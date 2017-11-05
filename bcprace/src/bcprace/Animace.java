@@ -27,6 +27,7 @@ public class Animace {
             }
         };
         timer.schedule(timertask, 20, 20);
+        
     } 
     
     private void tickTack()
@@ -34,6 +35,7 @@ public class Animace {
         for (int i = 0; i < cars.size(); i++) {
             cars.get(i).tick();
         }
+        
     }
     
     public void addCar(Auto car)

@@ -6,6 +6,9 @@
 package bcprace;
 
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.image.Image;
@@ -24,13 +27,13 @@ public class Auto {
     private int ux, uy;
     private Point p1, p2;
     private double t;
-    private double defRychlost=0.1;
+    private double actRychlost=0.1;
     private static final double maxRychlost=0.1;
     private Group root;
     private boolean pauza=false;
-    private double defZrychleni=0;
+    private double actZrychleni=0;
     private static final double zrychleni=0.002;
-    private Image defImg=new Image("/resources/car.png");
+    private Image defImg;
     public Auto(Group root, Usek u, Animace a) {
         this.a=a;
         this.root=root;
@@ -40,6 +43,48 @@ public class Auto {
     }
     private void setIv()
     {
+        Random rnd=new Random();
+        switch(rnd.nextInt(12)+1)
+        {  
+            case 1:
+                defImg=new Image("/resources/cars/01.png");
+                break; 
+            case 2:
+                defImg=new Image("/resources/cars/02.png");
+                break; 
+            case 3:
+                defImg=new Image("/resources/cars/03.png");
+                break;     
+            case 4:
+                defImg=new Image("/resources/cars/04.png");
+                break;     
+            case 5:
+                defImg=new Image("/resources/cars/05.png");
+                break; 
+            case 6:
+                defImg=new Image("/resources/cars/06.png");
+                break; 
+            case 7:
+                defImg=new Image("/resources/cars/07.png");
+                break; 
+            case 8:
+                defImg=new Image("/resources/cars/08.png");
+                break; 
+            case 9:
+                defImg=new Image("/resources/cars/09.png");
+                break; 
+            case 10:
+                defImg=new Image("/resources/cars/10.png");
+                break; 
+            case 11:
+                defImg=new Image("/resources/cars/11.png");
+                break; 
+            case 12:
+                defImg=new Image("/resources/cars/12.png");
+                break; 
+            default:
+                defImg=new Image("/resources/car.png");
+        }
         iv=new ImageView(defImg);
         iv.setFitWidth(64);
         iv.setFitHeight(64);
@@ -50,7 +95,7 @@ public class Auto {
                     pause();
                 else
                     play();
-                vybratAuto();
+                //vybratAuto();
             }
         });
         root.getChildren().add(iv);
@@ -61,24 +106,27 @@ public class Auto {
     }
     public void tick()
     {
-        t+=defRychlost;
-        
+        t+=actRychlost;
         double x=(xF+(t*ux));
         double y=(yF+(t*uy));
         move(x,y);
-        setSpeed(defZrychleni);
-        if(defRychlost >=maxRychlost)
+        setSpeed(actZrychleni);
+        if(actRychlost >=maxRychlost)
         {
-            defZrychleni=0;
-            defRychlost=maxRychlost;
+            actZrychleni=0;
+            actRychlost=maxRychlost;
         }
-        if(defRychlost<0.0005)
+        if(actRychlost<0.0005)
         {
-            defZrychleni=0;
-            defRychlost=0;
+            actZrychleni=0;
+            actRychlost=0;
         }
         if(!pauza)
-            detectCar();               
+        {
+             
+            streetDetectCar();  
+            crossDetectCar();  
+        }
         if(t>=1)
         {
             t-=1;
@@ -120,9 +168,9 @@ public class Auto {
     }
     public void setSpeed(double newSpeed)
     {
-        defRychlost+=newSpeed;
+        actRychlost+=newSpeed;
     }
-    private void detectCar()
+    private void streetDetectCar()
     {
         Usek uNext=u;
         double distance=0;
@@ -135,22 +183,65 @@ public class Auto {
                 double speedNextCar=uNext.getCar().getSpeed();
                 double tNextCar=uNext.getCar().getT();
                 distance=distance+tNextCar-t;
-                double dSpeed=defRychlost-speedNextCar;
-                if(dSpeed>0 || defRychlost<maxRychlost)
+                double dSpeed=actRychlost-speedNextCar;
+                if(dSpeed>0 || actRychlost<maxRychlost)
                 {
-                    defZrychleni=-calcSpeed(dSpeed, distance);
+                    actZrychleni=-calcSpeed(dSpeed, distance);
                     if(distance<2.5)
                     {
-                        defRychlost=0;
-                        defZrychleni=0;
+                        actRychlost=0;
+                        actZrychleni=0;
                     }
                 }
                 carFound=true;
             } 
         }
-        if(!carFound && defRychlost<maxRychlost)
+        if(!carFound && actRychlost<maxRychlost)
         {
-            defZrychleni=zrychleni;
+            actZrychleni=zrychleni;
+        }
+    }
+    private void crossDetectCar()
+    {
+        boolean carFound=false;
+        double actDist=0;
+        Usek x=u;
+        while(actDist<4 && !carFound && (x=x.getDalsi())!=null)
+        {
+            actDist++;
+            for (Usek checkPoint : x.getCheckPoints()) {
+                Usek ucp=checkPoint;
+                double nextDist=0;
+                while(nextDist>-3 && ucp!=null)
+                {
+                    ucp=ucp.getDalsi();
+                    nextDist--;
+                }
+                nextDist=0;
+                while(nextDist<10 && !carFound && (ucp=ucp.getPredchozi())!=null)
+                {
+                    nextDist++;
+                    if(ucp.getCar()!=null)
+                    {
+                        double speedNextCar=ucp.getCar().getSpeed();
+                        double tNextCar=ucp.getCar().getT();
+                        nextDist+=tNextCar;
+                        actDist-=t;
+                        double dNext=(nextDist+tNextCar)/speedNextCar;
+                        double dAct=actDist/actRychlost;
+                        if(dNext/2>dAct)
+                        {
+                            actZrychleni=-calcSpeed(actRychlost,actDist+2);
+                            if(actDist<0.2)
+                            {
+                                actRychlost=0;
+                                actZrychleni=0;
+                            }
+                        }
+                        carFound=true;
+                    } 
+                } 
+            }   
         }
     }
     private double calcSpeed(double dSpeed, double dist)
@@ -160,31 +251,31 @@ public class Auto {
     }
     private void move(double x, double y)
     {
-        iv.setX(x-(iv.getFitHeight()/2));
-        iv.setY(y-(iv.getFitWidth()/2));
+        iv.setX((x-(iv.getFitHeight()/2)));
+        iv.setY((y-(iv.getFitWidth()/2)));
     }
-    public float angle(Point p1, Point p2) {
+    private float angle(Point p1, Point p2) {
         float angle = (float) Math.toDegrees(Math.atan2(p1.getY() - p2.getY(), p1.getX() - p2.getX()))+180;
         if(angle < 0){
             angle += 360;
         }
         return angle;
     }
-    public void pause()
+    private void pause()
     {
         pauza=true;
-        defZrychleni=-zrychleni;
+        actZrychleni=-zrychleni;
     }
-    public void play()
+    private void play()
     {
         pauza=false;
-        defZrychleni=zrychleni;
+        actZrychleni=zrychleni;
     }
-    public double getSpeed()
+    private double getSpeed()
     {
-        return defRychlost;
+        return actRychlost;
     }
-    public double getT()
+    private double getT()
     {
         return t;
     }

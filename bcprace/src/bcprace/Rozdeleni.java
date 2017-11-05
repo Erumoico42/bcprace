@@ -62,6 +62,7 @@ public class Rozdeleni {
             u.setP2(p);   
             u2=new Usek();
             u.setDalsi(u2);
+            u2.setPredchozi(u);
             u=u2;
             u.setP1(p);
             

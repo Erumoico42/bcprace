@@ -8,7 +8,6 @@ package bcprace;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -33,16 +32,17 @@ public class BcPrace extends Application {
     private List<Circle> circleUseky=new ArrayList<Circle>();
     private List<Usek> useky;
     private ConnectPoint actCp;
-    private List<Auto> cars=new ArrayList<Auto>();
+    private List<Button> addCarBtns=new ArrayList<Button>();
     private Animace a;
     private static Auto actAuto;
     private MyCurve actCurve;
     private static Usek actUsek;
+    private int pozYAdd=0;
     @Override
     public void start(Stage primaryStage) {
         root = new Group();
         Scene scene = new Scene(root, 800, 600);
-        primaryStage.setTitle("V1");
+        primaryStage.setTitle("Project");
         primaryStage.setScene(scene);
         primaryStage.show();
         initGUI();
@@ -98,18 +98,8 @@ public class BcPrace extends Application {
                 }
             }
         });
-        Button addCar=new Button("Přidat auto");
-        addCar.setLayoutX(110);
-        addCar.setLayoutY(50);
-        addCar.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent t) {
-                final Auto car=new Auto(root, useky.get((new Random()).nextInt(useky.size())), a);
-                a.addCar(car);
-                    
-            }
-        });
-        root.getChildren().addAll(canvas, addCar);
+        
+        root.getChildren().addAll(canvas);
     }
     public static void vybratAuto(Auto auto)
     {
@@ -219,7 +209,22 @@ public class BcPrace extends Application {
         newController(0, t, mc);
         newController(1, t, mc);
         if(actCurve==null)
+        {
             curves.add(mc);
+            final Button addCar=new Button("Přidat auto");
+            addCar.setLayoutX(50);
+            addCar.setLayoutY((pozYAdd+1)*25);
+            addCarBtns.add(addCar);
+            addCar.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent t) {
+                    final Auto car=new Auto(root, useky.get(addCarBtns.indexOf(addCar)), a);
+                    a.addCar(car);   
+                }
+            });
+            pozYAdd++;
+            root.getChildren().add(addCar);
+        }
         else
             actCurve.setNext(mc);
         actCurve=mc;
@@ -228,6 +233,8 @@ public class BcPrace extends Application {
         root.getChildren().add(0, cubicCurve);
         actCp.movePoint(t.getX(), t.getY());
         toSegments();
+        
+        
     }
 
     /**
