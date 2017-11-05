@@ -18,20 +18,26 @@ public class Rozdeleni {
 
     private List<Usek> useky;
     private Usek u, u2;
-    private List<CubicCurve> curves;
+    private List<MyCurve> curves;
     private Point p;
-    public Rozdeleni(List<CubicCurve> curves) {
+    public Rozdeleni(List<MyCurve> curves) {
         useky=new ArrayList<Usek>();
         this.curves=curves;
         split();
     }
     private void split()
     {
-        p=new Point((int)curves.get(0).getStartX(),(int)curves.get(0).getStartY());
-        u=new Usek();
-        u.setP1(p);
-        for (CubicCurve curve : curves) {
-            callBez(curve);
+        for (MyCurve curve : curves) {
+            MyCurve mc=curve;
+            CubicCurve cc=mc.getCurve();
+            p=new Point((int)cc.getStartX(),(int)cc.getStartY());
+            u=new Usek();
+            u.setP1(p);
+            useky.add(u);
+            while (mc!=null) {                
+                callBez(mc.getCurve());
+                mc=mc.getNextCurve();
+            }
         }
     }
     
@@ -53,12 +59,12 @@ public class Rozdeleni {
         if(length(x, y)>30)
         {
             p=new Point(x,y);
-            u.setP2(p);
+            u.setP2(p);   
             u2=new Usek();
             u.setDalsi(u2);
-            useky.add(u);
             u=u2;
             u.setP1(p);
+            
         }
     }
     

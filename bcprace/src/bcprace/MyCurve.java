@@ -19,19 +19,28 @@ public class MyCurve {
     private Controller c1;
     private Controller c2;
     private boolean cpChanged=false;
-    private List<MyCurve> nextCurves;
+    //private List<MyCurve> dalsi;
+    private MyCurve dalsi;
     public MyCurve(CubicCurve curve, ConnectPoint cp0) {
         this.curve = curve;
         this.cp0=cp0;
     }
-    public void setNext(MyCurve next)
+    public void setNext(MyCurve dalsi)
     {
-        nextCurves.add(next);
+        this.dalsi=dalsi;          
     }
-    public List<MyCurve> getNextCurves()
+    public MyCurve getNextCurve()
     {
-        return nextCurves;
+        return dalsi;
     }
+    /*public void setNext(MyCurve next)
+    {
+        dalsi.add(next);
+    }
+    public List<MyCurve> getNextCurve()
+    {
+        return dalsi;
+    }*/
     public void setPoint1(Controller c1)
     {
         this.c1=c1;

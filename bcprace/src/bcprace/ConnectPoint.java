@@ -5,7 +5,6 @@
  */
 package bcprace;
 
-import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.scene.shape.Circle;
@@ -39,6 +38,11 @@ public class ConnectPoint {
     {
         curves.add(curve);
     }
+
+    public List<MyCurve> getCurves() {
+        return curves;
+    }
+    
     public Circle getCircle()
     {
         return circle;

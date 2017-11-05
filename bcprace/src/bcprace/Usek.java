@@ -6,6 +6,10 @@
 package bcprace;
 
 import java.awt.Point;
+import javafx.event.EventHandler;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 
 /**
  *
@@ -15,12 +19,47 @@ public class Usek {
     private Point p1, p2;
     private Usek dalsi=null;
     private Auto car;
+    private Circle cir;
     public Usek() {
     }
     public Point getP1() {
         return p1;
     }
-    
+
+    public Circle getCir() {
+        return cir;
+    }
+
+    public void setCir(final Circle cir) {
+        this.cir = cir;
+        cir.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent t) {
+                Usek actUsek=BcPrace.getActUsek();
+                if(actUsek!=getUsek())
+                {
+                    if(actUsek!=null)
+                    {
+                        actUsek.getCir().setFill(Color.GREEN);
+                        actUsek.getCir().setRadius(3);
+                    }
+                    BcPrace.vybratUsek(getUsek());
+                    cir.setFill(Color.BLUE);
+                    cir.setRadius(5);
+                }
+                else
+                {
+                    cir.setFill(Color.GREEN);
+                    cir.setRadius(3);
+                    BcPrace.vybratUsek(null);
+                }
+            }
+        });
+    }
+    private Usek getUsek()
+    {
+        return this;
+    }
     public Point getP2() {
         return p2;
     }

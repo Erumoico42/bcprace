@@ -22,12 +22,12 @@ public class Auto {
     private Usek u;
     private int xF, yF, xL, yL;
     private int ux, uy;
-    private Point p1, p2, p3;
+    private Point p1, p2;
     private double t;
     private double defRychlost=0.1;
     private static final double maxRychlost=0.1;
     private Group root;
-    private boolean pauza=false, end=false;
+    private boolean pauza=false;
     private double defZrychleni=0;
     private static final double zrychleni=0.002;
     private Image defImg=new Image("/resources/car.png");
@@ -61,33 +61,28 @@ public class Auto {
     }
     public void tick()
     {
-        if(!end)
+        t+=defRychlost;
+        
+        double x=(xF+(t*ux));
+        double y=(yF+(t*uy));
+        move(x,y);
+        setSpeed(defZrychleni);
+        if(defRychlost >=maxRychlost)
         {
-            t+=defRychlost;
-            if(t<=1)
-            { 
-                double x=(xF+(t*ux));
-                double y=(yF+(t*uy));
-                move(x,y);
-                setSpeed(defZrychleni);
-                if(defRychlost >=maxRychlost)
-                {
-                    defZrychleni=0;
-                    defRychlost=maxRychlost;
-                }
-                if(defRychlost<0.0005)
-                {
-                    defZrychleni=0;
-                    defRychlost=0;
-                }
-                if(!pauza)
-                    detectCar();               
-            }
-            else 
-            {
-                t-=1;
-                zmenitUsek();      
-            }
+            defZrychleni=0;
+            defRychlost=maxRychlost;
+        }
+        if(defRychlost<0.0005)
+        {
+            defZrychleni=0;
+            defRychlost=0;
+        }
+        if(!pauza)
+            detectCar();               
+        if(t>=1)
+        {
+            t-=1;
+            zmenitUsek();      
         }
     }
     private void removeCar()
@@ -107,7 +102,6 @@ public class Auto {
         }
         else
         {
-            end=true;
             removeCar();
         }
     }
