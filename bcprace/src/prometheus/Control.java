@@ -74,27 +74,20 @@ public class Control {
             if(!mc.equals(curve))
             {
                 double length=MyMath.length(conn.getPoint(), mc.getControl1().getPoint());
-                Point pp=rotate(conn.getPoint(), length, angle+Math.PI);
+                Point pp=MyMath.rotate(conn.getPoint(), length, angle+Math.PI);
                 mc.getControl1().moveControl((int)pp.getX(), (int)pp.getY());
                 mc.setChanged();
             }
         }
         for (MyCurve mc : conn.getEndCurves()) {
             double length=MyMath.length(conn.getPoint(), mc.getControl2().getPoint());
-            Point pp=rotate(conn.getPoint(), length, angle);
+            Point pp=MyMath.rotate(conn.getPoint(), length, angle);
             mc.getControl2().moveControl((int)pp.getX(), (int)pp.getY());
             mc.setChanged();
         }
     }
     
-    public Point rotate(Point p1, double length, double angle)
-    {
-        Point pp=new Point();
-        double x=Math.cos(angle)*length;
-        double y=Math.sin(angle)*length;
-        pp.setLocation(x+p1.getX(),y+p1.getY());
-        return pp;
-    }
+    
     
     public Circle getCircle()
     {

@@ -162,14 +162,14 @@ public final class MyCurve {
         double length= MyMath.length(p0, p3)*1/3;
         if(!conn0.getEndCurves().isEmpty())
         {
-            double ang=MyMath.angle(conn0.getPoint(),conn0.getEndCurves().get(0).getControl2().getPoint());
-            Point ppp=con1.rotate(conn0.getPoint(), length, ang);
+            double ang=MyMath.angle(p0,conn0.getEndCurves().get(0).getControl2().getPoint());
+            Point ppp=MyMath.rotate(p0, length, ang);
             p1.setLocation(ppp);
         } 
         else if(!conn0.getStartCurves().isEmpty())
         {
-            double ang=MyMath.angle(conn0.getPoint(),conn0.getStartCurves().get(0).getControl1().getPoint());
-            Point ppp=con1.rotate(conn0.getPoint(),length, Math.PI+ang);
+            double ang=MyMath.angle(p0,conn0.getStartCurves().get(0).getControl1().getPoint());
+            Point ppp=MyMath.rotate(p0,length, Math.PI+ang);
             p1.setLocation(ppp);  
         } 
         double angl=MyMath.angle(p1, p0);
@@ -177,16 +177,16 @@ public final class MyCurve {
     }
     private void rotSec(double ang, double length)
     {
-        double angle=MyMath.angle(conn0.getPoint(),conn3.getPoint());
-        Point p=con2.rotate(conn3.getPoint(), length, 2*angle+Math.PI-ang);
+        double angle=MyMath.angle(p0,p3);
+        Point p=MyMath.rotate(p3, length, 2*angle+Math.PI-ang);
         p2.setLocation(p);
     }
     public void newRotateControl()
     {
         if(!conn3.getStartCurves().isEmpty())
         {
-            double ang=MyMath.angle(conn3.getPoint(),conn3.getStartCurves().get(0).getControl1().getPoint());
-            Point pp=con2.rotate(conn3.getPoint(), MyMath.length(p0, p3)*1/3, ang);
+            double ang=MyMath.angle(p3,conn3.getStartCurves().get(0).getControl1().getPoint());
+            Point pp=MyMath.rotate(p3, MyMath.length(p0, p3)*1/3, ang);
             p2.setLocation(pp); 
         }
     }

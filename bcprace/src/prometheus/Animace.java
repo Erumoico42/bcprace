@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import javafx.application.Platform;
 
 /**
  *
@@ -27,15 +28,17 @@ public class Animace {
         timertask = new TimerTask() {
             @Override
             public void run(){
-                tickTack();
+                Platform.runLater(() -> {
+                    tickTack();
+                });
             }
         };
         timer.schedule(timertask, 20, 20);
     }
     public void stop()
     {
-        timer.cancel();
         timertask.cancel();
+        timer.cancel();
     }
     private void tickTack()
     {

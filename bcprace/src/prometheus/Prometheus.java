@@ -5,7 +5,6 @@
  */
 package prometheus;
 
-import java.awt.Panel;
 import javafx.scene.control.Button;
 import java.awt.Point;
 import java.io.File;
@@ -17,7 +16,6 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -92,8 +90,8 @@ public class Prometheus extends Application {
             a.stop();
             if(autoGen)
             {
-                timer.cancel();
                 timertask.cancel();
+                timer.cancel();
             }
         });
         primaryStage.widthProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
@@ -123,7 +121,7 @@ public class Prometheus extends Application {
                 
                 }
             };
-            timer.schedule(timertask, 2000, 2000);
+            timer.schedule(timertask, 0,1500);
         }
         else
         {
@@ -158,7 +156,7 @@ public class Prometheus extends Application {
              setBg(bgIv);
         });
         Button autoGen=new Button("Generování aut");
-        autoGen.setLayoutX(200);
+        autoGen.setLayoutX(250);
         autoGen.setLayoutY(20);
         autoGen.setOnAction((ActionEvent event) -> {
              autoAddCar();

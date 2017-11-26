@@ -19,7 +19,7 @@ import javafx.scene.shape.Circle;
  * @author Honza
  */
 public class Usek {
-    private Point p1, p2;
+    private Point p1, p2, p12=null, p21=null;
     private List<Usek> dalsiUseky=new ArrayList<Usek>();
     private List<Usek> predchoziUseky=new ArrayList<Usek>();
     private Auto car;
@@ -84,8 +84,6 @@ public class Usek {
                 }  
             }
         });
-        
-        
             cir.setOnMouseEntered(new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent t) {
@@ -145,6 +143,22 @@ public class Usek {
         this.p2 = p2;
     }
 
+    public Point getP12() {
+        return p12;
+    }
+
+    public void setP12(Point p12) {
+        this.p12 = p12;
+    }
+
+    public Point getP21() {
+        return p21;
+    }
+
+    public void setP21(Point p21) {
+        this.p21 = p21;
+    }
+    
     public Auto getCar() {
         return car;
     }

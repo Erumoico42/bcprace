@@ -8,6 +8,8 @@ package prometheus;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.CubicCurve;
 
 /**
@@ -19,7 +21,8 @@ public class Rozdeleni {
     private List<Usek> startUseky;
     private Usek u, u2;
     private Point p;
-    private final int LENGTH=30;
+    private Point p12, p21;
+    private final int SEG_LENGTH=30;
     public Rozdeleni(List<Connect> connects) {
         Prometheus.removeCircles();
         startUseky=new ArrayList<Usek>();
@@ -47,12 +50,31 @@ public class Rozdeleni {
     }
     private void newPoint(int x, int y)
     {
-        if(length(x, y)>LENGTH)
+        if(length(x, y)>SEG_LENGTH)
         {
             u2=new Usek();
             u2.setP1(p);
+            
+            
             p=new Point(x,y);
             u2.setP2(p);  
+            double angle;
+            if(u.getP21()==null)
+            {
+                angle=MyMath.angle(u2.getP2(), u2.getP1());
+                p12=MyMath.rotate(u2.getP1(), 10, angle);
+                p21=MyMath.rotate(u2.getP1(), 20, angle);
+                u.setP12(p12);
+                u.setP21(p21);
+            }      
+            angle=MyMath.angle(u2.getP1(),u.getP21());
+            p12=MyMath.rotate(u2.getP1(), 10, angle);
+            u2.setP12(p12);
+            
+            angle=MyMath.angle(p12,u2.getP2());
+            p21=MyMath.rotate(p, 10, angle); 
+            u2.setP21(p21);
+            
             u2.setCir();
             u.setDalsiUseky(u2);
             u2.setPredchoziUseky(u);
@@ -99,7 +121,6 @@ public class Rozdeleni {
             }
         }  
     }
-    
     public List<Usek> getStartUseky()
     {
         return startUseky;
@@ -178,59 +199,6 @@ public class Rozdeleni {
                 newPoint(x1, y1);
             }
         }    
-    }/*
-    private void line(Point p1, Point p2)
-    {
-        int x1=(int)p1.getX(), y1=(int)p1.getY(), x2=(int)p2.getX(), y2=(int)p2.getY();
-        double dx = x2-x1;
-        double dy = y2-y1;
+    }
 
-        if (Math.abs(y2 - y1) <= Math.abs(x2 - x1)) {
-
-            if ((x1 == x2) && (y1 == y2)) {
-                newPoint(x1,y1);
-            } 
-            else {
-                if (x2 < x1) {
-                    int tmp = x2;
-                    x2 = x1;
-                    x1 = tmp;
-
-                    tmp = y2;
-                    y2 = y1;
-                    y1 = tmp;
-                }
-
-                double k = (double)dy/dx; 
-                int cele_y;           
-                double y = (double)y1;
-
-                for (int x = x1 ; x <= x2 ; x++) {
-                    cele_y = (int)Math.round(y);
-                    y += k;
-                    newPoint(x,cele_y);
-                }
-            }
-        } else {
-
-            if (y2 < y1) {
-                int tmp = x2;
-                x2 = x1;
-                x1 = tmp;
-
-                tmp = y2;
-                y2 = y1;
-                y1 = tmp;
-            }
-
-            double k = (double)dx/dy;
-            int cele_x;
-            double x = (double)x1;
-            for (int y = y1; y <= y2; y++) {
-                cele_x = (int)Math.round(x);
-                x += k;       
-                newPoint(cele_x, y);
-            }
-        }  
-    }*/
 }
