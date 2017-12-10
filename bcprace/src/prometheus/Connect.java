@@ -64,7 +64,7 @@ public class Connect {
             lastLoc=new Point(p);
             p.setLocation(t.getX(), t.getY());
             moveConnect();
-            c.toFront();
+            c.toFront();;
         });
         c.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
@@ -77,6 +77,7 @@ public class Connect {
                     MyCurve mc=new MyCurve(actConn,getThis());
                     mc.newRotateControl();
                     mc.moveControls();
+                    mc.setJoined();
                     Prometheus.rozdel();
                 }
                     
@@ -119,6 +120,12 @@ public class Connect {
             Prometheus.setConnect(getThis());
             c.setStroke(Color.AQUA);
         }
+    }
+    public void move(Point p)
+    {
+        lastLoc=new Point(p);
+        p.setLocation(p.getX(), p.getY());
+        moveConnect();
     }
     private Connect getThis()
     {

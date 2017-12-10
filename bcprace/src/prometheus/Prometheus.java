@@ -12,10 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -35,7 +38,9 @@ import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
-
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -52,15 +57,15 @@ public class Prometheus extends Application {
     private static final List<Connect> startConnects=new ArrayList<Connect>();
     private static Usek actUsek;
     private static Auto actAuto;
-    private final List<Button> addCarBtns=new ArrayList<Button>();
-    private int pozYAdd=1;
-    private Animace a;
+    private static final List<Button> addCarBtns=new ArrayList<Button>();
+    private static int pozYAdd=1;
+    private static Animace a;
     private static Rozdeleni r;
     private static final List<Circle> checkPoints=new ArrayList<Circle>();
     private Scene scene;
     private SubScene subScene;
     private static Group rootSS;
-    private Canvas canvas;
+    private static Canvas canvas;
     private ImageView bgIv;
     double startX;
     double startY;
@@ -70,8 +75,13 @@ public class Prometheus extends Application {
     private final double RESIZE=50; 
     private final double MOVE=25; 
     private TimerTask timertask;
-    private Timer timer=new Timer();
+    private Timer timer;
     private boolean autoGen=false;
+    private int genDeley=1000;
+    private boolean delCanged=false;
+    private static int lastUsekId=0, lastCurveId=0;
+    private static List<Usek> useky=new ArrayList<Usek>();
+    private static List<MyCurve> krivky=new ArrayList<MyCurve>();
     @Override
     public void start(Stage primaryStage) {
         
@@ -88,10 +98,11 @@ public class Prometheus extends Application {
         primaryStage.show();
         primaryStage.setOnCloseRequest((WindowEvent event) -> {
             a.stop();
-            if(autoGen)
+            
+            if(timer!=null && timertask!=null)
             {
-                timertask.cancel();
                 timer.cancel();
+                timertask.cancel();   
             }
         });
         primaryStage.widthProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
@@ -106,28 +117,60 @@ public class Prometheus extends Application {
         });
         initGUI();
     }
+    public static void addCurve(MyCurve mc)
+    {
+        krivky.add(mc);
+    }
+    public static void addUsek(Usek us)
+    {
+        useky.add(us);
+    }
+    public static void cleanUseky()
+    {
+        useky.clear();
+        
+    }
     private void autoAddCar()
     {
         if(!autoGen)
         {
             autoGen=true;
-            timertask=new TimerTask() {
-            @Override
-            public void run() {
-                 Platform.runLater(() -> {
-                     Auto car=new Auto(r.getStartUseky().get((int)(Math.random()*(r.getStartUseky().size()))), a);
-                     a.addCar(car);
-                 });
-                
-                }
-            };
-            timer.schedule(timertask, 0,1500);
+            genCar();
         }
         else
         {
+            timer.cancel();
             timertask.cancel();
             autoGen=false;
         }
+    }
+    public static void setLastId(int lastUsekId)
+    {
+        lastUsekId=lastUsekId;
+    }
+    private void genCar()
+    {
+        timer = new Timer();
+        timertask=new TimerTask() {
+            public void run() {
+                Platform.runLater(() -> {
+                    if(Math.random()<0.8){
+                        Usek rndUsek=r.getStartUseky().get((int)(Math.random()*(r.getStartUseky().size())));
+                        rndUsek=rndUsek.getDalsiUseky().get((int)(Math.random()*(rndUsek.getDalsiUseky().size())));
+                        if(rndUsek.getCar()==null){
+                            Auto car=new Auto(rndUsek, a);
+                        }
+                    }
+                    if(delCanged)
+                    {
+                        delCanged=false;
+                        timer.cancel();
+                        genCar(); 
+                    }
+                });
+            }
+        };
+        timer.schedule(timertask, 0, genDeley);    
     }
     private void initGUI()
     {
@@ -162,13 +205,78 @@ public class Prometheus extends Application {
              autoAddCar();
         });
         canvas.setOnMousePressed((MouseEvent t) -> {
-            newCurve(t);
+            newCurve(new Point((int)t.getX(),(int)t.getY()));
         });
         canvas.setOnMouseDragged((MouseEvent t) -> {
             actConnect.setPoint(new Point((int)t.getX(),(int)t.getY()));
             actConnect.moveConnect();
         });
-        root.getChildren().addAll(pane,setbg, loadImage, autoGen);
+        TextField delTF=new TextField("1000");
+        delTF.setLayoutX(400);
+        delTF.setLayoutY(20);
+        delTF.setMaxWidth(100);
+        delTF.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if(event.getCode()==KeyCode.ENTER)
+                {
+                    genDeley=Integer.parseInt(delTF.getText());
+                    if(genDeley>5000)
+                        genDeley=5000;
+                    if(genDeley<200)
+                        genDeley=200;
+                    delCanged=true;
+                }
+            }
+        });
+        
+        
+        
+        
+        Button delMinus=new Button("-");
+        delMinus.setLayoutX(380);
+        delMinus.setLayoutY(20);
+        delMinus.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if(genDeley>200)
+                    genDeley-=100;
+                delTF.setText(""+genDeley);
+                delCanged=true;
+            }
+        });
+        Button delPlus=new Button("+");
+        delPlus.setLayoutX(500);
+        delPlus.setLayoutY(20);
+        delPlus.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if(genDeley<5000)
+                    genDeley+=100;
+                delTF.setText(""+genDeley);
+                delCanged=true;
+            }
+        });
+        
+        Button save=new Button("Save");
+        save.setLayoutX(800);
+        save.setLayoutY(20);
+        save.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                new XMLStore().writer(krivky, useky);
+            }
+        });
+        Button load=new Button("Load");
+        load.setLayoutX(850);
+        load.setLayoutY(20);
+        load.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                new XMLStore().reader();
+            }
+        });
+        root.getChildren().addAll(pane,setbg, loadImage, autoGen, delMinus, delPlus, delTF, save, load);
     }
     private void setBg(ImageView imgv)
     {
@@ -246,7 +354,23 @@ public class Prometheus extends Application {
         rootSS.getChildren().removeAll(checkPoints);
         checkPoints.clear();
     }
-    private void newCurve(MouseEvent t)
+    public static int getLastUsekId()
+    {
+        return lastUsekId;
+    }
+    public static void setLastUsekId(int lui)
+    {
+        lastUsekId=lui;
+    }
+    public static int getLastCurveId()
+    {
+        return lastCurveId;
+    }
+    public static void setLasCurveId(int lci)
+    {
+        lastCurveId=lci;
+    }
+    public static MyCurve newCurve(Point t)
     {
         if(actConnect==null)
         {
@@ -258,15 +382,20 @@ public class Prometheus extends Application {
             addCar.setLayoutY((pozYAdd+1)*26);
             addCarBtns.add(addCar);
             addCar.setOnAction((ActionEvent t1) -> {
-                final Auto car=new Auto(r.getStartUseky().get(addCarBtns.indexOf(addCar)), a);
-                a.addCar(car);
+                Usek rndUsek=r.getStartUseky().get(addCarBtns.indexOf(addCar));
+                rndUsek=rndUsek.getDalsiUseky().get((int)(Math.random()*(rndUsek.getDalsiUseky().size())));
+                if(rndUsek.getCar()==null){
+                    final Auto car=new Auto(rndUsek, a);
+                }
+                
             });
             pozYAdd++;
             root.getChildren().add(addCar);
         }
         Connect con = new Connect(new Point((int)t.getX()+(int)canvas.getLayoutX(),(int)t.getY()+(int)canvas.getLayoutY()));
-        new MyCurve(actConnect, con); 
+        MyCurve mc=new MyCurve(actConnect, con); 
         con.select();
+        return mc;
     }
     public static void rozdel()
     {

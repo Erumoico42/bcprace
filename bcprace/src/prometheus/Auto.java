@@ -30,11 +30,16 @@ public class Auto {
     private static final double MAX_ZRYCHLENI=0.002;
     private TexturaAuto ta;
     private final double IMG_SIZE=20;
+    private boolean carFoundStreet;
+    private double distNextStreet=0;
     public Auto(Usek u, Animace a) {
         this.a=a;
-        this.u=u.getDalsiUseky().get((int)(Math.random()*(u.getDalsiUseky().size())));
-        setIv();
+        this.u=u;
+        a.addCar(this);
+        u.setCar(this);
         setPoints(); 
+        setIv();
+        
     }
     private void setIv()
     {
@@ -42,6 +47,7 @@ public class Auto {
         iv=new ImageView(ta.getDefImg());
         iv.setFitWidth(40);
         iv.setFitHeight(40);
+        move(0);
         iv.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent t) {
@@ -76,7 +82,7 @@ public class Auto {
         }
         if(!pauza)
         {
-            streetDetectCar(); 
+            colisionDetect(); 
         }
         if(t>=1)
         {
@@ -110,10 +116,13 @@ public class Auto {
         p1=u.getP1();
         p2=u.getP2();
         p12=u.getP12();
+        if(p12==null)
+            p12=p2;
         p21=u.getP21();
+        if(p21==null)
+            p21=p1;
         x0=p1.getX();
         y0=p1.getY();
-        
         x1=3*(p12.getX()-x0);
         y1=3*(p12.getY()-y0);
         x2=3*(x0-2*p12.getX()+p21.getX());
@@ -123,37 +132,26 @@ public class Auto {
         
         xLast=x0;
         yLast=y0;
-        
-        //
-        //xF=(int)p1.getX();
-        //yF=(int)p1.getY();
-        //xL=(int)p2.getX();
-        //yL=(int)p2.getY();
-        //ux=xL-xF;
-        //uy=yL-yF;
-        //iv.setRotate(angle(p1,p2));
     }
     public void setSpeed(double newSpeed)
     {
         actRychlost+=newSpeed;
     }
-    private void streetDetectCar()
+    private void colisionDetect()
     {
-        Usek uNext=u;
-        boolean carFoundMain=false;
-        carFoundMain=findStreet(uNext, 0);
-        if(!carFoundMain)
-        {
-            actZrychleni=MAX_ZRYCHLENI; 
-        }
-        findCPCross(uNext, 1);
+        distNextStreet=666;
+        carFoundStreet=findStreet(u, 0);
+        if(!carFoundStreet)
+            actZrychleni=MAX_ZRYCHLENI;  
+        if(distNextStreet >1)
+            findCPCross(u, 1);
         
     }
     private boolean findStreet(Usek us, int d)
     {
         boolean carFound=false;
         for (Usek uNext : us.getDalsiUseky()) {
-            if(d<8 && !carFound)
+            if(d<5 && !carFound)
             {
                 if(uNext.getCar()!=null)
                 {
@@ -161,6 +159,7 @@ public class Auto {
                     double speedNextCar=uNext.getCar().getSpeed();
                     double tNextCar=uNext.getCar().getT();
                     dist=dist+tNextCar-t;
+                    distNextStreet=dist;
                     double dSpeed=actRychlost-speedNextCar;
                     if(dSpeed>0 || actRychlost<MAX_RYCHLOST)
                     {
@@ -170,6 +169,7 @@ public class Auto {
                             actRychlost=0;
                             actZrychleni=0;
                         }
+                        
                     }
                     carFound=true;
                 }
@@ -194,12 +194,8 @@ public class Auto {
             {
                 for (Usek cp : uNext.getCheckPoints()) {
                     for (Usek uN : cp.getDalsiUseky()) {
-                        for (Usek uNN : uN.getDalsiUseky()) {
-                            findCarCross(uNN, 1, dist);
-                        }
-                        
+                        findCarCross(uN, 1, dist);                        
                     }
-                    
                 }
                 
             }
@@ -207,22 +203,24 @@ public class Auto {
     }
     private boolean findCarCross(Usek us, int nextDist, double actDist)
     {
+        
         boolean carFound=false;
         Auto nextCar=us.getCar();
         for (Usek uNext : us.getPredchoziUseky()) {
-            if(nextDist<9 && !carFound)
+            if(!carFound)
             {
                 if(nextCar==null)
                     nextCar=uNext.getCar();
                 if(nextCar!=null)
                 {
-                    carFound=true;
+                    
                     double nextT=nextCar.getT();
                     double nextD=nextDist-nextT;
                     double dActCar=actDist-t;
-                    if(dActCar>2)
+                    carFound=true;
+                    if(dActCar>1 && actRychlost<MAX_RYCHLOST/1.3)
                         actZrychleni=MAX_ZRYCHLENI;
-                    else if(dActCar>0.1)
+                    else if(dActCar>0.05)
                         actZrychleni=-MAX_ZRYCHLENI;
                     else
                     {
@@ -230,8 +228,9 @@ public class Auto {
                         actRychlost=0;
                     }
                 }
-                else
+                else if(nextDist<7)
                 {
+                    
                     carFound=findCarCross(uNext, nextDist+1, actDist);
                 }
             }

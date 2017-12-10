@@ -27,14 +27,21 @@ public class Usek {
     private List<Usek> checkPoints=new ArrayList<Usek>();
     private Usek selectedUsek;
     private final Color DEF_COLOR=Color.GREEN;
-    
+    private int id;
     public Usek() {
+        id=Prometheus.getLastUsekId();
+        Prometheus.setLastUsekId(id+1);
+        Prometheus.addUsek(this);
     }
     public Point getP1() {
         return p1;
     }
     public Circle getCir() {
         return cir;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public void setCir() {

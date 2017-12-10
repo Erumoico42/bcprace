@@ -24,7 +24,13 @@ public class MyMath {
     }
     public static double length(Point p1,Point p2)
     {
-        double distance = Math.sqrt(Math.pow(p1.getX()-p2.getX(),2) + Math.pow(p1.getY()-p2.getY(),2));
+        //double distance = Math.sqrt(Math.pow(p1.getX()-p2.getX(),2) + Math.pow(p1.getY()-p2.getY(),2));
+        double distance = length(p1.getX(), p1.getY(), p2.getX(), p2.getY());
+        return distance;
+    }
+    public static double length(double x1, double y1, double x2, double y2)
+    {
+        double distance = Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
         return distance;
     }
     public static Point rotate(Point p1, double length, double angle)

@@ -6,8 +6,8 @@
 package prometheus;
 
 import java.awt.Point;
-import javafx.event.EventHandler;
-import javafx.event.EventType;
+import java.util.ArrayList;
+import java.util.List;
 import javafx.scene.shape.CubicCurve;
 
 /**
@@ -27,7 +27,12 @@ public final class MyCurve {
     private Point p3;
     private boolean changedCont=false;
     private boolean done=false;
-    public MyCurve(Connect conn0, Connect conn3) {    
+    private int id;
+    private boolean joined=false;
+    public MyCurve(Connect conn0, Connect conn3) {   
+        id=Prometheus.getLastCurveId();
+        Prometheus.setLasCurveId(id+1);
+        Prometheus.addCurve(this);
         this.p0=conn0.getPoint();
         this.p3=conn3.getPoint();
         p1=new Point();
@@ -49,6 +54,14 @@ public final class MyCurve {
         rotateControl();
         moveControls();
         Prometheus.rozdel();
+    }
+    public void setJoined()
+    {
+        joined=true;
+    }
+    public boolean getJoined()
+    {
+        return joined;
     }
     public void setDone(boolean done)
     {
@@ -97,6 +110,15 @@ public final class MyCurve {
     {
         return con2;
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+    
     public void moveP0(double x, double y)
     {
         
@@ -172,21 +194,28 @@ public final class MyCurve {
             Point ppp=MyMath.rotate(p0,length, Math.PI+ang);
             p1.setLocation(ppp);  
         } 
-        double angl=MyMath.angle(p1, p0);
+        double angl=MyMath.angle(p1, p3);
         rotSec(angl, length);
     }
     private void rotSec(double ang, double length)
     {
-        double angle=MyMath.angle(p0,p3);
-        Point p=MyMath.rotate(p3, length, 2*angle+Math.PI-ang);
+        //double angle=MyMath.angle(p0,p3);
+        Point p=MyMath.rotate(p3, length, ang);
         p2.setLocation(p);
     }
     public void newRotateControl()
     {
+        double length= MyMath.length(p0, p3)*1/3;
         if(!conn3.getStartCurves().isEmpty())
         {
             double ang=MyMath.angle(p3,conn3.getStartCurves().get(0).getControl1().getPoint());
-            Point pp=MyMath.rotate(p3, MyMath.length(p0, p3)*1/3, ang);
+            Point pp=MyMath.rotate(p3, length, ang);
+            p2.setLocation(pp); 
+        }
+        else if(!conn3.getEndCurves().isEmpty())
+        {
+            double ang=MyMath.angle(p3,conn3.getEndCurves().get(0).getControl2().getPoint());
+            Point pp=MyMath.rotate(p3, length, Math.PI+ang);
             p2.setLocation(pp); 
         }
     }
