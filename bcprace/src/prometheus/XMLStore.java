@@ -7,8 +7,15 @@ package prometheus;
 
 import java.awt.Point;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.stage.FileChooser;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -20,6 +27,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.*;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -29,40 +37,129 @@ public class XMLStore {
     private static List<Usek> useky=new ArrayList<Usek>();
     private static List<Usek> startUseky=new ArrayList<Usek>();
     private static List<MyCurve> mycurves=new ArrayList<MyCurve>();
+    private static List<Connect> connects=new ArrayList<Connect>();
     public XMLStore()
     {
         
     }
-    public static void reader()
+    public static void openFile()
+    {
+        FileChooser fch=new FileChooser();
+        FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("XML soubory (*.xml)", "*.xml");
+        fch.getExtensionFilters().add(filter);
+        File file = fch.showOpenDialog(null);
+        if (file != null) { 
+            reader(file);
+        }
+        
+    }
+    public static void saveFile(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, String bgSource, ImageView iv)
+    {
+        FileChooser fch=new FileChooser();
+        FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("XML soubory (*.xml)", "*.xml");
+        fch.getExtensionFilters().add(filter);
+        File file = fch.showSaveDialog(null);
+        if (file != null) { 
+            writer(curves, useky, connects, file, bgSource, iv);
+        }
+    }
+    private static void reader(File input)
     {
         
         try {
-            
-            File input=new File("D:\\xml2.xml");
             DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();
             DocumentBuilder db=dbf.newDocumentBuilder();
             Document doc;
             doc = db.parse(input);
             doc.getDocumentElement().normalize();
-            curves(doc);
-            //useky(doc);
             
-        } catch (Exception ex) {
-            System.out.println(ex);
+            readConnects(doc);
+            readCurves(doc);
+            
+            Prometheus.removeCircles();
+            Prometheus.cleanUseky();
+            readUseky(doc);
+            Prometheus.setStartUseky(startUseky);
+            
+            
+            NodeList bg=doc.getElementsByTagName("background");
+            Node background=bg.item(0);
+            boolean isnull= Boolean.parseBoolean(background.getAttributes().getNamedItem("isNull").getNodeValue());
+            
+            if(!isnull){
+                String source= background.getAttributes().getNamedItem("bgSource").getNodeValue();
+                String width=background.getAttributes().getNamedItem("width").getNodeValue();
+                String height=background.getAttributes().getNamedItem("height").getNodeValue();
+                
+                String p= background.getAttributes().getNamedItem("position").getNodeValue();
+                String[] pos=p.split(",");
+                Point position=new Point(Integer.parseInt(pos[0]),Integer.parseInt(pos[1]));
+                ImageView iv=new ImageView(new Image(source));
+                iv.setLayoutX(position.getX());
+                iv.setLayoutY(position.getY());
+                iv.setFitHeight(Integer.parseInt(height));
+                iv.setFitWidth(Integer.parseInt(width));
+                Prometheus.setBg(iv);
+                Prometheus.loadBg(iv);
+                Prometheus.setBgSource(source);
+            }
+            
+        } catch (ParserConfigurationException ex) {
+            Logger.getLogger(XMLStore.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SAXException ex) {
+            Logger.getLogger(XMLStore.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(XMLStore.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         
     }
-    private static void useky(Document doc)
+    private static void readConnects(Document doc)
+    {
+        NodeList conn=doc.getElementsByTagName("connect");
+        for (int i = 0; i < conn.getLength(); i++) {
+            
+            Node con=conn.item(i);           
+            int idConn=Integer.parseInt(con.getAttributes().getNamedItem("idConnect").getNodeValue());
+            boolean start=Boolean.parseBoolean(con.getAttributes().getNamedItem("start").getNodeValue());
+            String p=con.getAttributes().getNamedItem("pointConn").getNodeValue();
+            String[] s=p.split(",");
+            Point pp=new Point(Integer.parseInt(s[0]),Integer.parseInt(s[1]));
+            
+            Connect connect=new Connect(pp);
+            connect.setID(idConn);
+            connect.setStart(start);
+            
+            connects.add(connect);
+        }
+        Prometheus.setLastConnId(conn.getLength()-1);
+    }
+    private static void writeConnects(Element root, Document doc, List<Connect> connects)
+    {
+        for (Connect c : connects) {
+            Element connect=doc.createElement("connect");
+
+            Attr idConnect=doc.createAttribute("idConnect");
+            idConnect.setValue(String.valueOf(c.getID()));
+            connect.setAttributeNode(idConnect);
+            
+            Attr start=doc.createAttribute("start");
+            start.setValue(String.valueOf(c.getStart()));
+            connect.setAttributeNode(start);
+            
+            Attr point=doc.createAttribute("pointConn");
+            point.setValue(String.valueOf((int)c.getPoint().getX()+","+(int)c.getPoint().getY()));
+            connect.setAttributeNode(point);
+            root.appendChild(connect);
+        }
+    }
+    private static void readUseky(Document doc)
     {
         NodeList us=doc.getElementsByTagName("usek");
         for (int i = 0; i < us.getLength(); i++) {
             Usek u=new Usek();
-            Node usek=us.item(i); 
-            /*NodeList predch=((Element)us).getElementsByTagName("predchUsek");
-            if(predch.getLength()==0)
-                startUseky.add(u);
-            */
+            
+            Node usek=us.item(i);           
             String p=usek.getAttributes().getNamedItem("p1").getNodeValue();
             String[] s1=p.split(",");
             Point p1=new Point(Integer.parseInt(s1[0]),Integer.parseInt(s1[1]));
@@ -79,51 +176,57 @@ public class XMLStore {
             String[] s4=p.split(",");
             Point p4=new Point(Integer.parseInt(s4[0]),Integer.parseInt(s4[1]));
             u.setP2(p4); 
+            u.setCir();
             useky.add(u);
         }
+        SemtamforControl sc=Prometheus.getSC();
         for (int i = 0; i < us.getLength(); i++) {
             Node usek=us.item(i); 
             NodeList predch=((Element)usek).getElementsByTagName("predchUsek");
+            if(predch.getLength()==0)
+                startUseky.add(useky.get(i));
             for (int j = 0; j < predch.getLength(); j++) {
-                String p=predch.item(j).getAttributes().getNamedItem("idPredchUsek").getNodeValue();
-                useky.get(i).setPredchoziUseky(useky.get(Integer.parseInt(p)));
+                String id=predch.item(j).getAttributes().getNamedItem("idPredchUsek").getNodeValue();
+                useky.get(i).setPredchoziUseky(useky.get(Integer.parseInt(id)));
             }
             NodeList dalsi=((Element)usek).getElementsByTagName("dalsiUsek");
             for (int j = 0; j < dalsi.getLength(); j++) {
-                String p=dalsi.item(j).getAttributes().getNamedItem("idDalsiiUsek").getNodeValue();
-                useky.get(i).setDalsiUseky(useky.get(Integer.parseInt(p)));
+                String id=dalsi.item(j).getAttributes().getNamedItem("idDalsiUsek").getNodeValue();
+                useky.get(i).setDalsiUseky(useky.get(Integer.parseInt(id)));
             }
-        }    
+            NodeList checkPoints=((Element)usek).getElementsByTagName("checkPoint");
+            for (int j=0; j<checkPoints.getLength(); j++)
+            {
+                String cp=checkPoints.item(j).getAttributes().getNamedItem("idCheckPoint").getNodeValue();
+                useky.get(i).addCheckPoint(useky.get(Integer.parseInt(cp)));
+            }
+            NodeList semafory=((Element)usek).getElementsByTagName("semafor");
+            for (int j=0; j<semafory.getLength(); j++)
+            {
+                Node semafor=semafory.item(j); 
+                String color=semafor.getAttributes().getNamedItem("color").getNodeValue();
+                String p=semafor.getAttributes().getNamedItem("poz").getNodeValue();
+                int time=Integer.parseInt(semafor.getAttributes().getNamedItem("time").getNodeValue());
+                String[] s2=p.split(",");
+                Semafor s=new Semafor(color, sc);
+                s.setPoz(Integer.parseInt(s2[0]), Integer.parseInt(s2[1]));
+                s.setTime(time);
+                useky.get(i).addSemafor(s);
+            }
+        }   
     }
-    private static void curves(Document doc)
+    private static void readCurves(Document doc)
     {
         NodeList curves=doc.getElementsByTagName("curve");
             MyCurve mc;
             Prometheus.setLasCurveId(curves.getLength()-1);
             for (int i = 0; i < curves.getLength(); i++) {
                 Node curve=curves.item(i); 
-                NodeList ends=((Element)curve).getElementsByTagName("endCurve");
                 
-                if(ends.getLength()==0)
-                {
-                    Prometheus.setConnect(null);
-                }
-                else
-                {
-                    String e=ends.item(0).getAttributes().getNamedItem("idEndCurve").getNodeValue();
-                    int endId=Integer.parseInt(e);
-                    for (MyCurve mcc : mycurves) {
-                        
-                        if(mcc.getId()==endId){
-                            Prometheus.setConnect(mcc.getConnect3());
-                            break;
-                        }
-                    }
-                }
+                int conn0Id=Integer.parseInt(curve.getAttributes().getNamedItem("conn0").getNodeValue());
+                int conn3Id=Integer.parseInt(curve.getAttributes().getNamedItem("conn3").getNodeValue());
                 
-                String p=curve.getAttributes().getNamedItem("p1").getNodeValue();
-                String[] s1=p.split(",");
-                Point p1=new Point(Integer.parseInt(s1[0]),Integer.parseInt(s1[1]));
+                String p;
                 
                 p=curve.getAttributes().getNamedItem("p2").getNodeValue();
                 String[] s2=p.split(",");
@@ -133,65 +236,138 @@ public class XMLStore {
                 String[] s3=p.split(",");
                 Point p3=new Point(Integer.parseInt(s3[0]),Integer.parseInt(s3[1]));
                 
-                p=curve.getAttributes().getNamedItem("p4").getNodeValue();
-                String[] s4=p.split(",");
-                Point p4=new Point(Integer.parseInt(s4[0]),Integer.parseInt(s4[1]));
-                
-                String joined=String.valueOf(curve.getAttributes().getNamedItem("joined").getNodeValue());
+                Connect conn0=null;
+                Connect conn3=null;
+                for (Connect conn : connects) {
+                    if(conn.getID()==conn0Id)
+                        conn0=conn;
+                    if(conn.getID()==conn3Id)
+                        conn3=conn;
+                }
                 int idCurve=Integer.parseInt(curve.getAttributes().getNamedItem("idCurve").getNodeValue());
-                if(joined.equals("true"))
+                if(conn0!=null && conn3!= null)
                 {
-                    Connect actConn=Prometheus.getActConn();
-                    NodeList starts=((Element)curve).getElementsByTagName("startCurve");
-                    String s=starts.item(0).getAttributes().getNamedItem("idStartCurve").getNodeValue();
-                    int endId=Integer.parseInt(s);
-                    for (MyCurve mcc : mycurves) {
-                        
-                        if(mcc.getId()==endId){
-                            mc=new MyCurve(actConn,mcc.getConnect0());
-                            initMC(mc, p2, p3, p4, idCurve, i);
-                            mc.setJoined();
-                            break;
-                        }
-                        
-                    }
-                    
+                    mc=new MyCurve(conn0,conn3);
+                    initMC(mc, p2, p3, idCurve);
                 }
-                else
-                {
-                    mc=Prometheus.newCurve(p1);
-                    initMC(mc, p2, p3, p4, idCurve, i);
-                }
-                
-                
             }
-            /*for (int i = 0; i < curves.getLength(); i++) {
-                Node curve=curves.item(i); 
-                NodeList ends=((Element)curve).getElementsByTagName("endCurve");
-                for (int j = 0; j < ends.getLength(); j++) {
-                    String p=ends.item(j).getAttributes().getNamedItem("idEndCurve").getNodeValue();
-                    mycurves.get(i).getConnect0().addEndCurve(mycurves.get(Integer.parseInt(p)));
-                }
-                NodeList starts=((Element)curve).getElementsByTagName("startCurve");
-                for (int j = 0; j < starts.getLength(); j++) {
-                    String p=ends.item(j).getAttributes().getNamedItem("idStartCurve").getNodeValue();
-                    mycurves.get(i).getConnect3().addStartCurve(mycurves.get(j));
-                }
-            }*/
     }
-    private static void initMC(MyCurve mc, Point p2, Point p3, Point p4, int id, int i)
+    
+    private static void initMC(MyCurve mc, Point p2, Point p3, int id)
     {
         mc.setId(id);
         mc.getControl1().moveControl(p2.getX(), p2.getY());
         mc.getControl1().moveControls(p2);
         mc.getControl2().moveControl(p3.getX(), p3.getY());
         mc.getControl2().moveControls(p3);
-        mc.moveP3(p4.getX(), p4.getY());
-        mc.getConnect3().getCircle().setCenterX(i);
-        mc.getConnect3().move(p4);
         mycurves.add(mc);
     }
-    public void writer(List<MyCurve> curves, List<Usek> useky)
+    
+    private static void writeCurves(Element root, Document doc, List<MyCurve> curves)
+    {
+        for (MyCurve c : curves) {
+            Element curve=doc.createElement("curve");
+
+            Attr idCurve=doc.createAttribute("idCurve");
+            idCurve.setValue(String.valueOf(c.getId()));
+            curve.setAttributeNode(idCurve);
+
+            Attr conn0=doc.createAttribute("conn0");
+            conn0.setValue(String.valueOf(c.getConnect0().getID()));
+            curve.setAttributeNode(conn0);
+            
+            Attr conn3=doc.createAttribute("conn3");
+            conn3.setValue(String.valueOf(c.getConnect3().getID()));
+            curve.setAttributeNode(conn3);
+
+            Attr p1=doc.createAttribute("p1");
+            p1.setValue(String.valueOf((int)c.getCurve().getStartX()+","+(int)c.getCurve().getStartY()));
+            curve.setAttributeNode(p1);
+
+            Attr p2=doc.createAttribute("p2");
+            p2.setValue(String.valueOf((int)c.getCurve().getControlX1()+","+(int)c.getCurve().getControlY1()));
+            curve.setAttributeNode(p2);
+
+            Attr p3=doc.createAttribute("p3");
+            p3.setValue(String.valueOf((int)c.getCurve().getControlX2()+","+(int)c.getCurve().getControlY2()));
+            curve.setAttributeNode(p3);
+
+            Attr p4=doc.createAttribute("p4");
+            p4.setValue(String.valueOf((int)c.getCurve().getEndX()+","+(int)c.getCurve().getEndY()));
+            curve.setAttributeNode(p4);
+            root.appendChild(curve);
+        }
+    }
+    private static void writeUseky(Element root, Document doc, List<Usek> useky)
+    {
+        for (Usek u : useky) {
+            Element usek=doc.createElement("usek");
+
+            Attr idUsek=doc.createAttribute("idUsek");
+            idUsek.setValue(String.valueOf(u.getId()));
+            usek.setAttributeNode(idUsek);
+
+            if(u.getP1()!=null){
+                Attr p1=doc.createAttribute("p1");
+                p1.setValue(String.valueOf((int)u.getP1().getX()+","+(int)u.getP1().getY()));
+                usek.setAttributeNode(p1);
+
+                Attr p2=doc.createAttribute("p2");
+                p2.setValue(String.valueOf((int)u.getP12().getX()+","+(int)u.getP12().getY()));
+                usek.setAttributeNode(p2);
+
+                Attr p3=doc.createAttribute("p3");
+                p3.setValue(String.valueOf((int)u.getP21().getX()+","+(int)u.getP21().getY()));
+                usek.setAttributeNode(p3);
+
+                Attr p4=doc.createAttribute("p4");
+                p4.setValue(String.valueOf((int)u.getP2().getX()+","+(int)u.getP2().getY()));
+                usek.setAttributeNode(p4);
+
+
+            }
+            for (Usek uu : u.getDalsiUseky()) {
+                Element dalsiUsek=doc.createElement("dalsiUsek");
+
+                Attr idDalsiUsek=doc.createAttribute("idDalsiUsek");
+                idDalsiUsek.setValue(String.valueOf(uu.getId()));
+                dalsiUsek.setAttributeNode(idDalsiUsek);
+                usek.appendChild(dalsiUsek);
+            }
+            for (Usek uu : u.getPredchoziUseky()) {
+                Element predchUsek=doc.createElement("predchUsek");
+
+                Attr idPredchUsek=doc.createAttribute("idPredchUsek");
+                idPredchUsek.setValue(String.valueOf(uu.getId()));
+                predchUsek.setAttributeNode(idPredchUsek);
+                usek.appendChild(predchUsek);
+            }
+            for (Usek cp : u.getCheckPoints()) {
+                Element checkPoint=doc.createElement("checkPoint");
+
+                Attr idcp=doc.createAttribute("idCheckPoint");
+                idcp.setValue(String.valueOf(cp.getId()));
+                checkPoint.setAttributeNode(idcp);
+                usek.appendChild(checkPoint);
+            }
+            for (Semafor s : u.getSemafory()) {
+                Element semafor=doc.createElement("semafor");
+
+                Attr color=doc.createAttribute("color");
+                color.setValue(s.getColor());
+                semafor.setAttributeNode(color);
+                Attr poz=doc.createAttribute("poz");
+                poz.setValue(String.valueOf((int)s.getPoz().getX()+","+(int)s.getPoz().getY()));
+                semafor.setAttributeNode(poz);
+                Attr time=doc.createAttribute("time");
+                time.setValue(String.valueOf(s.getTime()));
+                semafor.setAttributeNode(time);
+                usek.appendChild(semafor);
+            }
+            root.appendChild(usek);
+        }
+    }
+    public static void writer(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, File file, String bgSource, ImageView iv)
     {
         DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();
         DocumentBuilder db;
@@ -201,105 +377,53 @@ public class XMLStore {
 
             Element root=doc.createElement("root");
             doc.appendChild(root);
-
-            for (MyCurve c : curves) {
-                Element curve=doc.createElement("curve");
+            writeConnects(root, doc, connects);
+            writeCurves(root, doc, curves);
+            writeUseky(root, doc, useky);
             
-                Attr idCurve=doc.createAttribute("idCurve");
-                idCurve.setValue(String.valueOf(c.getId()));
-                curve.setAttributeNode(idCurve);
-                
-                Attr joined=doc.createAttribute("joined");
-                joined.setValue(String.valueOf(c.getJoined()));
-                curve.setAttributeNode(joined);
-                
-                Attr p1=doc.createAttribute("p1");
-                p1.setValue(String.valueOf((int)c.getCurve().getStartX()+","+(int)c.getCurve().getStartY()));
-                curve.setAttributeNode(p1);
-                
-                Attr p2=doc.createAttribute("p2");
-                p2.setValue(String.valueOf((int)c.getCurve().getControlX1()+","+(int)c.getCurve().getControlY1()));
-                curve.setAttributeNode(p2);
-                
-                Attr p3=doc.createAttribute("p3");
-                p3.setValue(String.valueOf((int)c.getCurve().getControlX2()+","+(int)c.getCurve().getControlY2()));
-                curve.setAttributeNode(p3);
-                
-                Attr p4=doc.createAttribute("p4");
-                p4.setValue(String.valueOf((int)c.getCurve().getEndX()+","+(int)c.getCurve().getEndY()));
-                curve.setAttributeNode(p4);
-                
-                for (MyCurve ec : c.getConnect0().getEndCurves()) {
-                    Element endCurve=doc.createElement("endCurve");
+            Element background=doc.createElement("background");
+            Attr isnull=doc.createAttribute("isNull");
+            if(bgSource!=null)
+            {
+                isnull.setValue("false");
+                Attr bgs=doc.createAttribute("bgSource");
+                Attr width=doc.createAttribute("width");
+                Attr height=doc.createAttribute("height");
+                Attr pos=doc.createAttribute("position");       
+                bgs.setValue(bgSource);
+                if(iv!=null)
+                {
                     
-                    Attr idendCurve=doc.createAttribute("idEndCurve");
-                    idendCurve.setValue(String.valueOf(ec.getId()));
-                    endCurve.setAttributeNode(idendCurve);
-                    curve.appendChild(endCurve);
-                }
-                
-                for (MyCurve sc : c.getConnect3().getStartCurves()) {
-                    Element startCurve=doc.createElement("startCurve");
+                    width.setValue(String.valueOf((int)iv.getFitWidth()));
+                    height.setValue(String.valueOf((int)iv.getFitHeight()));
+                    pos.setValue(String.valueOf((int)iv.getLayoutX()+","+(int)iv.getLayoutY()));
                     
-                    Attr idStartCurve=doc.createAttribute("idStartCurve");
-                    idStartCurve.setValue(String.valueOf(sc.getId()));
-                    startCurve.setAttributeNode(idStartCurve);
-                    curve.appendChild(startCurve);
                 }
-                root.appendChild(curve);
-                
+                else
+                {
+                    width.setValue("null");
+                    height.setValue("null");
+                    pos.setValue(String.valueOf("0,0"));
+                }
+                background.setAttributeNode(bgs);
+                background.setAttributeNode(width);
+                background.setAttributeNode(height);
+                background.setAttributeNode(pos);
             }
-         /*for (Usek u : useky) {
-                Element usek=doc.createElement("usek");
+            else
+            {
+                isnull.setValue("true");
+            }
+            background.setAttributeNode(isnull); 
+            root.appendChild(background);
             
-                Attr idUsek=doc.createAttribute("idUsek");
-                idUsek.setValue(String.valueOf(u.getId()));
-                usek.setAttributeNode(idUsek);
-                
-                if(u.getP1()!=null){
-                    Attr p1=doc.createAttribute("p1");
-                    p1.setValue(String.valueOf(u.getP1().getX()+","+u.getP1().getY()));
-                    usek.setAttributeNode(p1);
-
-                    Attr p2=doc.createAttribute("p2");
-                    p2.setValue(String.valueOf(u.getP12().getX()+","+u.getP12().getY()));
-                    usek.setAttributeNode(p2);
-
-                    Attr p3=doc.createAttribute("p3");
-                    p3.setValue(String.valueOf(u.getP21().getX()+","+u.getP21().getY()));
-                    usek.setAttributeNode(p3);
-
-                    Attr p4=doc.createAttribute("p4");
-                    p4.setValue(String.valueOf(u.getP2().getX()+","+u.getP2().getY()));
-                    usek.setAttributeNode(p4);
-
-                    for (Usek uu : u.getDalsiUseky()) {
-                        Element dalsiUsek=doc.createElement("dalsiUsek");
-
-                        Attr idDalsiUsek=doc.createAttribute("idDalsiUsek");
-                        idDalsiUsek.setValue(String.valueOf(uu.getId()));
-                        dalsiUsek.setAttributeNode(idDalsiUsek);
-                        usek.appendChild(dalsiUsek);
-                    }
-                }
-                for (Usek uu : u.getPredchoziUseky()) {
-                    Element predchUsek=doc.createElement("predchUsek");
-                    
-                    Attr idPredchUsek=doc.createAttribute("idPredchUsek");
-                    idPredchUsek.setValue(String.valueOf(uu.getId()));
-                    predchUsek.setAttributeNode(idPredchUsek);
-                    usek.appendChild(predchUsek);
-                }
-                root.appendChild(usek);
-            }     */
-        
-        TransformerFactory tfc=TransformerFactory.newInstance();
-        Transformer tf=tfc.newTransformer();
-        tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        tf.setOutputProperty(OutputKeys.INDENT, "yes");
-        DOMSource source=new DOMSource(doc);
-        StreamResult result=new StreamResult(new File("D:\\xml2.xml"));
-        tf.transform(source, result);
+            TransformerFactory tfc=TransformerFactory.newInstance();
+            Transformer tf=tfc.newTransformer();
+            tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            tf.setOutputProperty(OutputKeys.INDENT, "yes");
+            DOMSource source=new DOMSource(doc);
+            StreamResult result=new StreamResult(file);
+            tf.transform(source, result);
         } catch (DOMException dome)
         {
             throw new Error(dome);

@@ -24,9 +24,6 @@ public class Rozdeleni {
     private Point p12, p21;
     private final int SEG_LENGTH=30;
     public Rozdeleni(List<Connect> connects) {
-        Prometheus.removeCircles();
-        Prometheus.setLastUsekId(0);
-        Prometheus.cleanUseky();
         startUseky=new ArrayList<Usek>();
         for (Connect con : connects) {
             deDone(con);
@@ -102,16 +99,16 @@ public class Rozdeleni {
                     else
                     {  
                         for (Usek usek : mc.getConnect3().getStartCurves().get(0).getPrvni().getDalsiUseky()) {
-                            Usek u3;//=new Usek();
-                            /*Point p1=mc.getPosledni().getP2();
+                            Usek u3=new Usek();
+                            Point p1=mc.getPosledni().getP2();
                             Point p2=usek.getP1();
-                            if(MyMath.length(p1.getX(),p1.getY(),p2.getX(),p2.getY())>20)
+                            if(MyMath.length(p1.getX(),p1.getY(),p2.getX(),p2.getY())>15)
                             {
                                 u3.setP1(mc.getPosledni().getP2());
                                 u3.setP2(usek.getP1());
                                 mc.getPosledni().setDalsiUseky(u3);
                             }
-                            else*/
+                            else
                                 u3=mc.getPosledni();
                             
                             u3.setDalsiUseky(usek);

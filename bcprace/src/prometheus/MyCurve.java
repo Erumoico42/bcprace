@@ -28,7 +28,6 @@ public final class MyCurve {
     private boolean changedCont=false;
     private boolean done=false;
     private int id;
-    private boolean joined=false;
     public MyCurve(Connect conn0, Connect conn3) {   
         id=Prometheus.getLastCurveId();
         Prometheus.setLasCurveId(id+1);
@@ -54,14 +53,6 @@ public final class MyCurve {
         rotateControl();
         moveControls();
         Prometheus.rozdel();
-    }
-    public void setJoined()
-    {
-        joined=true;
-    }
-    public boolean getJoined()
-    {
-        return joined;
     }
     public void setDone(boolean done)
     {

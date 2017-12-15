@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -54,19 +52,20 @@ import javafx.stage.WindowEvent;
 public class Prometheus extends Application {
     private static Group root;
     private static Connect actConnect;
-    private static final List<Connect> startConnects=new ArrayList<Connect>();
+    private static List<Connect> startConnects=new ArrayList<Connect>();
+    private static List<Connect> connects=new ArrayList<Connect>();
     private static Usek actUsek;
     private static Auto actAuto;
     private static final List<Button> addCarBtns=new ArrayList<Button>();
     private static int pozYAdd=1;
     private static Animace a;
-    private static Rozdeleni r;
+    
     private static final List<Circle> checkPoints=new ArrayList<Circle>();
     private Scene scene;
-    private SubScene subScene;
+    private static SubScene subScene;
     private static Group rootSS;
     private static Canvas canvas;
-    private ImageView bgIv;
+    private static ImageView bgIv;
     double startX;
     double startY;
     double distX;
@@ -79,9 +78,15 @@ public class Prometheus extends Application {
     private boolean autoGen=false;
     private int genDeley=1000;
     private boolean delCanged=false;
-    private static int lastUsekId=0, lastCurveId=0;
+    private static int lastUsekId=0, lastCurveId=0, lastConnId=0;
     private static List<Usek> useky=new ArrayList<Usek>();
+    private static List<Usek> startUseky=new ArrayList<Usek>();
     private static List<MyCurve> krivky=new ArrayList<MyCurve>();
+    private static String bgSource=null;
+    private static Semafor selectedSem=null;
+    private static Button spSem;
+    private static SemtamforControl sc=new SemtamforControl();
+    private TextField semColor;
     @Override
     public void start(Stage primaryStage) {
         
@@ -104,6 +109,7 @@ public class Prometheus extends Application {
                 timer.cancel();
                 timertask.cancel();   
             }
+            sc.end();
         });
         primaryStage.widthProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             
@@ -130,6 +136,10 @@ public class Prometheus extends Application {
         useky.clear();
         
     }
+    public static void setBgSource(String source)
+    {
+        bgSource=source;
+    }
     private void autoAddCar()
     {
         if(!autoGen)
@@ -144,9 +154,9 @@ public class Prometheus extends Application {
             autoGen=false;
         }
     }
-    public static void setLastId(int lastUsekId)
+    public static void setLastId(int lastUId)
     {
-        lastUsekId=lastUsekId;
+        lastUsekId=lastUId;
     }
     private void genCar()
     {
@@ -155,7 +165,7 @@ public class Prometheus extends Application {
             public void run() {
                 Platform.runLater(() -> {
                     if(Math.random()<0.8){
-                        Usek rndUsek=r.getStartUseky().get((int)(Math.random()*(r.getStartUseky().size())));
+                        Usek rndUsek=startUseky.get((int)(Math.random()*(startUseky.size())));
                         rndUsek=rndUsek.getDalsiUseky().get((int)(Math.random()*(rndUsek.getDalsiUseky().size())));
                         if(rndUsek.getCar()==null){
                             Auto car=new Auto(rndUsek, a);
@@ -264,24 +274,122 @@ public class Prometheus extends Application {
         save.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                new XMLStore().writer(krivky, useky);
+                new XMLStore().saveFile(krivky, useky, connects, bgSource, bgIv);
             }
         });
         Button load=new Button("Load");
-        load.setLayoutX(850);
+        load.setLayoutX(845);
         load.setLayoutY(20);
         load.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                new XMLStore().reader();
+                new XMLStore().openFile();
             }
         });
-        root.getChildren().addAll(pane,setbg, loadImage, autoGen, delMinus, delPlus, delTF, save, load);
+        Button clean=new Button("Vyčistit");
+        clean.setLayoutX(740);
+        clean.setLayoutY(20);
+        clean.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                celan();
+            }
+        });
+        
+        Button playAll=new Button("Spustit vše");
+        playAll.setLayoutX(20);
+        playAll.setLayoutY(50);
+        playAll.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                for (Semafor semafor : sc.getSemafory()) {
+                    semafor.play();
+                }
+            }
+        });
+        Button semafor=new Button("Nový semafor");
+        semafor.setLayoutX(20);
+        semafor.setLayoutY(80);
+        semafor.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                Semafor s=new Semafor(semColor.getText(), sc);
+                selectSem(s);
+            }
+        });
+        spSem=new Button("Play");
+        spSem.setLayoutX(20);
+        spSem.setLayoutY(140);
+        spSem.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                selectedSem.pausePlay();
+                if(selectedSem.getPaused())
+                    spSem.setText("Play");
+                else
+                    spSem.setText("Pause");
+            }
+        });
+        semColor=new TextField("red");
+        semColor.setLayoutX(20);
+        semColor.setLayoutY(110);
+        semColor.setMaxWidth(70);
+        semColor.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if(event.getCode()==KeyCode.ENTER)
+                {
+                    if(selectedSem!=null)
+                        selectedSem.setColor(semColor.getText());         
+                }
+            }
+        });
+        root.getChildren().addAll(pane,setbg, loadImage, autoGen, delMinus, delPlus, delTF, save, load, clean, semafor, spSem, semColor, playAll);
     }
-    private void setBg(ImageView imgv)
+    public static SemtamforControl getSC()
+    {
+        return sc;
+    }
+    public static void selectSem(Semafor sem)
+    {
+        if(selectedSem!=sem){
+            selectedSem=sem;
+            spSem.setVisible(true);
+            if(sem.getPaused())
+                spSem.setText("Play");
+            else
+                spSem.setText("Pause");
+        }
+        else
+        {
+            selectedSem=null;
+            spSem.setVisible(false);
+        }
+    }
+    private void celan()
+    {
+        for (MyCurve mc : krivky) {
+            rootSS.getChildren().removeAll(
+                    mc.getCurve(),mc.getControl1().getCircle(),mc.getControl2().getCircle(),
+                    mc.getConnect0().getCircle(), mc.getConnect3().getCircle());
+        }
+        for (Usek u : useky) {
+            rootSS.getChildren().remove(u.getCir());
+        }
+        lastUsekId=0;
+        lastCurveId=0;
+        krivky.clear();
+        useky.clear();
+        root.getChildren().removeAll(addCarBtns);
+        addCarBtns.clear();
+        pozYAdd=1;
+        actConnect=null;
+        startConnects.clear();
+    }
+    public static void setBg(ImageView imgv)
     {
         Image newImg = imgv.snapshot(null, null);
-        Rectangle2D croppedPortion = new Rectangle2D(-(int)bgIv.getLayoutX(), -(int)bgIv.getLayoutY(), (int)subScene.getWidth(), (int)subScene.getHeight());
+        Rectangle2D croppedPortion = new Rectangle2D(-(int)imgv.getLayoutX(), -(int)imgv.getLayoutY(), (int)subScene.getWidth(), (int)subScene.getHeight());
 
         ImageView newIv = new ImageView(newImg);
         newIv.setViewport(croppedPortion);
@@ -291,13 +399,18 @@ public class Prometheus extends Application {
         WritableImage croppedImage = newIv.snapshot(null, null);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.drawImage(croppedImage, 0, 0, canvas.getWidth(), canvas.getHeight()); 
-        rootSS.getChildren().remove(bgIv);
+        rootSS.getChildren().remove(imgv);
+    }
+    public static void loadBg(ImageView img)
+    {
+        bgIv=img;
     }
     private void loadImage(File file)
     {
         if(bgIv!=null)
             rootSS.getChildren().remove(bgIv);
-        Image image = new Image(file.toURI().toString());
+        bgSource=file.toURI().toString();
+        Image image = new Image(bgSource);
         bgIv = new ImageView(image);
         bgIv.setFitHeight(image.getHeight());
         bgIv.setFitWidth(image.getWidth());
@@ -362,6 +475,14 @@ public class Prometheus extends Application {
     {
         lastUsekId=lui;
     }
+    public static int getLastConnId()
+    {
+        return lastConnId;
+    }
+    public static void setLastConnId(int lci)
+    {
+        lastConnId=lci;
+    }
     public static int getLastCurveId()
     {
         return lastCurveId;
@@ -370,41 +491,67 @@ public class Prometheus extends Application {
     {
         lastCurveId=lci;
     }
+    public static void addConnect(Connect con)
+    {
+        connects.add(con);
+    }
+    public static List<Connect> getConnect()
+    {
+        return connects;
+    }
+    public static void cleanConnect()
+    {
+        connects.clear();
+    }
     public static MyCurve newCurve(Point t)
     {
         if(actConnect==null)
         {
             Connect con=new Connect(new Point((int)t.getX()+(int)canvas.getLayoutX(),(int)t.getY()+(int)canvas.getLayoutY()));
             startConnects.add(con);
+            con.setStart(true);
             con.select();
-            final Button addCar=new Button("Přidat auto");
-            addCar.setLayoutX(25);
-            addCar.setLayoutY((pozYAdd+1)*26);
-            addCarBtns.add(addCar);
-            addCar.setOnAction((ActionEvent t1) -> {
-                Usek rndUsek=r.getStartUseky().get(addCarBtns.indexOf(addCar));
-                rndUsek=rndUsek.getDalsiUseky().get((int)(Math.random()*(rndUsek.getDalsiUseky().size())));
-                if(rndUsek.getCar()==null){
-                    final Auto car=new Auto(rndUsek, a);
-                }
-                
-            });
-            pozYAdd++;
-            root.getChildren().add(addCar);
+            //addCarBtn();
         }
         Connect con = new Connect(new Point((int)t.getX()+(int)canvas.getLayoutX(),(int)t.getY()+(int)canvas.getLayoutY()));
         MyCurve mc=new MyCurve(actConnect, con); 
         con.select();
         return mc;
     }
+    public static void addCarBtn()
+    {
+        final Button addCar=new Button("Přidat auto");
+        addCar.setLayoutX(25);
+        addCar.setLayoutY((pozYAdd+1)*26);
+        addCarBtns.add(addCar);
+        addCar.setOnAction((ActionEvent t1) -> {
+            Usek rndUsek=startUseky.get(addCarBtns.indexOf(addCar));
+            rndUsek=rndUsek.getDalsiUseky().get((int)(Math.random()*(rndUsek.getDalsiUseky().size())));
+            if(rndUsek.getCar()==null){
+                final Auto car=new Auto(rndUsek, a);
+            }
+        });
+        pozYAdd++;
+        root.getChildren().add(addCar);
+    }
     public static void rozdel()
     {
         removeCircles();
-        r=new Rozdeleni(startConnects);
+        setLastUsekId(0);
+        cleanUseky();
+        startUseky=new Rozdeleni(startConnects).getStartUseky();
     }
     public static void setConnect(Connect con)
     {
         actConnect=con;
+    }
+    public static void setStartUseky(List<Usek> start)
+    {
+        startUseky=start;
+    }
+    public static void setstartConnects(List<Connect> start)
+    {
+        startConnects=start;
     }
     public static void setActUsek(Usek u)
     {

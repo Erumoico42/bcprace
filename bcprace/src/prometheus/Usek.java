@@ -25,6 +25,7 @@ public class Usek {
     private Auto car;
     private Circle cir;
     private List<Usek> checkPoints=new ArrayList<Usek>();
+    private List<Semafor> semafory=new ArrayList<Semafor>();
     private Usek selectedUsek;
     private final Color DEF_COLOR=Color.GREEN;
     private int id;
@@ -61,15 +62,18 @@ public class Usek {
                         {
                             circleStyle(selectedUsek.getCir(),DEF_COLOR, 4);
                             deSelectCheckPoints(selectedUsek);
+                            deselectSemafory();
                         }
                         Prometheus.setActUsek(getUsek());
                         circleStyle(cir,Color.BLUE, 5);
                         selectCheckPoints(getUsek());
+                        selectSemafory();
                     }
                     else
                     {
                         circleStyle(cir,DEF_COLOR, 4);
                         deSelectCheckPoints(getUsek());
+                        deselectSemafory();
                         Prometheus.setActUsek(null);
                     }
                 }
@@ -117,6 +121,26 @@ public class Usek {
         for (Usek cp : u.getCheckPoints()) {
             circleStyle(cp.getCir(),DEF_COLOR, 4);
         }
+    }
+    public void selectSemafory()
+    {
+        for (Semafor sem : semafory) {
+            sem.select();
+        }
+    }
+    public void deselectSemafory()
+    {
+        for (Semafor sem : semafory) {
+            sem.deSelect();
+        }
+    }
+    public void addSemafor(Semafor s)
+    {
+        semafory.add(s);
+    }
+    public List<Semafor> getSemafory()
+    {
+        return semafory;
     }
     public void addCheckPoint(Usek u)
     {

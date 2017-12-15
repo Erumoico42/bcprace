@@ -142,10 +142,43 @@ public class Auto {
         distNextStreet=666;
         carFoundStreet=findStreet(u, 0);
         if(!carFoundStreet)
+        {
             actZrychleni=MAX_ZRYCHLENI;  
+            carFoundStreet=findSem(u,1);
+            if(!carFoundStreet)
+                distNextStreet=0;
+        }
         if(distNextStreet >1)
-            findCPCross(u, 1);
+           findCPCross(u, 1);
         
+    }
+    private boolean findSem(Usek us, double d)
+    {
+        boolean semFound=false;
+        for (Usek uNext : us.getDalsiUseky()) {
+            if(d<5 && !semFound)
+            {
+                double dist=d;
+                for (Semafor sem : uNext.getSemafory()) {
+                    if(sem.getColor().equals("red") || sem.getColor().equals("orange2red"))
+                    {
+                        semFound=true;
+                        dist-=t;
+                        actZrychleni=-calcSpeed(actRychlost, dist+2);
+                        if(dist<0.1)
+                        {
+                            actRychlost=0;
+                            actZrychleni=0;
+                        }
+                    }
+                }
+                if(!semFound)
+                {
+                    findSem(uNext, d+1);
+                }
+            }
+        }
+        return semFound;
     }
     private boolean findStreet(Usek us, int d)
     {
@@ -153,14 +186,15 @@ public class Auto {
         for (Usek uNext : us.getDalsiUseky()) {
             if(d<5 && !carFound)
             {
+                double dist=d;
                 if(uNext.getCar()!=null)
                 {
-                    double dist=d;
+                    
                     double speedNextCar=uNext.getCar().getSpeed();
                     double tNextCar=uNext.getCar().getT();
                     dist=dist+tNextCar-t;
-                    distNextStreet=dist;
                     double dSpeed=actRychlost-speedNextCar;
+                    distNextStreet=dist; 
                     if(dSpeed>0 || actRychlost<MAX_RYCHLOST)
                     {
                         actZrychleni=-calcSpeed(dSpeed, dist+2);
@@ -214,8 +248,6 @@ public class Auto {
                 if(nextCar!=null)
                 {
                     
-                    double nextT=nextCar.getT();
-                    double nextD=nextDist-nextT;
                     double dActCar=actDist-t;
                     carFound=true;
                     if(dActCar>1 && actRychlost<MAX_RYCHLOST/1.3)
@@ -230,7 +262,6 @@ public class Auto {
                 }
                 else if(nextDist<7)
                 {
-                    
                     carFound=findCarCross(uNext, nextDist+1, actDist);
                 }
             }

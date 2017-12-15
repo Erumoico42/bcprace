@@ -8,7 +8,6 @@ package prometheus;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -24,12 +23,35 @@ public class Connect {
     private List<MyCurve> endCurves=new ArrayList<>();
     private List<MyCurve> startCurves=new ArrayList<>();
     private Circle c;
-
+    private int id;
+    private boolean start=false;
     public Connect(Point p) {
         this.p = p;
         setCircle();
+        Prometheus.addConnect(this);
+        setID();
     }
-
+    public void setID()
+    {
+        this.id=Prometheus.getLastConnId();
+        Prometheus.setLastConnId(id+1);
+    }
+    public void setID(int id)
+    {
+        this.id=id;
+    }
+    public int getID()
+    {
+        return id;
+    }
+    public void setStart(boolean start)
+    {
+        this.start=start;
+    }
+    public boolean getStart()
+    {
+        return start;
+    }
     public Point getPoint() {
         return p;
     }
@@ -77,7 +99,6 @@ public class Connect {
                     MyCurve mc=new MyCurve(actConn,getThis());
                     mc.newRotateControl();
                     mc.moveControls();
-                    mc.setJoined();
                     Prometheus.rozdel();
                 }
                     
