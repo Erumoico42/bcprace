@@ -101,7 +101,7 @@ public class XMLStore {
                 iv.setFitWidth(Integer.parseInt(width));
                 Prometheus.setBg(iv);
                 Prometheus.loadBg(iv);
-                Prometheus.setBgSource(source);
+                Prometheus.setBgSource(source);            
             }
             
         } catch (ParserConfigurationException ex) {
@@ -306,26 +306,23 @@ public class XMLStore {
             Attr idUsek=doc.createAttribute("idUsek");
             idUsek.setValue(String.valueOf(u.getId()));
             usek.setAttributeNode(idUsek);
+            
+            Attr p1=doc.createAttribute("p1");
+            p1.setValue(String.valueOf((int)u.getP1().getX()+","+(int)u.getP1().getY()));
+            usek.setAttributeNode(p1);
 
-            if(u.getP1()!=null){
-                Attr p1=doc.createAttribute("p1");
-                p1.setValue(String.valueOf((int)u.getP1().getX()+","+(int)u.getP1().getY()));
-                usek.setAttributeNode(p1);
+            Attr p2=doc.createAttribute("p2");
+            p2.setValue(String.valueOf((int)u.getP12().getX()+","+(int)u.getP12().getY()));
+            usek.setAttributeNode(p2);
+            
+            Attr p3=doc.createAttribute("p3");
+            p3.setValue(String.valueOf((int)u.getP21().getX()+","+(int)u.getP21().getY()));
+            usek.setAttributeNode(p3);
 
-                Attr p2=doc.createAttribute("p2");
-                p2.setValue(String.valueOf((int)u.getP12().getX()+","+(int)u.getP12().getY()));
-                usek.setAttributeNode(p2);
+            Attr p4=doc.createAttribute("p4");
+            p4.setValue(String.valueOf((int)u.getP2().getX()+","+(int)u.getP2().getY()));
+            usek.setAttributeNode(p4);
 
-                Attr p3=doc.createAttribute("p3");
-                p3.setValue(String.valueOf((int)u.getP21().getX()+","+(int)u.getP21().getY()));
-                usek.setAttributeNode(p3);
-
-                Attr p4=doc.createAttribute("p4");
-                p4.setValue(String.valueOf((int)u.getP2().getX()+","+(int)u.getP2().getY()));
-                usek.setAttributeNode(p4);
-
-
-            }
             for (Usek uu : u.getDalsiUseky()) {
                 Element dalsiUsek=doc.createElement("dalsiUsek");
 
