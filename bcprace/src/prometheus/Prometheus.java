@@ -201,7 +201,7 @@ public class Prometheus extends Application {
         pane.setLayoutX(120);
         pane.setLayoutY(50);
         Button loadImage=new Button("Vložit pozadi");
-        loadImage.setLayoutX(20);
+        loadImage.setLayoutX(10);
         loadImage.setLayoutY(20);
         final FileChooser fileChooser = new FileChooser();
         loadImage.setOnAction((ActionEvent event) -> {
@@ -304,8 +304,8 @@ public class Prometheus extends Application {
             }
         });
         
-        Button playAll=new Button("Spustit vše");
-        playAll.setLayoutX(20);
+        Button playAll=new Button("Spustit semafory");
+        playAll.setLayoutX(10);
         playAll.setLayoutY(50);
         playAll.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -315,8 +315,8 @@ public class Prometheus extends Application {
                 }
             }
         });
-        Button pauseAll=new Button("Pozastavit vše");
-        pauseAll.setLayoutX(20);
+        Button pauseAll=new Button("Zastavit semafory");
+        pauseAll.setLayoutX(10);
         pauseAll.setLayoutY(80);
         pauseAll.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -327,7 +327,7 @@ public class Prometheus extends Application {
             }
         });
         Button semafor=new Button("Nový semafor");
-        semafor.setLayoutX(20);
+        semafor.setLayoutX(10);
         semafor.setLayoutY(110);
         semafor.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -338,7 +338,7 @@ public class Prometheus extends Application {
             }
         });
         spSem=new Button("Spustit");
-        spSem.setLayoutX(20);
+        spSem.setLayoutX(10);
         spSem.setLayoutY(260);
         spSem.setVisible(false);
         spSem.setOnAction(new EventHandler<ActionEvent>() {
@@ -362,7 +362,7 @@ public class Prometheus extends Application {
                 setColors();
             }
         });
-        cbSemColor.setLayoutX(20);
+        cbSemColor.setLayoutX(10);
         cbSemColor.setLayoutY(140);
         cbSemColor.setMaxWidth(90);
         cbSemColor.setVisible(false);
@@ -413,15 +413,15 @@ public class Prometheus extends Application {
             }
         });
         labSemGreen=new Label("Zelena");
-        labSemGreen.setLayoutX(20);
+        labSemGreen.setLayoutX(10);
         labSemGreen.setLayoutY(200);
         labSemGreen.setVisible(false);
         labSemOrange=new Label("Oranzova");
-        labSemOrange.setLayoutX(20);
+        labSemOrange.setLayoutX(10);
         labSemOrange.setLayoutY(230);
         labSemOrange.setVisible(false);
         labSemRed=new Label("Cervena");
-        labSemRed.setLayoutX(20);
+        labSemRed.setLayoutX(10);
         labSemRed.setLayoutY(170);
         labSemRed.setVisible(false);
         Button lock=new Button("Uzamknout");
@@ -470,9 +470,9 @@ public class Prometheus extends Application {
             labSemGreen.setVisible(true);
             labSemOrange.setVisible(true);
             if(sem.getPaused())
-                spSem.setText("Play");
+                spSem.setText("Spustit");
             else
-                spSem.setText("Pause");
+                spSem.setText("Zastavit");
             cbSemColor.setValue(sem.getColor());
             semOrange.setText(String.valueOf(sem.getOrange()));
             semGreen.setText(String.valueOf(sem.getGreen()));
@@ -653,28 +653,11 @@ public class Prometheus extends Application {
             startConnects.add(con);
             con.setStart(true);
             con.select();
-            //addCarBtn();
         }
         Connect con = new Connect(new Point((int)t.getX()+(int)canvas.getLayoutX(),(int)t.getY()+(int)canvas.getLayoutY()));
         MyCurve mc=new MyCurve(actConnect, con); 
         con.select();
         return mc;
-    }
-    public static void addCarBtn()
-    {
-        final Button addCar=new Button("Přidat auto");
-        addCar.setLayoutX(25);
-        addCar.setLayoutY((pozYAdd+1)*26);
-        addCarBtns.add(addCar);
-        addCar.setOnAction((ActionEvent t1) -> {
-            Usek rndUsek=startUseky.get(addCarBtns.indexOf(addCar));
-            rndUsek=rndUsek.getDalsiUseky().get((int)(Math.random()*(rndUsek.getDalsiUseky().size())));
-            if(rndUsek.getCar()==null){
-                final Auto car=new Auto(rndUsek, a);
-            }
-        });
-        pozYAdd++;
-        root.getChildren().add(addCar);
     }
     public static void rozdel()
     {
