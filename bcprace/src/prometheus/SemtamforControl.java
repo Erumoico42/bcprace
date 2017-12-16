@@ -41,6 +41,10 @@ public class SemtamforControl {
         timertask.cancel();
         timer.cancel();
     }
+    public void removeAll()
+    {
+        semafory.clear();
+    }
     public List<Semafor> getSemafory()
     {
         return semafory;
