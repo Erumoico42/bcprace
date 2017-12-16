@@ -30,7 +30,7 @@ public class Auto {
     private static final double MAX_ZRYCHLENI=0.002;
     private TexturaAuto ta;
     private final double IMG_SIZE=20;
-    private boolean carFoundStreet;
+    private boolean carFoundStreet, semFound;
     private double distNextStreet=0;
     public Auto(Usek u, Animace a) {
         this.a=a;
@@ -149,8 +149,9 @@ public class Auto {
         if(distNextStreet >1)
         {
             carFoundStreet=findSem(u,2);
-            if(!carFoundStreet)
+            if(!semFound)
                 findCPCross(u, 1);
+            
         }
            
         
@@ -166,14 +167,19 @@ public class Auto {
                     if(sem.getColor().equals("red") || sem.getColor().equals("orange2red"))
                     {
                         semFound=true;
+                        this.semFound=false;
                         dist-=t;
                         actZrychleni=-calcSpeed(actRychlost, dist+2);
-                        System.out.println(dist);
                         if(dist<1.1)
                         {
                             actRychlost=0;
                             actZrychleni=0;
                         }
+                    }
+                    else if(!semFound)
+                    {
+                        this.semFound=true;
+                        actZrychleni=MAX_ZRYCHLENI;  
                     }
                 }
                 if(!semFound)
