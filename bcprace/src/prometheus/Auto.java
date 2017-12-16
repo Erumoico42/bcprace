@@ -144,12 +144,15 @@ public class Auto {
         if(!carFoundStreet)
         {
             actZrychleni=MAX_ZRYCHLENI;  
-            carFoundStreet=findSem(u,1);
-            if(!carFoundStreet)
-                distNextStreet=0;
         }
+        
         if(distNextStreet >1)
-           findCPCross(u, 1);
+        {
+            carFoundStreet=findSem(u,2);
+            if(!carFoundStreet)
+                findCPCross(u, 1);
+        }
+           
         
     }
     private boolean findSem(Usek us, double d)
@@ -165,7 +168,8 @@ public class Auto {
                         semFound=true;
                         dist-=t;
                         actZrychleni=-calcSpeed(actRychlost, dist+2);
-                        if(dist<0.1)
+                        System.out.println(dist);
+                        if(dist<1.1)
                         {
                             actRychlost=0;
                             actZrychleni=0;
