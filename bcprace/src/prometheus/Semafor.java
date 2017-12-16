@@ -10,6 +10,8 @@ import java.util.List;
 import javafx.event.EventHandler;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -19,16 +21,16 @@ import javafx.scene.layout.HBox;
  * @author Honza
  */
 public class Semafor {
-    private final int DEF_GREEN=7;
-    private final int DEF_RED=7;
-    private final int DEF_ORANGE=1;
+    private int defGreen=7;
+    private int derRed=7;
+    private int defOrange=1;
     private ImageView iv;
     private Image red=new Image("/resources/semafor/red.png");
     private Image green=new Image("/resources/semafor/green.png");
     private Image orange2green=new Image("/resources/semafor/orange2green.png");
     private Image orange2red=new Image("/resources/semafor/orange2red.png");
     private int time=0;
-    private int max=DEF_GREEN;
+    private int max=defGreen;
     private String color;
     private boolean paused=true;
     private double startX, startY, distX, distY;
@@ -36,6 +38,9 @@ public class Semafor {
     private final String STYLE_SELECT="-fx-border-color: red;"
             + "-fx-border-width: 2;"
             + "-fx-border-style: solid;";  
+    private final String STYLE_SELECT_2="-fx-border-color: blue;"
+            + "-fx-border-width: 2;"
+            + "-fx-border-style: solid;"; 
     private final String STYLE_DESELECT="-fx-border-color: red;"
             + "-fx-border-width: 0;"
             + "-fx-border-style: solid;"; 
@@ -64,13 +69,27 @@ public class Semafor {
             distX = startX - hbox.getLayoutX();
             distY = startY - hbox.getLayoutY();
         });
-        
         hbox.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if(event.getButton()==MouseButton.PRIMARY)
                 {
-                    Prometheus.selectSem(getThis());
+                    Semafor actSem=Prometheus.getActSem();
+                    if(actSem==getThis())
+                    {
+                        deselect();
+                        Prometheus.selectSem(null);
+                    }else if(actSem!=null)
+                    {
+                        actSem.deselect();
+                        Prometheus.selectSem(getThis());
+                        select2();
+                        
+                    }
+                    else{
+                        Prometheus.selectSem(getThis());
+                        select2();
+                    }
                 }
                 else if(event.getButton()==MouseButton.SECONDARY)
                 {
@@ -81,7 +100,7 @@ public class Semafor {
                         if(semafory.contains(getThis()))
                         {
                             semafory.remove(getThis());
-                            deSelect();
+                            deselect();
                         }
                         else
                         {
@@ -94,18 +113,29 @@ public class Semafor {
         });
         Prometheus.addNode(hbox);
     }
-    public void select()
+    public HBox getImg()
     {
-            
+        return hbox;
+    }
+    public void select()
+    {    
         hbox.setStyle(STYLE_SELECT);
     }
-    public void deSelect()
-    {
+    public void deselect()
+    {    
         hbox.setStyle(STYLE_DESELECT);
+    }
+    public void select2()
+    {    
+        hbox.setStyle(STYLE_SELECT_2);
     }
     public void play()
     {
         paused=false;
+    }
+    public void pause()
+    {
+        paused=true;
     }
     public void setPoz(double x, double y)
     {
@@ -174,6 +204,30 @@ public class Semafor {
         }
         
     }
+    public void setGreen(int green)
+    {
+        defGreen=green;
+    }
+    public void setRed(int red)
+    {
+        derRed=red;
+    }
+    public void setOrange(int orange)
+    {
+        defOrange=orange;
+    }
+    public int getGreen()
+    {
+        return defGreen;
+    }
+    public int getRed()
+    {
+        return derRed;
+    }
+    public int getOrange()
+    {
+        return defOrange;
+    }
     public String getColor()
     {
         return color;
@@ -183,23 +237,23 @@ public class Semafor {
         if(color.equals("green"))
         {
             color="orange2red";
-            max=DEF_ORANGE;
+            max=defOrange;
             iv.setImage(orange2red);
                 
         }else if(color.equals("orange2red"))
         {
             color="red";
-            max=DEF_RED;
+            max=derRed;
             iv.setImage(red);
         }else if(color.equals("orange2green"))
         {
             color="green";
-            max=DEF_GREEN;
+            max=defGreen;
             iv.setImage(green);
         }else if(color.equals("red"))
         {
             color="orange2green";
-            max=DEF_ORANGE;
+            max=defOrange;
             iv.setImage(orange2green);
         }
 
