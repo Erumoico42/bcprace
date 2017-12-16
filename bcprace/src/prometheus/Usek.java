@@ -131,7 +131,7 @@ public class Usek {
     public void deselectSemafory()
     {
         for (Semafor sem : semafory) {
-            sem.deSelect();
+            sem.deselect();
         }
     }
     public void addSemafor(Semafor s)
