@@ -8,8 +8,6 @@ package prometheus;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.CubicCurve;
 
 /**
@@ -53,12 +51,10 @@ public class Rozdeleni {
         {
             u2=new Usek();
             u2.setP1(p);
-            
-            
             p=new Point(x,y);
-            u2.setP2(p);  
+            u2.setP2(p);
             double angle;
-            if(u.getP21()==null)
+            if(u.getP21()==null || u.getP12()==null)
             {
                 angle=MyMath.angle(u2.getP2(), u2.getP1());
                 p12=MyMath.rotate(u2.getP1(), 10, angle);
@@ -79,6 +75,7 @@ public class Rozdeleni {
             u2.setPredchoziUseky(u);
             u=u2;
         }
+        
     }
     private void split(Usek start, Connect c)
     {    
@@ -91,7 +88,7 @@ public class Rozdeleni {
                 mc.setPrvni(start);
                 callBez(mc.getCurve());
                 mc.setPosledni(u);
-
+                
                 if(!mc.getConnect3().getStartCurves().isEmpty())
                 {
                     if(!mc.getConnect3().getStartCurves().get(0).getDone())
@@ -99,14 +96,21 @@ public class Rozdeleni {
                     else
                     {  
                         for (Usek usek : mc.getConnect3().getStartCurves().get(0).getPrvni().getDalsiUseky()) {
-                            Usek u3=new Usek();
+                            Usek u3;
                             Point p1=mc.getPosledni().getP2();
                             Point p2=usek.getP1();
                             if(MyMath.length(p1.getX(),p1.getY(),p2.getX(),p2.getY())>15)
                             {
+                                u3=new Usek();
                                 u3.setP1(mc.getPosledni().getP2());
                                 u3.setP2(usek.getP1());
+                                double angle=MyMath.angle(u3.getP2(), u3.getP1());
+                                Point p12=MyMath.rotate(u3.getP1(), 10, angle);
+                                Point p21=MyMath.rotate(u3.getP1(), 20, angle);
+                                u3.setP12(p12);
+                                u3.setP21(p21);
                                 mc.getPosledni().setDalsiUseky(u3);
+                                u3.setPredchoziUseky(mc.getPosledni());
                             }
                             else
                                 u3=mc.getPosledni();
@@ -169,17 +173,17 @@ public class Rozdeleni {
         int y1=yA;
         int x2=xB;
         int y2=yB;
-        int dx = Math.abs(x2-x1);               //výpočet rozdílu souřadnic na horizontální ose
-        int dy = Math.abs(y2-y1);               //výpočet rozdílu souřadnic na vertikální ose
+        int dx = Math.abs(x2-x1);
+        int dy = Math.abs(y2-y1); 
         int dxy=dx-dy;    
-        if(dx!=0 || dy!=0)                      //zajištění, aby úsečka byla delší než 1 pixel
+        if(dx!=0 || dy!=0) 
         {
             int px=-1;
             int py=-1;
             if(x1<x2)px=1;
             if(y1<y2)py=1;
             newPoint(x1, y1);
-            while ((x1 != x2) || (y1 != y2))        //cyklus, který bude probíhat dokud se přímka nevykreslí od prvního bodu ke druhému
+            while ((x1 != x2) || (y1 != y2))
             {            
                 int p = 2 * dxy;
                 if (p > -dy) {
