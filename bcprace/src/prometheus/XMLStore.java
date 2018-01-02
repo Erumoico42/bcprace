@@ -19,11 +19,7 @@ import javafx.stage.FileChooser;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.*;
@@ -38,6 +34,8 @@ public class XMLStore {
     private static List<Usek> startUseky=new ArrayList<Usek>();
     private static List<MyCurve> mycurves=new ArrayList<MyCurve>();
     private static List<Connect> connects=new ArrayList<Connect>();
+    private static List<Connect> startConnects=new ArrayList<Connect>();
+    private static List<Semafor> semafory=new ArrayList<Semafor>();  
     public XMLStore()
     {
         
@@ -53,14 +51,14 @@ public class XMLStore {
         }
         
     }
-    public static void saveFile(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, String bgSource, ImageView iv)
+    public static void saveFile(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, List<Semafor> semafory, String bgSource, ImageView iv)
     {
         FileChooser fch=new FileChooser();
         FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("XML soubory (*.xml)", "*.xml");
         fch.getExtensionFilters().add(filter);
         File file = fch.showSaveDialog(null);
         if (file != null) { 
-            writer(curves, useky, connects, file, bgSource, iv);
+            writer(curves, useky, connects, semafory, file, bgSource, iv);
         }
     }
     private static void reader(File input)
@@ -78,6 +76,7 @@ public class XMLStore {
             
             Prometheus.removeCircles();
             Prometheus.cleanUseky();
+            readSemafory(doc);
             readUseky(doc);
             Prometheus.setStartUseky(startUseky);
             
@@ -129,9 +128,12 @@ public class XMLStore {
             Connect connect=new Connect(pp);
             connect.setID(idConn);
             connect.setStart(start);
+            if(start)
+                startConnects.add(connect);
             
             connects.add(connect);
         }
+        Prometheus.setstartConnects(startConnects);
         Prometheus.setLastConnId(conn.getLength()-1);
     }
     private static void writeConnects(Element root, Document doc, List<Connect> connects)
@@ -156,6 +158,7 @@ public class XMLStore {
     private static void readUseky(Document doc)
     {
         NodeList us=doc.getElementsByTagName("usek");
+        Prometheus.setLastUsekId(0);
         for (int i = 0; i < us.getLength(); i++) {
             Usek u=new Usek();
             
@@ -179,7 +182,6 @@ public class XMLStore {
             u.setCir();
             useky.add(u);
         }
-        SemtamforControl sc=Prometheus.getSC();
         for (int i = 0; i < us.getLength(); i++) {
             Node usek=us.item(i); 
             NodeList predch=((Element)usek).getElementsByTagName("predchUsek");
@@ -200,18 +202,16 @@ public class XMLStore {
                 String cp=checkPoints.item(j).getAttributes().getNamedItem("idCheckPoint").getNodeValue();
                 useky.get(i).addCheckPoint(useky.get(Integer.parseInt(cp)));
             }
-            NodeList semafory=((Element)usek).getElementsByTagName("semafor");
-            for (int j=0; j<semafory.getLength(); j++)
-            {
-                Node semafor=semafory.item(j); 
-                String color=semafor.getAttributes().getNamedItem("color").getNodeValue();
-                String p=semafor.getAttributes().getNamedItem("poz").getNodeValue();
-                int time=Integer.parseInt(semafor.getAttributes().getNamedItem("time").getNodeValue());
-                String[] s2=p.split(",");
-                Semafor s=new Semafor(color, sc);
-                s.setPoz(Integer.parseInt(s2[0]), Integer.parseInt(s2[1]));
-                s.setTime(time);
-                useky.get(i).addSemafor(s);
+            NodeList sems=((Element)usek).getElementsByTagName("semControl");
+            for (int j = 0; j < sems.getLength(); j++) {
+                int idsem=Integer.parseInt(sems.item(j).getAttributes().getNamedItem("idSem").getNodeValue());
+                for (Semafor semafor : semafory) {
+                    if(semafor.getID()==idsem)
+                    {
+                        useky.get(i).addSemafor(semafor);
+                    }
+                }
+                
             }
         }   
     }
@@ -347,24 +347,145 @@ public class XMLStore {
                 checkPoint.setAttributeNode(idcp);
                 usek.appendChild(checkPoint);
             }
-            for (Semafor s : u.getSemafory()) {
-                Element semafor=doc.createElement("semafor");
+            for (Semafor semafor : u.getSemafory()) {
+                Element sem=doc.createElement("semControl");
 
-                Attr color=doc.createAttribute("color");
-                color.setValue(s.getColor());
-                semafor.setAttributeNode(color);
-                Attr poz=doc.createAttribute("poz");
-                poz.setValue(String.valueOf((int)s.getPoz().getX()+","+(int)s.getPoz().getY()));
-                semafor.setAttributeNode(poz);
-                Attr time=doc.createAttribute("time");
-                time.setValue(String.valueOf(s.getTime()));
-                semafor.setAttributeNode(time);
-                usek.appendChild(semafor);
+                Attr idsem=doc.createAttribute("idSem");
+                idsem.setValue(String.valueOf(semafor.getID()));
+                sem.setAttributeNode(idsem);
+                usek.appendChild(sem);
             }
             root.appendChild(usek);
         }
     }
-    public static void writer(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, File file, String bgSource, ImageView iv)
+    private static void readSemafory(Document doc)
+    {
+        SemaforControl sc=Prometheus.getSC();
+        NodeList sem=doc.getElementsByTagName("semafor");
+        for (int i = 0; i < sem.getLength(); i++) {
+            Node sema=sem.item(i);    
+            
+            String ids=sema.getAttributes().getNamedItem("ids").getNodeValue();
+            Semafor semafor=sc.newSem();
+            semafor.setID(Integer.parseInt(ids));
+            String status=sema.getAttributes().getNamedItem("status").getNodeValue();
+            String timeRed=sema.getAttributes().getNamedItem("timeRed").getNodeValue();
+            String timeGreen=sema.getAttributes().getNamedItem("timeGreen").getNodeValue();
+            String autoRed=sema.getAttributes().getNamedItem("autoRed").getNodeValue();
+            String autoGreen=sema.getAttributes().getNamedItem("autoGreen").getNodeValue();
+            String poz=sema.getAttributes().getNamedItem("pozice").getNodeValue();
+            semafor.setStatus(Integer.parseInt(status), true);
+            semafor.setTimeGreen(Integer.parseInt(timeGreen));
+            semafor.setTimeRed(Integer.parseInt(timeRed));
+            semafor.enableChangeGreen(Boolean.parseBoolean(autoGreen));
+            semafor.enableChangeRed(Boolean.parseBoolean(autoRed));
+            String[] pozzz=poz.split(",");
+            Point p=new Point(Integer.parseInt(pozzz[0]),Integer.parseInt(pozzz[1]));
+            semafor.moveIMG(p);
+            semafory.add(semafor);
+            
+        }
+            
+        for (int i = 0; i < sem.getLength(); i++) {
+            Node sema=sem.item(i);  
+            int ids=Integer.parseInt(sema.getAttributes().getNamedItem("ids").getNodeValue());
+            NodeList spGreen=((Element)sema).getElementsByTagName("spGreen");
+            NodeList spRed=((Element)sema).getElementsByTagName("spRed");
+            for (Semafor semafor : semafory) {
+                if(semafor.getID()==ids)
+                {
+                    for (int j = 0; j < spGreen.getLength(); j++) {
+                        int idsp=Integer.parseInt(spGreen.item(j).getAttributes().getNamedItem("idSem").getNodeValue());
+                        int stat=Integer.parseInt(spGreen.item(j).getAttributes().getNamedItem("statSem").getNodeValue());
+                        for (Semafor semafor1 : semafory) {
+                            if(semafor1.getID()==idsp)
+                            {
+                                semafor.addControlGreen(semafor1, stat);
+                            }
+                        }
+                        
+                    }
+                    for (int j = 0; j < spRed.getLength(); j++) {
+                        int idsp=Integer.parseInt(spRed.item(j).getAttributes().getNamedItem("idSem").getNodeValue());
+                        int stat=Integer.parseInt(spRed.item(j).getAttributes().getNamedItem("statSem").getNodeValue());
+                        for (Semafor semafor1 : semafory) {
+                            if(semafor1.getID()==idsp)
+                            {
+                                semafor.addControlRed(semafor1, stat);
+                            }
+                        }
+                        
+                    }
+                }
+            }
+        }
+           
+    }
+    public static void writeSemafory(Element root, Document doc, List<Semafor> semafory)
+    {
+        for (Semafor s : semafory) {
+            Element semafor=doc.createElement("semafor");
+
+            Attr id=doc.createAttribute("ids");
+            id.setValue(String.valueOf(s.getID()));
+            semafor.setAttributeNode(id);
+            
+            Attr status=doc.createAttribute("status");
+            status.setValue(String.valueOf(s.getStatus()));
+            semafor.setAttributeNode(status);
+
+            Attr poz=doc.createAttribute("pozice");
+            poz.setValue(String.valueOf((int)s.getPoz().getX()+","+(int)s.getPoz().getY()));
+            semafor.setAttributeNode(poz);
+
+            Attr timeRed=doc.createAttribute("timeRed");
+            timeRed.setValue(String.valueOf(s.getTimeRed()));
+            semafor.setAttributeNode(timeRed);
+
+            Attr timeGreen=doc.createAttribute("timeGreen");
+            timeGreen.setValue(String.valueOf(s.getTimeGreen()));
+            semafor.setAttributeNode(timeGreen);
+
+            Attr autoRed=doc.createAttribute("autoRed");
+            autoRed.setValue(String.valueOf(s.getEnableRed()));
+            semafor.setAttributeNode(autoRed);
+
+            Attr autoGreen=doc.createAttribute("autoGreen");
+            autoGreen.setValue(String.valueOf(s.getEnableGreen()));
+            semafor.setAttributeNode(autoGreen);
+
+            for (SemPrechod sp : s.getControlGreen()) {
+                Element spGreen=doc.createElement("spGreen");
+
+                
+                Attr idSem=doc.createAttribute("idSem");
+                idSem.setValue(String.valueOf(sp.getSem().getID()));
+                
+                Attr statSem=doc.createAttribute("statSem");
+                statSem.setValue(String.valueOf(sp.getStatus()));
+                
+                spGreen.setAttributeNode(statSem);
+                spGreen.setAttributeNode(idSem);
+                semafor.appendChild(spGreen);
+            }
+            for (SemPrechod sp : s.getControlRed()) {
+                Element spRed=doc.createElement("spRed");
+
+                Attr idSem=doc.createAttribute("idSem");
+                idSem.setValue(String.valueOf(sp.getSem().getID()));
+                
+                Attr statSem=doc.createAttribute("statSem");
+                statSem.setValue(String.valueOf(sp.getStatus()));
+                
+                spRed.setAttributeNode(statSem);
+                spRed.setAttributeNode(idSem);
+                semafor.appendChild(spRed);
+            }
+            root.appendChild(semafor);
+        }
+    }
+    
+    public static void writer(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, List<Semafor> semafory, File file, String bgSource, ImageView iv)
     {
         DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();
         DocumentBuilder db;
@@ -377,7 +498,7 @@ public class XMLStore {
             writeConnects(root, doc, connects);
             writeCurves(root, doc, curves);
             writeUseky(root, doc, useky);
-            
+            writeSemafory(root, doc, semafory);
             Element background=doc.createElement("background");
             Attr isnull=doc.createAttribute("isNull");
             if(bgSource!=null)
