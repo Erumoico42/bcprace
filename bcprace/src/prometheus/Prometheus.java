@@ -14,7 +14,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -25,9 +24,6 @@ import javafx.scene.Scene;
 import javafx.scene.SubScene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
@@ -62,9 +58,7 @@ public class Prometheus extends Application {
     private static Usek actUsek;
     private static Auto actAuto;
     private static final List<Button> addCarBtns=new ArrayList<Button>();
-    private static int pozYAdd=1;
-    private static Animace a;
-    
+    private static Animace a;  
     private static final List<Circle> checkPoints=new ArrayList<Circle>();
     private Scene scene;
     private static SubScene subScene;
@@ -87,14 +81,11 @@ public class Prometheus extends Application {
     private static List<Usek> useky=new ArrayList<Usek>();
     private static List<Usek> startUseky=new ArrayList<Usek>();
     private static List<MyCurve> krivky=new ArrayList<MyCurve>();
-    private static List<HBox> semafory=new ArrayList<HBox>();
+    private static List<HBox> semaforyImg=new ArrayList<HBox>();
+    private static List<Semafor> semafory=new ArrayList<Semafor>();
     private static String bgSource=null;
-    private static Semafor selectedSem=null;
-    private static Button spSem;
-    private static SemtamforControl sc=new SemtamforControl();
-    private static TextField semGreen, semRed, semOrange;
-    private static Label labSemGreen, labSemOrange, labSemRed;
-    private static ComboBox cbSemColor;
+    private static final SemaforControl sc=new SemaforControl();
+    private static Auto myCar=null;
     @Override
     public void start(Stage primaryStage) {
         
@@ -117,6 +108,7 @@ public class Prometheus extends Application {
                 timer.cancel();
                 timertask.cancel();   
             }
+
             sc.end();
         });
         primaryStage.widthProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
@@ -129,7 +121,36 @@ public class Prometheus extends Application {
             subScene.setHeight(newValue.intValue()-100);
             canvas.setHeight(subScene.getHeight());
         });
+        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if(myCar!=null){
+                    if(event.getCode()==KeyCode.UP)
+                    {
+                        myCar.zvysitRychlost(0.002);
+                    }
+                    if(event.getCode()==KeyCode.DOWN)
+                    {
+                        
+                        if(myCar.getSpeed()>0)
+                        {
+                            myCar.zvysitRychlost(-0.002);
+                        }
+                        else
+                        {
+                            myCar.setRychlost(0);
+                        }
+                        
+                    }
+                }
+                
+            }
+        });
         initGUI();
+    }
+    public static void addSemafor(Semafor sem)
+    {
+        semafory.add(sem);
     }
     public static void addCurve(MyCurve mc)
     {
@@ -143,6 +164,12 @@ public class Prometheus extends Application {
     {
         useky.clear();
         
+    }
+    public static void cleanSemafory()
+    {
+        rootSS.getChildren().removeAll(semaforyImg);
+        semaforyImg.clear();
+        semafory.clear();
     }
     public static void setBgSource(String source)
     {
@@ -282,7 +309,7 @@ public class Prometheus extends Application {
         save.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                new XMLStore().saveFile(krivky, useky, connects, bgSource, bgIv);
+                new XMLStore().saveFile(krivky, useky, connects, semafory, bgSource, bgIv);
             }
         });
         Button load=new Button("Load");
@@ -303,127 +330,7 @@ public class Prometheus extends Application {
                 celan();
             }
         });
-        
-        Button playAll=new Button("Spustit semafory");
-        playAll.setLayoutX(10);
-        playAll.setLayoutY(50);
-        playAll.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                for (Semafor semafor : sc.getSemafory()) {
-                    semafor.play();
-                }
-            }
-        });
-        Button pauseAll=new Button("Zastavit semafory");
-        pauseAll.setLayoutX(10);
-        pauseAll.setLayoutY(80);
-        pauseAll.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                for (Semafor semafor : sc.getSemafory()) {
-                    semafor.pause();
-                }
-            }
-        });
-        Button semafor=new Button("Nový semafor");
-        semafor.setLayoutX(10);
-        semafor.setLayoutY(110);
-        semafor.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                Semafor s=new Semafor(cbSemColor.getValue().toString(), sc);
-                selectSem(s);
-                semafory.add(s.getImg());
-            }
-        });
-        spSem=new Button("Spustit");
-        spSem.setLayoutX(10);
-        spSem.setLayoutY(260);
-        spSem.setVisible(false);
-        spSem.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                selectedSem.pausePlay();
-                if(selectedSem.getPaused())
-                    spSem.setText("Spustit");
-                else
-                {
-                    setColors();
-                    spSem.setText("Zastavit");
-                }
-                
-            }
-        });
-        cbSemColor=new ComboBox();
-        cbSemColor.valueProperty().addListener(new ChangeListener() {
-            @Override
-            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
-                setColors();
-            }
-        });
-        cbSemColor.setLayoutX(10);
-        cbSemColor.setLayoutY(140);
-        cbSemColor.setMaxWidth(90);
-        cbSemColor.setVisible(false);
-        cbSemColor.setValue("orange2red");
-        cbSemColor.getItems().addAll("red", "green", "orange2red", "orange2green");
-        
-        
-        semRed=new TextField();
-        semRed.setLayoutX(90);
-        semRed.setLayoutY(170);
-        semRed.setMaxWidth(20);
-        semRed.setVisible(false);
-        semRed.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if(event.getCode()==KeyCode.ENTER)
-                {     
-                    setColors();
-                }
-            }
-        });
-        semGreen=new TextField();
-        semGreen.setLayoutX(90);
-        semGreen.setLayoutY(200);
-        semGreen.setMaxWidth(20);
-        semGreen.setVisible(false);
-        semGreen.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if(event.getCode()==KeyCode.ENTER)
-                {    
-                    setColors();
-                }
-            }
-        });
-        semOrange=new TextField();
-        semOrange.setLayoutX(90);
-        semOrange.setLayoutY(230);
-        semOrange.setMaxWidth(20);
-        semOrange.setVisible(false);
-        semOrange.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                if(event.getCode()==KeyCode.ENTER)
-                {      
-                    setColors();
-                }
-            }
-        });
-        labSemGreen=new Label("Zelena");
-        labSemGreen.setLayoutX(10);
-        labSemGreen.setLayoutY(200);
-        labSemGreen.setVisible(false);
-        labSemOrange=new Label("Oranzova");
-        labSemOrange.setLayoutX(10);
-        labSemOrange.setLayoutY(230);
-        labSemOrange.setVisible(false);
-        labSemRed=new Label("Cervena");
-        labSemRed.setLayoutX(10);
-        labSemRed.setLayoutY(170);
-        labSemRed.setVisible(false);
+
         Button lock=new Button("Uzamknout");
         lock.setLayoutX(530);
         lock.setLayoutY(20);
@@ -431,69 +338,58 @@ public class Prometheus extends Application {
             @Override
             public void handle(ActionEvent event) {
                 if(canvas.isDisable())
+                {
                     canvas.setDisable(false);
+                    lock.setText("Uzamknout");
+                }
                 else
+                {
                     canvas.setDisable(true);
+                    lock.setText("Odemknout");
+                }
                 
             }
         });
-        root.getChildren().addAll(pane,setbg, loadImage, autoGen, delMinus, delPlus, delTF, save, load, clean, semafor, 
-                spSem, playAll,semOrange, semGreen, semRed, labSemRed, labSemOrange, labSemGreen, cbSemColor, pauseAll, lock);
+        Button addMyCar=new Button("Vložit vlastní");
+        addMyCar.setLayoutX(630);
+        addMyCar.setLayoutY(20);
+        addMyCar.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+ 
+                if(myCar==null)
+                {
+                    Usek rndUsek;
+                    if(actConnect!=null)
+                    {
+                        rndUsek=actConnect.getStartCurves().get(0).getPrvni();
+                    }
+                    else
+                    {
+                        rndUsek=startUseky.get((int)(Math.random()*(startUseky.size())));
+                        
+                    }
+                    rndUsek=rndUsek.getDalsiUseky().get((int)(Math.random()*(rndUsek.getDalsiUseky().size())));
+                    if(rndUsek.getCar()==null){
+                        Auto car=new Auto(rndUsek, a);
+                        myCar=car;
+                        car.setMyCar();
+                    }
+                }
+            }
+        });
+        root.getChildren().addAll(pane,setbg, loadImage, autoGen, delMinus, delPlus, delTF, save, load, clean, 
+                  lock, addMyCar, sc.getRoot());
     }
-    public static SemtamforControl getSC()
+    public static SemaforControl getSC()
     {
         return sc;
     }
-    private void setColors()
+    public static void setMyCarNull()
     {
-        if(selectedSem!=null){
-            selectedSem.setColor(cbSemColor.getValue().toString()); 
-            if(!semGreen.getText().isEmpty())
-                selectedSem.setGreen(Integer.parseInt(semGreen.getText()));
-            if(!semRed.getText().isEmpty())
-                selectedSem.setRed(Integer.parseInt(semRed.getText())); 
-            if(!semOrange.getText().isEmpty())
-                selectedSem.setOrange(Integer.parseInt(semOrange.getText()));
-        }
+        myCar=null;
     }
-    public static void selectSem(Semafor sem)
-    {
-        selectedSem=sem;
-        if(sem!=null){
-            
-            spSem.setVisible(true);
-            cbSemColor.setVisible(true);
-            semOrange.setVisible(true);
-            semGreen.setVisible(true);
-            semRed.setVisible(true);
-            labSemRed.setVisible(true);
-            labSemGreen.setVisible(true);
-            labSemOrange.setVisible(true);
-            if(sem.getPaused())
-                spSem.setText("Spustit");
-            else
-                spSem.setText("Zastavit");
-            cbSemColor.setValue(sem.getColor());
-            semOrange.setText(String.valueOf(sem.getOrange()));
-            semGreen.setText(String.valueOf(sem.getGreen()));
-            semRed.setText(String.valueOf(sem.getRed()));
-        }
-        else
-        {
-            spSem.setVisible(false);
-            cbSemColor.setVisible(false);
-            semOrange.setVisible(false);
-            semGreen.setVisible(false);
-            semRed.setVisible(false);
-            labSemRed.setVisible(false);
-            labSemGreen.setVisible(false);
-            labSemOrange.setVisible(false);
-        }
-    }
-    public static Semafor getActSem()
-    {
-        return selectedSem;
-    }
+  
     private void celan()
     {
         for (MyCurve mc : krivky) {
@@ -504,18 +400,9 @@ public class Prometheus extends Application {
         for (Usek u : useky) {
             rootSS.getChildren().remove(u.getCir());
         }
-        for (HBox sem : semafory) {
+        for (HBox sem : semaforyImg) {
             rootSS.getChildren().remove(sem);
         }
-        selectedSem=null;
-        spSem.setVisible(false);
-        cbSemColor.setVisible(false);
-        semOrange.setVisible(false);
-        semGreen.setVisible(false);
-        semRed.setVisible(false);
-        labSemRed.setVisible(false);
-        labSemGreen.setVisible(false);
-        labSemOrange.setVisible(false);
         
         lastUsekId=0;
         lastCurveId=0;
@@ -523,7 +410,6 @@ public class Prometheus extends Application {
         useky.clear();
         root.getChildren().removeAll(addCarBtns);
         addCarBtns.clear();
-        pozYAdd=1;
         actConnect=null;
         actUsek=null;
         startConnects.clear();

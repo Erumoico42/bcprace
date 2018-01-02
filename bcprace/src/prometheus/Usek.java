@@ -125,13 +125,13 @@ public class Usek {
     public void selectSemafory()
     {
         for (Semafor sem : semafory) {
-            sem.select();
+            sem.setStyle(2);
         }
     }
     public void deselectSemafory()
     {
         for (Semafor sem : semafory) {
-            sem.deselect();
+            sem.setStyle(0);
         }
     }
     public void addSemafor(Semafor s)
