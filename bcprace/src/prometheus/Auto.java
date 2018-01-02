@@ -6,9 +6,9 @@
 package prometheus;
 
 import java.awt.Point;
-import java.util.Random;
-import javafx.event.EventHandler;
-import javafx.scene.Group;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.event.EventHandler;;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
@@ -24,14 +24,17 @@ public class Auto {
     private Point p1, p2, p12, p21;
     private double t;
     private double actRychlost=0.1;
-    private static final double MAX_RYCHLOST=0.1;
+    private final double MAX_RYCHLOST=0.1+Math.random()*0.001;
     private boolean pauza=false;
     private double actZrychleni=0;
-    private static final double MAX_ZRYCHLENI=0.002;
+    private final double MAX_ZRYCHLENI=0.0017+Math.random()*0.0005;
     private TexturaAuto ta;
     private final double IMG_SIZE=20;
     private boolean carFoundStreet, semFound;
     private double distNextStreet=0;
+    private boolean myCar=false;
+    private List<Usek> myCarStreet=new ArrayList<>();
+    private int pozMyCarStreet=0;
     public Auto(Usek u, Animace a) {
         this.a=a;
         this.u=u;
@@ -39,7 +42,6 @@ public class Auto {
         u.setCar(this);
         setPoints(); 
         setIv();
-        
     }
     private void setIv()
     {
@@ -55,34 +57,38 @@ public class Auto {
                     pause();
                 else
                     play();
-                //vybratAuto();
             }
         });
         Prometheus.addNode(iv);
     }
-    private void vybratAuto()
+    public void setMyCar()
     {
-        Prometheus.setActAuto(this);
+        this.myCar=true;
+        generateMyCarStreet();
+        actZrychleni=0;
+        actRychlost=0;
     }
     public void tick()
     {
         t+=actRychlost;
         
         move(t);
-        setSpeed(actZrychleni);
-        if(actRychlost >=MAX_RYCHLOST)
-        {
-            actZrychleni=0;
-            actRychlost=MAX_RYCHLOST;
-        }
-        if(actRychlost<0.0005)
-        {
-            actZrychleni=0;
-            actRychlost=0;
-        }
-        if(!pauza)
-        {
-            colisionDetect(); 
+        zvysitRychlost(actZrychleni);
+        if(!myCar){
+            if(actRychlost >=MAX_RYCHLOST)
+            {
+                actZrychleni=0;
+                actRychlost=MAX_RYCHLOST;
+            }
+            if(actRychlost<0.0005)
+            {
+                actZrychleni=0;
+                actRychlost=0;
+            }
+            if(!pauza)
+            {
+                colisionDetect(); 
+            }
         }
         if(t>=1)
         {
@@ -96,18 +102,57 @@ public class Auto {
         u.setCar(null);
         iv.setVisible(false);
     }
+    public void generateMyCarStreet()
+    {
+        Usek rnd=u;
+        rnd=rnd.getDalsiUseky().get((int)(Math.random()*(rnd.getDalsiUseky().size())));
+        myCarStreet.add(rnd);
+        while(!rnd.getDalsiUseky().isEmpty())
+        {
+            myCarStreet.add(rnd);
+            rnd=rnd.getDalsiUseky().get((int)(Math.random()*(rnd.getDalsiUseky().size())));
+        }
+    }
     private void zmenitUsek()
     {
         u.setCar(null);
-        if(!u.getDalsiUseky().isEmpty())
-        {
-            u=u.getDalsiUseky().get((int)(Math.random()*(u.getDalsiUseky().size())));
-            setPoints();
-            u.setCar(this); 
+        
+        if(myCar){
+            
+            if(pozMyCarStreet==myCarStreet.size()-1)
+            {
+                removeCar(); 
+                Prometheus.setMyCarNull();
+            }
+            else
+            {
+                pozMyCarStreet++;
+                u=myCarStreet.get(pozMyCarStreet);
+                setPoints();
+                u.setCar(this); 
+            }
         }
         else
         {
-            removeCar();  
+        
+            if(!u.getDalsiUseky().isEmpty())
+            {
+                if(!myCar){
+                    u=u.getDalsiUseky().get((int)(Math.random()*(u.getDalsiUseky().size())));
+                }
+                else
+                {
+
+                    pozMyCarStreet++;
+                    u=myCarStreet.get(pozMyCarStreet);
+                }
+                setPoints();
+                u.setCar(this); 
+            }
+            else
+            {
+                removeCar();  
+            }
         }
     }
     
@@ -133,9 +178,19 @@ public class Auto {
         xLast=x0;
         yLast=y0;
     }
-    public void setSpeed(double newSpeed)
+    public void zvysitRychlost(double newSpeed)
     {
         actRychlost+=newSpeed;
+    }
+    
+    public void setRychlost(double newSpeed)
+    {
+        actRychlost=newSpeed;
+    }
+    public void stopCar()
+    {
+        actRychlost=0;
+        actZrychleni=0;
     }
     private void colisionDetect()
     {
@@ -149,7 +204,7 @@ public class Auto {
         if(distNextStreet >1)
         {
             carFoundStreet=findSem(u,2);
-            if(!semFound)
+            //if(!semFound)
                 findCPCross(u, 1);
             
         }
@@ -164,17 +219,18 @@ public class Auto {
             {
                 double dist=d;
                 for (Semafor sem : uNext.getSemafory()) {
-                    if(sem.getColor().equals("red") || sem.getColor().equals("orange2red"))
+                    if(sem.getStatus()==0 || sem.getStatus()==1)
                     {
                         semFound=true;
                         this.semFound=false;
                         dist-=t;
-                        actZrychleni=-calcSpeed(actRychlost, dist+2);
-                        if(dist<1.1)
+                        actZrychleni=-calcSpeed(actRychlost, dist+2)*2;
+                        if(dist<1.1 && sem.getStatus()==0)
                         {
                             actRychlost=0;
                             actZrychleni=0;
                         }
+                            
                     }
                     else if(!semFound)
                     {
@@ -255,12 +311,11 @@ public class Auto {
             {
                 if(nextCar==null)
                     nextCar=uNext.getCar();
-                if(nextCar!=null)
+                if(nextCar!=null )
                 {
-                    
                     double dActCar=actDist-t;
                     carFound=true;
-                    if(dActCar>1 && actRychlost<MAX_RYCHLOST/1.3)
+                    if((dActCar>1 && actRychlost<MAX_RYCHLOST/1.3) || nextCar.getSpeed()<0.001)
                         actZrychleni=MAX_ZRYCHLENI;
                     else if(dActCar>0.05)
                         actZrychleni=-MAX_ZRYCHLENI;
@@ -308,11 +363,11 @@ public class Auto {
         pauza=false;
         actZrychleni=MAX_ZRYCHLENI;
     }
-    private double getSpeed()
+    public double getSpeed()
     {
         return actRychlost;
     }
-    private double getT()
+    public double getT()
     {
         return t;
     }
