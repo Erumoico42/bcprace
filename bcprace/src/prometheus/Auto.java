@@ -35,6 +35,8 @@ public class Auto {
     private boolean myCar=false;
     private List<Usek> myCarStreet=new ArrayList<>();
     private int pozMyCarStreet=0;
+    private Statistiky statistika;
+    private double time=0;
     public Auto(Usek u, Animace a) {
         this.a=a;
         this.u=u;
@@ -42,6 +44,8 @@ public class Auto {
         u.setCar(this);
         setPoints(); 
         setIv();
+        statistika=Prometheus.getStatistiky();
+        statistika.addCar();
     }
     private void setIv()
     {
@@ -68,8 +72,13 @@ public class Auto {
         actZrychleni=0;
         actRychlost=0;
     }
+    public double getTime()
+    {
+        return time;
+    }
     public void tick()
     {
+        time++;
         t+=actRychlost;
         
         move(t);
@@ -98,6 +107,7 @@ public class Auto {
     }
     private void removeCar()
     {
+        statistika.addCar(this);
         a.removeCar(this);
         u.setCar(null);
         iv.setVisible(false);
@@ -137,15 +147,8 @@ public class Auto {
         
             if(!u.getDalsiUseky().isEmpty())
             {
-                if(!myCar){
-                    u=u.getDalsiUseky().get((int)(Math.random()*(u.getDalsiUseky().size())));
-                }
-                else
-                {
-
-                    pozMyCarStreet++;
-                    u=myCarStreet.get(pozMyCarStreet);
-                }
+                u=u.getDalsiUseky().get((int)(Math.random()*(u.getDalsiUseky().size())));
+                
                 setPoints();
                 u.setCar(this); 
             }
@@ -221,15 +224,20 @@ public class Auto {
                 for (Semafor sem : uNext.getSemafory()) {
                     if(sem.getStatus()==0 || sem.getStatus()==1)
                     {
-                        semFound=true;
-                        this.semFound=false;
-                        dist-=t;
-                        actZrychleni=-calcSpeed(actRychlost, dist+2)*2;
-                        if(dist<1.1 && sem.getStatus()==0)
-                        {
-                            actRychlost=0;
-                            actZrychleni=0;
-                        }
+                        semFound=detection(dist-t);
+                            
+                    }
+                    else if(!semFound)
+                    {
+                        this.semFound=true;
+                        actZrychleni=MAX_ZRYCHLENI;  
+                    }
+                }
+                dist=d;
+                for (PolicieStrana ps : uNext.getPolicii()) {
+                    if(!ps.getRun())
+                    {
+                        semFound=detection(dist-t);
                             
                     }
                     else if(!semFound)
@@ -245,6 +253,19 @@ public class Auto {
             }
         }
         return semFound;
+    }
+    private boolean detection(double dist)
+    {
+        
+        this.semFound=false;
+        dist-=t;
+        actZrychleni=-MAX_ZRYCHLENI;
+        if(dist<1.1)
+        {
+            actRychlost=0;
+            actZrychleni=0;
+        }
+        return true;
     }
     private boolean findStreet(Usek us, int d)
     {
@@ -315,7 +336,7 @@ public class Auto {
                 {
                     double dActCar=actDist-t;
                     carFound=true;
-                    if((dActCar>1 && actRychlost<MAX_RYCHLOST/1.3) || nextCar.getSpeed()<0.001)
+                    if((dActCar>1 && actRychlost<MAX_RYCHLOST/1.3) || nextCar.getSpeed()<0.002)
                         actZrychleni=MAX_ZRYCHLENI;
                     else if(dActCar>0.05)
                         actZrychleni=-MAX_ZRYCHLENI;
