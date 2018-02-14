@@ -36,6 +36,7 @@ public class XMLStore {
     private static List<Connect> connects=new ArrayList<Connect>();
     private static List<Connect> startConnects=new ArrayList<Connect>();
     private static List<Semafor> semafory=new ArrayList<Semafor>();  
+    private static List<PolicieStrana> polStrany=new ArrayList<PolicieStrana>(); 
     public XMLStore()
     {
         
@@ -51,14 +52,14 @@ public class XMLStore {
         }
         
     }
-    public static void saveFile(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, List<Semafor> semafory, String bgSource, ImageView iv)
+    public static void saveFile(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, List<Semafor> semafory,List<Policie> poldas, String bgSource, ImageView iv)
     {
         FileChooser fch=new FileChooser();
         FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("XML soubory (*.xml)", "*.xml");
         fch.getExtensionFilters().add(filter);
         File file = fch.showSaveDialog(null);
         if (file != null) { 
-            writer(curves, useky, connects, semafory, file, bgSource, iv);
+            writer(curves, useky, connects, semafory,poldas, file, bgSource, iv);
         }
     }
     private static void reader(File input)
@@ -77,6 +78,7 @@ public class XMLStore {
             Prometheus.removeCircles();
             Prometheus.cleanUseky();
             readSemafory(doc);
+            readPolicie(doc);
             readUseky(doc);
             Prometheus.setStartUseky(startUseky);
             
@@ -112,6 +114,56 @@ public class XMLStore {
         }
         
         
+    }
+    private static void readPolicie(Document doc)
+    {
+        NodeList pol=doc.getElementsByTagName("policie");
+        for (int i = 0; i < pol.getLength(); i++) {
+            Node police=pol.item(i);
+            NodeList polSides=((Element)police).getElementsByTagName("polSide");
+            Policie polda=new Policie();
+            Prometheus.addPolicie(polda);
+            String p=police.getAttributes().getNamedItem("policePoz").getNodeValue();
+            
+            String[] s=p.split(",");
+            polda.move(Integer.parseInt(s[0]),Integer.parseInt(s[1]));
+            for (int j = 0; j < polSides.getLength(); j++) {
+                
+                p=polSides.item(j).getAttributes().getNamedItem("psPoz").getNodeValue();
+                s=p.split(",");
+                Point point=new Point(Integer.parseInt(s[0]),Integer.parseInt(s[1]));
+                String idPs=polSides.item(j).getAttributes().getNamedItem("psId").getNodeValue();
+                PolicieStrana ps=new PolicieStrana(point);
+                ps.setId(Integer.parseInt(idPs));
+                polda.pridatStranu(ps);
+                Prometheus.setLastPsId(Integer.parseInt(idPs));
+                polStrany.add(ps);
+            }
+        }
+    }
+    private static void writePolicie(Element root, Document doc, List<Policie> pols)
+    {
+        for (Policie p : pols) {
+            Element polda=doc.createElement("policie");
+            
+            Attr polPoz=doc.createAttribute("policePoz");
+            polPoz.setValue(String.valueOf((int)p.getPoz().getX()+","+(int)p.getPoz().getY()));
+            polda.setAttributeNode(polPoz);
+
+
+            for (PolicieStrana ps : p.getStrany()) {
+                Element pStrana=doc.createElement("polSide");
+                Attr psId=doc.createAttribute("psId");
+                psId.setValue(String.valueOf(ps.getId()));
+                pStrana.setAttributeNode(psId);
+                Attr psPoz=doc.createAttribute("psPoz");
+                psPoz.setValue(String.valueOf(String.valueOf((int)ps.getPoint().getX()+","+(int)ps.getPoint().getY())));
+                pStrana.setAttributeNode(psPoz);
+                polda.appendChild(pStrana);
+            }
+
+            root.appendChild(polda);
+        }
     }
     private static void readConnects(Document doc)
     {
@@ -209,6 +261,17 @@ public class XMLStore {
                     if(semafor.getID()==idsem)
                     {
                         useky.get(i).addSemafor(semafor);
+                    }
+                }
+                
+            }
+            NodeList pols=((Element)usek).getElementsByTagName("polSides");
+            for (int j = 0; j < pols.getLength(); j++) {
+                int idPs=Integer.parseInt(pols.item(j).getAttributes().getNamedItem("idPs").getNodeValue());
+                for (PolicieStrana polStr : polStrany) {
+                    if(polStr.getId()==idPs)
+                    {
+                        useky.get(i).addPolicii(polStr);
                     }
                 }
                 
@@ -355,6 +418,14 @@ public class XMLStore {
                 sem.setAttributeNode(idsem);
                 usek.appendChild(sem);
             }
+            for (PolicieStrana ps : u.getPolicii()) {
+                Element polda=doc.createElement("polSides");
+
+                Attr psId=doc.createAttribute("idPs");
+                psId.setValue(String.valueOf(ps.getId()));
+                polda.setAttributeNode(psId);
+                usek.appendChild(polda);
+            }
             root.appendChild(usek);
         }
     }
@@ -485,7 +556,7 @@ public class XMLStore {
         }
     }
     
-    public static void writer(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, List<Semafor> semafory, File file, String bgSource, ImageView iv)
+    public static void writer(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, List<Semafor> semafory,List<Policie> poldas, File file, String bgSource, ImageView iv)
     {
         DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();
         DocumentBuilder db;
@@ -497,6 +568,7 @@ public class XMLStore {
             doc.appendChild(root);
             writeConnects(root, doc, connects);
             writeCurves(root, doc, curves);
+            writePolicie(root, doc, poldas);
             writeUseky(root, doc, useky);
             writeSemafory(root, doc, semafory);
             Element background=doc.createElement("background");
