@@ -77,52 +77,64 @@ public class Rozdeleni {
         }
         
     }
-    private void split(Usek start, Connect c)
-    {    
-        for (MyCurve mc : c.getStartCurves()) { 
-            if(!mc.getDone())
+    private void split(Usek stUs, Connect con)
+    {
+        for (MyCurve sc : con.getStartCurves()) {
+            if(!sc.getDone())
             {
-                mc.setDone(true);
-                p=start.getP2();
-                u=start;
-                mc.setPrvni(start);
-                callBez(mc.getCurve());
-                mc.setPosledni(u);
+                sc.setDone(true);
+                p=stUs.getP2();
+                u=stUs;
                 
-                if(!mc.getConnect3().getStartCurves().isEmpty())
+                sc.setPrvni(stUs);
+                callBez(sc.getCurve());
+                sc.setPosledni(u);
+                if(!sc.getConnect3().getStartCurves().isEmpty())
                 {
-                    if(!mc.getConnect3().getStartCurves().get(0).getDone())
-                        split(mc.getPosledni(), mc.getConnect3()); 
+                    if(!sc.getConnect3().getStartCurves().get(0).getDone())
+                    {
+                        split(sc.getPosledni(), sc.getConnect3());
+                    }
                     else
-                    {  
-                        for (Usek usek : mc.getConnect3().getStartCurves().get(0).getPrvni().getDalsiUseky()) {
-                            Usek u3;
-                            Point p1=mc.getPosledni().getP2();
-                            Point p2=usek.getP1();
-                            if(MyMath.length(p1.getX(),p1.getY(),p2.getX(),p2.getY())>15)
+                    {
+                        for (MyCurve scc : sc.getConnect3().getStartCurves()) {
+                            if(scc.getPrvni()!=null)
                             {
-                                u3=new Usek();
-                                u3.setP1(mc.getPosledni().getP2());
-                                u3.setP2(usek.getP1());
-                                double angle=MyMath.angle(u3.getP2(), u3.getP1());
-                                Point p12=MyMath.rotate(u3.getP1(), 10, angle);
-                                Point p21=MyMath.rotate(u3.getP1(), 20, angle);
-                                u3.setP12(p12);
-                                u3.setP21(p21);
-                                mc.getPosledni().setDalsiUseky(u3);
-                                u3.setPredchoziUseky(mc.getPosledni());
+                                for (Usek une : scc.getPrvni().getDalsiUseky()) {
+                                    for (Usek nes : une.getDalsiUseky()) {
+                                        Usek uNew=new Usek();
+                                        uNew.setP1(sc.getPosledni().getP2());
+                                        uNew.setP2(nes.getP1());
+                                        double length=MyMath.length(uNew.getP1().getX(),uNew.getP1().getY(),uNew.getP2().getX(),uNew.getP2().getY());
+                                        if(length>SEG_LENGTH)
+                                        {  
+                                            uNew.setP12(sc.getConnect3().getPoint());
+                                            uNew.setP21(sc.getConnect3().getPoint());
+                                        }
+                                        else
+                                        {
+                                            double angle=MyMath.angle(uNew.getP1(), uNew.getP2());
+                                            Point p12=MyMath.rotate(uNew.getP2(), 10, angle);
+                                            Point p21=MyMath.rotate(uNew.getP2(), 20, angle);
+                                            uNew.setP12(p12);
+                                            uNew.setP21(p21);
+                                        }
+                                        
+                                        sc.getPosledni().setDalsiUseky(uNew);
+                                        uNew.setDalsiUseky(nes);
+                                        uNew.setPredchoziUseky(sc.getPosledni());
+                                        nes.setPredchoziUseky(uNew);
+                                    }
+                                    
+                                }
+                                
+                                
                             }
-                            else
-                                u3=mc.getPosledni();
-                            
-                            u3.setDalsiUseky(usek);
-                            if(!usek.getDalsiUseky().contains(mc.getPosledni()))
-                                usek.setPredchoziUseky(u3);
                         }
                     }
                 }
             }
-        }  
+        }
     }
     public List<Usek> getStartUseky()
     {
