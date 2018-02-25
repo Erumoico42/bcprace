@@ -17,16 +17,19 @@ import javafx.scene.shape.Circle;
  * @author Honza
  */
 public class PolicieStrana {
-    Circle c;
-    Point p;
-    private boolean run=false;
+    private Circle c;
+    private final Point p;
+    private boolean selected=false;
     private int id;
-    public PolicieStrana(Point p)
+    private final Policie pol;
+    
+    public PolicieStrana(Point p, Policie pol)
     {
+        this.pol=pol;
         this.p=p;
         setCircle();
+        pol.pridatStranu(this);
     }
-
     public int getId() {
         return id;
     }
@@ -49,29 +52,45 @@ public class PolicieStrana {
             public void handle(MouseEvent event) {
                 if(event.getButton()==MouseButton.SECONDARY)
                 {
-                    Usek actUs=Prometheus.getActUsek();
-                    if(actUs!=null){
-                        if(!actUs.getPolicii().contains(getThis())){
-                            actUs.addPolicii(getThis());
-                            changeColor(1);
+                    if(Prometheus.getActPol()!=null){
+                        if(!selected){
+                            select(true);
+                            
                         }
-                        else{
-                           actUs.getPolicii().remove(getThis());
-                           changeColor(0);
+                        else
+                        {
+                            select(false);
+                            
                         }
                     }
-                    
                 }
             }
         });
         Prometheus.addNode(c);
     }
-    public void changeColor(int style)
+    public void deSelect()
     {
-        if(style==0)
-            c.setFill(Color.BROWN);
-        if(style==1)
-            c.setFill(Color.GRAY);
+        c.setFill(Color.BROWN);
+        selected=false;
+    }
+    public void select(boolean sel)
+    {
+        if(!sel){
+            deSelect();
+            if(pol.getPs1()==this)
+                pol.setPs1(null);
+            if(pol.getPs2()==this)
+                pol.setPs2(null);
+        }
+        else
+        {
+            c.setFill(Color.ORANGERED);
+            selected=true;
+            if(pol.getPs1()==null)
+                pol.setPs1(this);
+            else
+                pol.setPs2(this);
+        }
     }
     private PolicieStrana getThis()
     {
@@ -80,14 +99,6 @@ public class PolicieStrana {
     public Point getPoint()
     {
         return p;
-    }
-    public void setRun(boolean run)
-    {
-        this.run=run;
-    }
-    public boolean getRun()
-    {
-        return run;
     }
     
 }

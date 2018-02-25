@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import javafx.application.Platform;
-import javafx.scene.Group;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 
@@ -22,28 +22,133 @@ import javafx.scene.layout.HBox;
  * @author Honza
  */
 public class Policie {
-    Timer timer;
-    TimerTask timertask;
-    ImageView ivPolice, ivRH, ivLH;
+    private Timer timer;
+    private TimerTask timertask;
+    private ImageView ivPolice, ivRH, ivLH;
     private Point p=new Point();
     private HBox hbox;
-    Group rootPolice;
     private PolicieStrana ps1, ps2;
-    int poz1=0, poz2=1;
-    List<PolicieStrana> strany=new ArrayList<>();
+    int poz1=0;
+    private List<PolicieStrana> strany=new ArrayList<>();
+    private List<PolKomb> kombinace=new ArrayList<>();
+    private int time=666, maxTime=0, dealeyTime=10;
+    private PolKomb selectedPK=null;
     private double startX, startY, distX, distY;
+    private boolean dealey=false;
     private final String STYLE_SELECT="-fx-border-color: blue;"
             + "-fx-border-width: 2;"
             + "-fx-border-style: solid;"; 
     public Policie()
     {
         imageControl();
-        
-        Prometheus.addNode(hbox);
         Prometheus.addNode(ivRH);
         Prometheus.addNode(ivLH);
-
+        Prometheus.addNode(hbox);
     }
+
+    public int getDealey() {
+        return dealeyTime;
+    }
+
+    public void setDealey(int dealey) {
+        this.dealeyTime = dealey;
+    }
+    private boolean checkExist()
+    {
+        boolean exist=false;
+        
+        for (PolKomb polKomb : kombinace) {
+            exist=polKomb.compare(ps1, ps2);
+            if(exist){
+                setSelPK(polKomb);
+                break;
+            }
+        }
+        return exist;
+    }
+    public void createKomb()
+    {
+        
+        if(!checkExist()){
+            int id=Prometheus.getLastIdPk()+1;
+            PolKomb pk=new PolKomb(ps1, ps2);
+            pk.setId(id);
+            Prometheus.setlastIdPk(id);
+            setSelPK(pk);
+            kombinace.add(pk);
+            Prometheus.checkKombiPol(false);
+        }
+    }
+    public void addKomb(PolKomb pk)
+    {
+        kombinace.add(pk);
+    }
+    public List<PolKomb> getPk()
+    {
+        return kombinace;
+    }
+    public void removeKomb()
+    {
+        for (PolKomb polKomb : kombinace) {
+            if(polKomb.compare(ps1, ps2)){
+                kombinace.remove(polKomb);
+                Prometheus.checkKombiPol(true);
+                break;
+            }
+        }
+    }
+    public PolKomb getActPK() {
+        return selectedPK;
+    }
+
+    public void setSelPK(PolKomb actPK) {
+        this.selectedPK = actPK;
+        if(selectedPK!=null)
+            Prometheus.setPolTime(selectedPK.getTime());
+        
+    }
+    private void guiControl()
+    {
+        if(ps1==null || ps2==null)
+            Prometheus.setVisPol(false);
+        else{
+            if(checkExist()){
+                Prometheus.checkKombiPol(false);
+            }
+            else
+                Prometheus.checkKombiPol(true);
+            Prometheus.setVisPol(true);
+        }
+    }
+
+    public PolicieStrana getPs1() {
+        return ps1;
+    }
+
+    public void setPs1(PolicieStrana ps1) {
+        
+        this.ps1 = ps1;
+        if(ps1==null || ps2==null)
+            setSelPK(null);
+        guiControl();
+    }
+
+    public PolicieStrana getPs2() {
+        return ps2;
+        
+    }
+
+    public void setPs2(PolicieStrana ps2) {
+        if(this.ps2!=null)
+        {
+            this.ps2.deSelect();
+        }
+        this.ps2 = ps2;
+        guiControl();
+        if(ps1==null || ps2==null)
+            setSelPK(null);
+    }
+    
     public List<PolicieStrana> getStrany(){
         return strany;
     }
@@ -52,10 +157,11 @@ public class Policie {
         hbox.setLayoutX(x  - distX);
         hbox.setLayoutY(y - distY);
         p.setLocation(hbox.getLayoutX(), hbox.getLayoutY());
-        ivRH.setLayoutX(p.getX()+10);
-        ivRH.setLayoutY(p.getY()-60);
-        ivLH.setLayoutX(p.getX()+10);
-        ivLH.setLayoutY(p.getY()-60);
+        ivLH.setLayoutX(p.getX()+5);
+        ivLH.setLayoutY(p.getY()-40);
+        ivRH.setLayoutX(p.getX()+20);
+        ivRH.setLayoutY(p.getY()-40);
+
     }
     public void pridatStranu(PolicieStrana ps)
     {
@@ -63,12 +169,8 @@ public class Policie {
     }
     public void play()
     {
-        if(strany.size()>1){
-            ps1=strany.get(poz1);
-            if(poz2==strany.size())
-                poz2=0;
-            ps2=strany.get(poz2);
-            
+        System.out.println(kombinace.size());
+        if(kombinace.size()>1){
             timer=new Timer();
             timertask = new TimerTask() {
                 @Override
@@ -78,7 +180,7 @@ public class Policie {
                     });
                 }
             };
-            timer.schedule(timertask, 5000, 5000);  
+            timer.schedule(timertask, 1000, 1000);  
         }
     }
     public void pause()
@@ -88,74 +190,102 @@ public class Policie {
         if(timer!=null)
             timer.cancel();
     }
+    
     private void tick()
     {
-        if(strany.size()==poz1)
-            poz1=0;
-        if(strany.size()==poz2)
-            poz2=0;
-        
-        ps1.setRun(false);
-        ps1=strany.get(poz1);
-        
-        ps2.setRun(false);
-        ps2=strany.get(poz2);
-        ps1.setRun(true);
-        ps2.setRun(true);
-        
-        zmenitStrany();
-        poz1++;
-        poz2++;
-        
+       
+        if(time>=maxTime)
+        {
+            dealey=true;
+            ivRH.setRotate(0);
+            ivLH.setRotate(0);
+            if(dealeyTime+maxTime<=time)
+            {
+                dealey=false;
+                if(poz1<kombinace.size()-1)
+                    poz1++;
+                else
+                    poz1=0;
+                PolKomb act=kombinace.get(poz1);
+                zmenitStrany(act.getPs1().getPoint(), act.getPs2().getPoint());
+                maxTime=act.getTime();
+                time=0;
+            }
+        }
+        time++;
     }
+    
     public Point getPoz()
     {
         return p;
     }
-    private void zmenitStrany()
+    private void zmenitStrany(Point ps1, Point ps2)
     {
-        ivRH.setRotate(Math.toDegrees(MyMath.angle(p, ps1.getPoint()))-90);
-        ivLH.setRotate(Math.toDegrees(MyMath.angle(p, ps2.getPoint()))-90);
+        ivRH.setRotate(Math.toDegrees(MyMath.angle(p, ps1))-90);
+        ivLH.setRotate(Math.toDegrees(MyMath.angle(p, ps2))-90);
     }
     private void imageControl()
     {
         ivPolice=new ImageView(new Image("resources/police/head.png"));
         ivRH=new ImageView(new Image("resources/police/handR.png"));
         ivLH=new ImageView(new Image("resources/police/handL.png"));
-        ivLH.setFitWidth(10);
-        ivLH.setFitHeight(150);
-        ivRH.setFitWidth(10);
-        ivRH.setFitHeight(150);
+        ivLH.setFitWidth(15);
+        ivLH.setFitHeight(120);
+        ivRH.setFitWidth(15);
+        ivRH.setFitHeight(120);
 
         
         ivPolice.setFitWidth(40);
-        ivPolice.setFitHeight(30);
+        ivPolice.setFitHeight(40);
         hbox=new HBox();
-        hbox.setLayoutX(30);
-        hbox.setLayoutY(30);
+        hbox.setLayoutX(40);
+        hbox.setLayoutY(45);
         hbox.setStyle(STYLE_SELECT);
-        ivRH.setLayoutX(40);
-        ivRH.setLayoutY(-25);
-        ivLH.setLayoutX(40);
-        ivLH.setLayoutY(-25);
+        ivLH.setLayoutX(45);
+        ivLH.setLayoutY(5);
+        ivRH.setLayoutX(60);
+        ivRH.setLayoutY(5);
             
         p.setLocation(hbox.getLayoutX(), hbox.getLayoutY());
         hbox.getChildren().add(ivPolice);
         hbox.setOnMousePressed((MouseEvent event1) -> {
-            startX = event1.getX();
-            startY = event1.getY();
-            distX = startX - hbox.getLayoutX();
-            distY = startY - hbox.getLayoutY();
-            Policie actPol=Prometheus.getActPoliceMan();
-            if(actPol==getThis())
-            {
-                hbox.setStyle(null);
-                Prometheus.setPoliceMan(null);
+            if(event1.getButton()==MouseButton.PRIMARY){
+                startX = event1.getX();
+                startY = event1.getY();
+                distX = startX - hbox.getLayoutX();
+                distY = startY - hbox.getLayoutY();
+                Policie actPol=Prometheus.getActPol();
+                if(actPol==getThis())
+                {
+                    hbox.setStyle(null);
+                    Prometheus.setVisPol(false);
+                    Prometheus.setActPol(null);
+                    if(ps1!=null)
+                        ps1.select(false);
+                    if(ps2!=null)
+                        ps2.select(false);
+                }
+                else
+                {
+                    hbox.setStyle(STYLE_SELECT);
+                    Prometheus.setActPol(getThis());
+                }
             }
-            else
-            {
-                hbox.setStyle(STYLE_SELECT);
-                Prometheus.setPoliceMan(getThis());
+            if(event1.getButton()==MouseButton.SECONDARY){
+                if(Prometheus.getActUsek()!=null)
+                {
+                    Usek actUs=Prometheus.getActUsek();
+                    boolean exist=false;
+                    for (PolKomb polKomb : actUs.getPK()) {
+                        if(polKomb==selectedPK){
+                            actUs.getPK().remove(selectedPK);
+                            exist=true;
+                            break;
+                        }
+                    }
+                    if(!exist)
+                        actUs.addPK(selectedPK);
+                }
             }
         });
         hbox.setOnMouseDragged((MouseEvent event1) -> {
