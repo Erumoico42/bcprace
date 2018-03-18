@@ -39,6 +39,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
@@ -60,32 +61,42 @@ public class Prometheus extends Application {
     private static final List<Button> addCarBtns=new ArrayList<Button>();
     private static Animace a;  
     private static final List<Circle> checkPoints=new ArrayList<Circle>();
+    private static final List<Node> hideShowList=new ArrayList<>();
     private Scene scene;
     private static SubScene subScene;
     private static Group rootSS;
     private static Canvas canvas;
     private static ImageView bgIv;
+    private static Policie actPol;
+    private boolean changeSpeedLoop=false;
     double startX;
     double startY;
     double distX;
     double distY;
     double raito=0;
+    private double myCarSpeedChange=0;
     private final double RESIZE=50; 
     private final double MOVE=25; 
-    private TimerTask timertask;
-    private Timer timer;
+    private TimerTask timertask, changeSpeedTimerTask;
+    private Timer timer, changeSpeedTimer;
     private boolean autoGen=false;
     private int genDeley=1000;
     private boolean delCanged=false;
-    private static int lastUsekId=0, lastCurveId=0, lastConnId=0;
+    private static int lastUsekId=0, lastCurveId=0, lastConnId=0, lastPsId=0, lastIdPk=0;
     private static List<Usek> useky=new ArrayList<Usek>();
     private static List<Usek> startUseky=new ArrayList<Usek>();
     private static List<MyCurve> krivky=new ArrayList<MyCurve>();
     private static List<HBox> semaforyImg=new ArrayList<HBox>();
     private static List<Semafor> semafory=new ArrayList<Semafor>();
+    private static List<Policie> policie=new ArrayList<Policie>();
     private static String bgSource=null;
     private static final SemaforControl sc=new SemaforControl();
     private static Auto myCar=null;
+    private static Statistiky statistika=new Statistiky();
+    private static TextField setPolTime, setWaitTime;
+    private static Button autoGenBtn, newKombin;
+    private TextField speedTF;
+  
     @Override
     public void start(Stage primaryStage) {
         
@@ -108,7 +119,6 @@ public class Prometheus extends Application {
                 timer.cancel();
                 timertask.cancel();   
             }
-
             sc.end();
         });
         primaryStage.widthProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
@@ -121,32 +131,66 @@ public class Prometheus extends Application {
             subScene.setHeight(newValue.intValue()-100);
             canvas.setHeight(subScene.getHeight());
         });
+        scene.setOnKeyReleased(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if(event.getCode()==KeyCode.UP || event.getCode()==KeyCode.DOWN)
+                {
+                    changeSpeedLoop=false;
+                    if(changeSpeedTimer!=null)
+                        changeSpeedTimer.cancel();
+                    if(changeSpeedTimerTask!=null)
+                        changeSpeedTimerTask.cancel();
+                }
+            }
+        });
         scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
                 if(myCar!=null){
-                    if(event.getCode()==KeyCode.UP)
-                    {
-                        myCar.zvysitRychlost(0.002);
-                    }
-                    if(event.getCode()==KeyCode.DOWN)
-                    {
-                        
-                        if(myCar.getSpeed()>0)
-                        {
-                            myCar.zvysitRychlost(-0.002);
+                    if(!changeSpeedLoop){
+                        if(event.getCode()==KeyCode.UP || event.getCode()==KeyCode.DOWN){
+                            changeSpeedLoop=true;
+
+                            if(event.getCode()==KeyCode.UP)
+                                myCarSpeedChange=0.002;
+                            if(event.getCode()==KeyCode.DOWN)
+                            {
+                                myCarSpeedChange=-0.002;
+                                
+                            }
+                            
+                            changeSpeedLoop();
                         }
-                        else
-                        {
-                            myCar.setRychlost(0);
-                        }
-                        
                     }
                 }
                 
             }
         });
         initGUI();
+    }
+    private void changeSpeedLoop()
+    {
+        changeSpeedTimer = new Timer();
+        changeSpeedTimerTask = new TimerTask() {
+            public void run() {
+                Platform.runLater(() -> {
+                    if(myCar!=null){
+                        if(myCar.getSpeed()+myCarSpeedChange>=0)
+                        {
+                            myCar.setRychlost(myCar.getSpeed()+myCarSpeedChange);
+                        }
+                        else
+                        {
+                            myCar.setRychlost(0);
+                        }
+                        speedTF.setText(String.valueOf(Math.round(myCar.getSpeed()*1000)));
+                    }
+                    
+                });
+            }
+        };
+        changeSpeedTimer.schedule(changeSpeedTimerTask, 0, 50);   
     }
     public static void addSemafor(Semafor sem)
     {
@@ -165,6 +209,44 @@ public class Prometheus extends Application {
         useky.clear();
         
     }
+    public static void setLastPsId(int id)
+    {
+        lastPsId=id;
+    }
+    private void hideShowList(boolean show)
+    {
+        for (Node node : hideShowList) {
+            node.setVisible(show);
+        }
+    }
+    public static void addToHideShow(Node node)
+    {
+        hideShowList.add(node);
+    }
+    public void removeHideShow(Node node)
+    {
+        hideShowList.remove(node);
+    }
+    public static int getLastPsId()
+    {
+        return lastPsId;
+    }
+    public static void setlastIdPk(int idPk)
+    {
+        lastIdPk=idPk;
+    }
+    public static int getLastIdPk()
+    {
+        return lastIdPk;
+    }
+    public static Statistiky getStatistiky()
+    {
+        return statistika;
+    }
+    public static void addPolicie(Policie pol)
+    {
+        policie.add(pol);
+    }
     public static void cleanSemafory()
     {
         rootSS.getChildren().removeAll(semaforyImg);
@@ -181,9 +263,11 @@ public class Prometheus extends Application {
         {
             autoGen=true;
             genCar();
+            autoGenBtn.setText("Gener off");
         }
         else
         {
+            autoGenBtn.setText("Gener on");
             timer.cancel();
             timertask.cancel();
             autoGen=false;
@@ -199,13 +283,9 @@ public class Prometheus extends Application {
         timertask=new TimerTask() {
             public void run() {
                 Platform.runLater(() -> {
-                    if(Math.random()<0.8){
-                        Usek rndUsek=startUseky.get((int)(Math.random()*(startUseky.size())));
-                        rndUsek=rndUsek.getDalsiUseky().get((int)(Math.random()*(rndUsek.getDalsiUseky().size())));
-                        if(rndUsek.getCar()==null){
-                            Auto car=new Auto(rndUsek, a);
-                        }
-                    }
+                    
+                    generCar();
+                    
                     if(delCanged)
                     {
                         delCanged=false;
@@ -217,8 +297,35 @@ public class Prometheus extends Application {
         };
         timer.schedule(timertask, 0, genDeley);    
     }
+    private void generCar()
+    {
+        Usek rndUsek=startUseky.get((int)(Math.random()*(startUseky.size())));
+        if(!rndUsek.getDalsiUseky().isEmpty()){
+            rndUsek=rndUsek.getDalsiUseky().get((int)(Math.random()*(rndUsek.getDalsiUseky().size())));
+            boolean free=true;
+            if(rndUsek.getCar()==null){
+                for (Usek uNext : rndUsek.getDalsiUseky()) {
+                    if(uNext.getCar()!=null)
+                        free=false;
+                }
+                if(free){
+                    Auto car=new Auto(rndUsek, a);
+                }
+            }
+        }
+    }
     private void initGUI()
     {
+        boolean statshow=false;
+        Button stat=new Button("Statistika");
+        stat.setLayoutX(10);
+        stat.setLayoutY(530);
+        stat.setOnAction((ActionEvent event) -> {
+            if(!statshow)
+                statistika.show();
+            else
+               statistika.hide(); 
+        });
         
         BorderPane pane = new BorderPane();
         pane.setBorder(new Border(new BorderStroke(Color.BLACK,
@@ -243,21 +350,32 @@ public class Prometheus extends Application {
         setbg.setOnAction((ActionEvent event) -> {
              setBg(bgIv);
         });
-        Button autoGen=new Button("Generování aut");
-        autoGen.setLayoutX(250);
-        autoGen.setLayoutY(20);
-        autoGen.setOnAction((ActionEvent event) -> {
+        autoGenBtn=new Button("Gener on");
+        autoGenBtn.setLayoutX(250);
+        autoGenBtn.setLayoutY(20);
+        autoGenBtn.setOnAction((ActionEvent event) -> {
              autoAddCar();
         });
         canvas.setOnMousePressed((MouseEvent t) -> {
-            newCurve(new Point((int)t.getX(),(int)t.getY()));
+            if(t.getButton()==MouseButton.PRIMARY)
+                newCurve(new Point((int)t.getX(),(int)t.getY()));
+            else if(t.getButton()==MouseButton.SECONDARY)
+            {
+                if(actPol!=null){
+                    PolicieStrana ps=new PolicieStrana(new Point((int)t.getX(), (int)t.getY()), actPol);
+                    ps.setId(lastPsId);
+                }
+            }
         });
         canvas.setOnMouseDragged((MouseEvent t) -> {
-            actConnect.setPoint(new Point((int)t.getX(),(int)t.getY()));
-            actConnect.moveConnect();
+            if(t.getButton()==MouseButton.PRIMARY)
+            {
+                actConnect.setPoint(new Point((int)t.getX(),(int)t.getY()));
+                actConnect.moveConnect();
+            }
         });
         TextField delTF=new TextField("1000");
-        delTF.setLayoutX(400);
+        delTF.setLayoutX(350);
         delTF.setLayoutY(20);
         delTF.setMaxWidth(100);
         delTF.setOnKeyPressed(new EventHandler<KeyEvent>() {
@@ -273,13 +391,9 @@ public class Prometheus extends Application {
                     delCanged=true;
                 }
             }
-        });
-        
-        
-        
-        
+        }); 
         Button delMinus=new Button("-");
-        delMinus.setLayoutX(380);
+        delMinus.setLayoutX(330);
         delMinus.setLayoutY(20);
         delMinus.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -291,7 +405,7 @@ public class Prometheus extends Application {
             }
         });
         Button delPlus=new Button("+");
-        delPlus.setLayoutX(500);
+        delPlus.setLayoutX(450);
         delPlus.setLayoutY(20);
         delPlus.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -303,17 +417,17 @@ public class Prometheus extends Application {
             }
         });
         
-        Button save=new Button("Save");
-        save.setLayoutX(800);
+        Button save=new Button("Uložit");
+        save.setLayoutX(780);
         save.setLayoutY(20);
         save.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                new XMLStore().saveFile(krivky, useky, connects, semafory, bgSource, bgIv);
+                new XMLStore().saveFile(krivky, useky, connects, semafory, policie, bgSource, bgIv);
             }
         });
-        Button load=new Button("Load");
-        load.setLayoutX(845);
+        Button load=new Button("Otevřít");
+        load.setLayoutX(835);
         load.setLayoutY(20);
         load.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -322,7 +436,7 @@ public class Prometheus extends Application {
             }
         });
         Button clean=new Button("Vyčistit");
-        clean.setLayoutX(740);
+        clean.setLayoutX(720);
         clean.setLayoutY(20);
         clean.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -331,27 +445,27 @@ public class Prometheus extends Application {
             }
         });
 
-        Button lock=new Button("Uzamknout");
-        lock.setLayoutX(530);
-        lock.setLayoutY(20);
-        lock.setOnAction(new EventHandler<ActionEvent>() {
+        Button hideShow=new Button("Skrýt");
+        hideShow.setLayoutX(480);
+        hideShow.setLayoutY(20);
+        hideShow.setMinWidth(70);
+        hideShow.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                if(canvas.isDisable())
+                if(hideShow.getText().equals("Skrýt"))
                 {
-                    canvas.setDisable(false);
-                    lock.setText("Uzamknout");
+                    hideShowList(false);
+                    hideShow.setText("Zobrazit");
                 }
                 else
                 {
-                    canvas.setDisable(true);
-                    lock.setText("Odemknout");
+                    hideShowList(true);
+                    hideShow.setText("Skrýt");
                 }
-                
             }
         });
         Button addMyCar=new Button("Vložit vlastní");
-        addMyCar.setLayoutX(630);
+        addMyCar.setLayoutX(560);
         addMyCar.setLayoutY(20);
         addMyCar.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -360,26 +474,186 @@ public class Prometheus extends Application {
                 if(myCar==null)
                 {
                     Usek rndUsek;
-                    if(actConnect!=null)
+                    if(actConnect!=null && !actConnect.getStartCurves().isEmpty())
                     {
                         rndUsek=actConnect.getStartCurves().get(0).getPrvni();
                     }
                     else
                     {
-                        rndUsek=startUseky.get((int)(Math.random()*(startUseky.size())));
-                        
+                        rndUsek=startUseky.get((int)(Math.random()*(startUseky.size())));                     
                     }
+                    if(!rndUsek.getDalsiUseky().isEmpty()){
                     rndUsek=rndUsek.getDalsiUseky().get((int)(Math.random()*(rndUsek.getDalsiUseky().size())));
                     if(rndUsek.getCar()==null){
+                        speedTF.setText("0");
                         Auto car=new Auto(rndUsek, a);
                         myCar=car;
                         car.setMyCar();
+                    }}
+                }
+            }
+        });
+        speedTF=new TextField("0");
+        speedTF.setLayoutX(645);
+        speedTF.setLayoutY(20);
+        speedTF.setMaxWidth(70);
+        speedTF.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if(event.getCode()==KeyCode.ENTER)
+                {
+                    if(myCar!=null)
+                    {
+                        double newSpeed=Double.parseDouble(speedTF.getText())/1000;
+                        if(newSpeed>=0 && newSpeed<1)
+                            myCar.setRychlost(newSpeed);
                     }
                 }
             }
         });
-        root.getChildren().addAll(pane,setbg, loadImage, autoGen, delMinus, delPlus, delTF, save, load, clean, 
-                  lock, addMyCar, sc.getRoot());
+        Button setSpeedUp=new Button("+");
+        setSpeedUp.setLayoutX(715);
+        setSpeedUp.setLayoutY(20);
+        setSpeedUp.setMinSize(25, 25);
+        setSpeedUp.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if(myCar!=null)
+                {
+                    myCar.zvysitRychlost(0.003);
+                    speedTF.setText(String.valueOf(Math.round(myCar.getSpeed()*1000)));
+                }
+            }
+        });
+        Button setSpeedDown=new Button("-");
+        setSpeedDown.setLayoutX(740);
+        setSpeedDown.setLayoutY(20);
+        setSpeedDown.setMinSize(25, 25);
+        setSpeedDown.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if(myCar!=null)
+                {
+                    myCar.zvysitRychlost(-0.003);
+                    if(myCar.getSpeed()<0)
+                        myCar.setRychlost(0);
+                    speedTF.setText(String.valueOf(Math.round(myCar.getSpeed()*1000)));
+                }
+            }
+        });
+        guiPolice();
+        root.getChildren().addAll(pane,setbg, loadImage, autoGenBtn, delMinus, delPlus, delTF, save, load, 
+                  hideShow, addMyCar, sc.getRoot(), stat, setSpeedDown, setSpeedUp, speedTF);
+    }
+    private void guiPolice()
+    {
+        
+        Button policieRun=new Button("Policie on");
+        policieRun.setLayoutX(10);
+        policieRun.setLayoutY(330);
+        policieRun.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if(policieRun.getText().equals("Policie on")){
+                    policieRun.setText("Policie off");
+                    for (Policie pol : policie) {
+                        pol.play();
+                    }
+                }
+                else
+                {
+                    policieRun.setText("Policie on");
+                    for (Policie pol : policie) {
+                        pol.pause();
+                    }
+                }
+            }
+        });
+        Button policieBtn=new Button("Policie++");
+        policieBtn.setLayoutX(10);
+        policieBtn.setLayoutY(360);
+        policieBtn.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                actPol=new Policie();
+                policie.add(actPol);
+            }
+        });
+        newKombin=new Button("Směr ++");
+        newKombin.setLayoutX(10);
+        newKombin.setLayoutY(420);
+        newKombin.setVisible(false);
+        newKombin.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if(actPol!=null)
+                {
+                    if(actPol.getPs1()!=null && actPol.getPs2()!=null)
+                    {
+                        if(newKombin.getText().equals("Směr ++")){
+                            actPol.createKomb();
+                        }
+                        else
+                            actPol.removeKomb();
+                    }
+                }
+            }
+        });
+        setPolTime=new TextField();
+        setPolTime.setLayoutX(10);
+        setPolTime.setLayoutY(450);
+        setPolTime.setMaxWidth(80);
+        setPolTime.setVisible(false);
+        setPolTime.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if(event.getCode()==KeyCode.ENTER){
+                    if(actPol!=null && actPol.getActPK()!=null)
+                    {
+                        actPol.getActPK().setTime(Integer.parseInt(setPolTime.getText()));
+                    }
+                }
+            }
+        });
+        setWaitTime=new TextField();
+        setWaitTime.setLayoutX(10);
+        setWaitTime.setLayoutY(390);
+        setWaitTime.setMaxWidth(80);
+        setWaitTime.setVisible(false);
+        setWaitTime.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if(event.getCode()==KeyCode.ENTER){
+                    if(actPol!=null)
+                    {
+                        actPol.setWaitTime(Integer.parseInt(setWaitTime.getText()));
+                    }
+                }
+            }
+        });
+        root.getChildren().addAll(policieBtn,policieRun, newKombin, setPolTime, setWaitTime);
+    }
+    public static void setVisPol(boolean vis)
+    {
+        setPolTime.setVisible(vis);
+        newKombin.setVisible(vis);
+    }
+    public static void removeNode(Node node)
+    {
+        root.getChildren().remove(node);
+    }
+    public static void setPolTime(int time)
+    {
+        setPolTime.setText(String.valueOf(time));
+    }
+    public static void checkKombiPol(boolean add)
+    {
+        if(add)
+        {
+            newKombin.setText("Směr ++");
+        }
+        else
+            newKombin.setText("Směr --");
     }
     public static SemaforControl getSC()
     {
@@ -503,6 +777,22 @@ public class Prometheus extends Application {
     {
         lastUsekId=lui;
     }
+    public static Policie getActPol()
+    {
+        return actPol;
+    }
+    public static void setActPol(Policie ap)
+    {
+        actPol=ap;
+        if(ap!=null){
+            setWaitTime.setVisible(true);
+            setWaitTime.setText(String.valueOf(ap.getWaitTime()));
+        }
+        else
+        {
+            setWaitTime.setVisible(false);
+        }
+    }
     public static int getLastConnId()
     {
         return lastConnId;
@@ -547,6 +837,7 @@ public class Prometheus extends Application {
     }
     public static void rozdel()
     {
+        hideShowList.removeAll(checkPoints);
         removeCircles();
         setLastUsekId(0);
         cleanUseky();

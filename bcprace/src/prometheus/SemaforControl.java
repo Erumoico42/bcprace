@@ -41,24 +41,36 @@ public class SemaforControl {
     private CheckBox enableRedChange=new CheckBox("Red");
     private CheckBox enableGreenChange=new CheckBox("Green");
     private Semafor semPrim=null, semSec=null;
-    private Button vazba;
+    private Button vazba, play;
     private TextField tfRed, tfGreen;
     private ComboBox cbColor;
     private int lastID=0, lastIDPrechod=0;
+    private boolean runSem=false;
     public SemaforControl() {
         gui();
     }
     private void play()
     {
-        timertask = new TimerTask() {
-            @Override
-            public void run(){
-                Platform.runLater(() -> {
-                    tick();
-                });
-            }
-        };
-        timer.schedule(timertask, 1000, 1000);
+        if(!runSem){
+            runSem=true;
+            play.setText("Sem off");
+            timertask = new TimerTask() {
+                @Override
+                public void run(){
+                    Platform.runLater(() -> {
+                        tick();
+                    });
+                }
+            };
+            timer.schedule(timertask, 1000, 1000);
+        }
+        else
+        {
+            timertask.cancel();
+            runSem=false;
+            play.setText("Sem on");      
+        }
+            
         
     }
 
@@ -114,7 +126,7 @@ public class SemaforControl {
     private void gui()
     {
         cbColor=new ComboBox();
-        cbColor.setLayoutX(20);
+        cbColor.setLayoutX(10);
         cbColor.setLayoutY(80);
         cbColor.setMaxWidth(80);
         cbColor.setVisible(false);
@@ -128,23 +140,23 @@ public class SemaforControl {
         });
         semRoot=new Group();
         semRoot.setLayoutY(50);
-        Button pridat=new Button("Novy");
+        Button pridat=new Button("Semafor++");
         pridat.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 newSem();
             }
         });
-        pridat.setLayoutX(20);
+        pridat.setLayoutX(10);
         pridat.setLayoutY(50);   
-        Button play=new Button("Sem On");
+        play=new Button("Sem On");
         play.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 play();
             }
         });
-        play.setLayoutX(20);
+        play.setLayoutX(10);
         play.setLayoutY(20); 
         
         vazba=new Button("Propojit");
@@ -154,12 +166,12 @@ public class SemaforControl {
                 setControlSem();
             }
         });
-        vazba.setLayoutX(20);
+        vazba.setLayoutX(10);
         vazba.setLayoutY(210); 
         vazba.setVisible(false);
         enableRedChange.setVisible(false);
         enableGreenChange.setVisible(false);
-        enableRedChange.setLayoutX(20);
+        enableRedChange.setLayoutX(10);
         enableRedChange.setLayoutY(110);
         enableRedChange.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -172,7 +184,7 @@ public class SemaforControl {
         });
         tfRed=new TextField();
         tfRed.setMaxWidth(80);
-        tfRed.setLayoutX(20);
+        tfRed.setLayoutX(10);
         tfRed.setLayoutY(130);
         tfRed.setVisible(false);
         tfRed.setOnKeyPressed(new EventHandler<KeyEvent>() {
@@ -182,7 +194,7 @@ public class SemaforControl {
                     semPrim.setTimeRed(Integer.parseInt(tfRed.getText()));
             }
         });
-        enableGreenChange.setLayoutX(20);
+        enableGreenChange.setLayoutX(10);
         enableGreenChange.setLayoutY(160);
         enableGreenChange.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -195,7 +207,7 @@ public class SemaforControl {
         });
         tfGreen=new TextField();
         tfGreen.setMaxWidth(80);
-        tfGreen.setLayoutX(20);
+        tfGreen.setLayoutX(10);
         tfGreen.setLayoutY(180);
         tfGreen.setVisible(false);
         tfGreen.setOnKeyPressed(new EventHandler<KeyEvent>() {
@@ -210,18 +222,18 @@ public class SemaforControl {
         rbRedPrim.setVisible(false);
         rbGreenPrim.setToggleGroup(tgPrim);
         rbGreenPrim.setVisible(false);
-        rbRedPrim.setLayoutX(20);
+        rbRedPrim.setLayoutX(10);
         rbRedPrim.setLayoutY(240);
-        rbGreenPrim.setLayoutX(20);
+        rbGreenPrim.setLayoutX(10);
         rbGreenPrim.setLayoutY(260);
         ToggleGroup tgSec=new ToggleGroup();
         rbRedSec.setToggleGroup(tgSec);
         rbRedSec.setVisible(false);
         rbGreenSec.setToggleGroup(tgSec);
         rbGreenSec.setVisible(false);
-        rbRedSec.setLayoutX(40);
+        rbRedSec.setLayoutX(30);
         rbRedSec.setLayoutY(240);
-        rbGreenSec.setLayoutX(40);
+        rbGreenSec.setLayoutX(30);
         rbGreenSec.setLayoutY(260);
         semRoot.getChildren().addAll(pridat, rbRedPrim, rbGreenPrim, rbRedSec, rbGreenSec, play, vazba, enableRedChange, enableGreenChange, tfGreen, tfRed, cbColor);
     }

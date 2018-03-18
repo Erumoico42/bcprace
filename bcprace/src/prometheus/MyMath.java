@@ -24,7 +24,6 @@ public class MyMath {
     }
     public static double length(Point p1,Point p2)
     {
-        //double distance = Math.sqrt(Math.pow(p1.getX()-p2.getX(),2) + Math.pow(p1.getY()-p2.getY(),2));
         double distance = length(p1.getX(), p1.getY(), p2.getX(), p2.getY());
         return distance;
     }

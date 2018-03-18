@@ -8,9 +8,13 @@ package prometheus;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
-import javafx.event.EventHandler;;
+import javafx.event.EventHandler;
+;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 
 /**
  *
@@ -37,23 +41,33 @@ public class Auto {
     private int pozMyCarStreet=0;
     private Statistiky statistika;
     private double time=0;
+    private double angle;
+    private Rectangle rect;
+    private int timeToRemove=10;
     public Auto(Usek u, Animace a) {
         this.a=a;
         this.u=u;
+        
         a.addCar(this);
         u.setCar(this);
         setPoints(); 
         setIv();
+        if(myCar)
+            setPoints();
         statistika=Prometheus.getStatistiky();
         statistika.addCar();
     }
     private void setIv()
     {
+        rect=new Rectangle(34, 14);
         ta=new TexturaAuto();
         iv=new ImageView(ta.getDefImg());
         iv.setFitWidth(40);
         iv.setFitHeight(40);
-        move(0);
+        move(time);
+        time+=MAX_RYCHLOST;
+        move(time);
+        
         iv.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent t) {
@@ -65,12 +79,53 @@ public class Auto {
         });
         Prometheus.addNode(iv);
     }
+    public Rectangle getRect()
+    {
+        return rect;
+    }
+    private void checkCollAll()
+    {
+        List<Auto> auta=a.getCars();
+        for (int i = 0; i < auta.size(); i++) {
+            Auto car=auta.get(i);
+            if(car!=this)
+            {
+                if(checkColl(rect,car.getRect()))
+                {
+                    stopCar();
+                    car.stopCar();
+                    if(!a.getToRemove().contains(this))
+                        a.addToRemove(this);
+                    if(!a.getToRemove().contains(car))
+                        a.addToRemove(car);
+ 
+                }
+            }
+        }
+    }
+    public ImageView getIv()
+    {
+        return iv;
+    }
+    public int getTimeToRemove()
+    {
+        timeToRemove--;
+        return timeToRemove;
+    }
+    private boolean checkColl(Rectangle r1, Rectangle r2)
+    {
+         if(Shape.intersect(r1, r2).getBoundsInLocal().getWidth()>10)
+             return true;
+         else
+             return false;
+    }
     public void setMyCar()
     {
         this.myCar=true;
         generateMyCarStreet();
         actZrychleni=0;
         actRychlost=0;
+        iv.setImage(new TexturaAuto().getMyCar());
     }
     public double getTime()
     {
@@ -82,6 +137,7 @@ public class Auto {
         t+=actRychlost;
         
         move(t);
+        checkCollAll();
         zvysitRychlost(actZrychleni);
         if(!myCar){
             if(actRychlost >=MAX_RYCHLOST)
@@ -105,12 +161,14 @@ public class Auto {
             zmenitUsek();      
         }
     }
-    private void removeCar()
+    public void removeCar()
     {
         statistika.addCar(this);
         a.removeCar(this);
         u.setCar(null);
         iv.setVisible(false);
+        if(myCar)
+            Prometheus.setMyCarNull();
     }
     public void generateMyCarStreet()
     {
@@ -122,6 +180,7 @@ public class Auto {
             myCarStreet.add(rnd);
             rnd=rnd.getDalsiUseky().get((int)(Math.random()*(rnd.getDalsiUseky().size())));
         }
+        myCarStreet.add(rnd);
     }
     private void zmenitUsek()
     {
@@ -198,6 +257,8 @@ public class Auto {
     private void colisionDetect()
     {
         distNextStreet=666;
+        if(u.getCar()==null)
+            u.setCar(this);
         carFoundStreet=findStreet(u, 0);
         if(!carFoundStreet)
         {
@@ -234,8 +295,8 @@ public class Auto {
                     }
                 }
                 dist=d;
-                for (PolicieStrana ps : uNext.getPolicii()) {
-                    if(!ps.getRun())
+                for (PolKomb pk : uNext.getPK()) {
+                    if(!pk.getRun())
                     {
                         semFound=detection(dist-t);
                             
@@ -273,10 +334,10 @@ public class Auto {
         for (Usek uNext : us.getDalsiUseky()) {
             if(d<5 && !carFound)
             {
-                double dist=d;
+                
                 if(uNext.getCar()!=null)
                 {
-                    
+                    double dist=d;
                     double speedNextCar=uNext.getCar().getSpeed();
                     double tNextCar=uNext.getCar().getT();
                     dist=dist+tNextCar-t;
@@ -285,11 +346,13 @@ public class Auto {
                     if(dSpeed>0 || actRychlost<MAX_RYCHLOST)
                     {
                         actZrychleni=-calcSpeed(dSpeed, dist+2);
-                        if(dist<0.5)
+                        if(dist<1)
                         {
                             actRychlost=0;
                             actZrychleni=0;
                         }
+                        else if(dist>3)
+                            actZrychleni=MAX_ZRYCHLENI;
                         
                     }
                     carFound=true;
@@ -366,13 +429,17 @@ public class Auto {
         double x = (x0+(t*x1)+(t2*x2)+(t3*x3));
         double y = (y0+(t*y1)+(t2*y2)+(t3*y3)); 
         
-        double angle=Math.toDegrees(MyMath.angle(x, y,xLast, yLast));
-        if(angle!=0)
+        angle=Math.toDegrees(MyMath.angle(x, y,xLast, yLast));
+        if(angle!=0){
             iv.setRotate(angle);
+            rect.setRotate(angle);
+        }
         xLast=x;
         yLast=y;
         iv.setX(x-IMG_SIZE);
-        iv.setY(y-IMG_SIZE);     
+        iv.setY(y-IMG_SIZE); 
+        rect.setX(x-17);
+        rect.setY(y-7);
     }
     private void pause()
     {

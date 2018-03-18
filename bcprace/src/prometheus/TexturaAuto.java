@@ -59,7 +59,10 @@ public class TexturaAuto {
                 defImg=new Image("/resources/cars/00.png");
         }
     }
-
+    public Image getMyCar()
+    {
+        return new Image("/resources/cars/myCar.png");
+    }
     public Image getDefImg() {
         return defImg;
     }

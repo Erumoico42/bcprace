@@ -29,6 +29,7 @@ public class PolicieStrana {
         this.p=p;
         setCircle();
         pol.pridatStranu(this);
+        Prometheus.addToHideShow(c);
     }
     public int getId() {
         return id;

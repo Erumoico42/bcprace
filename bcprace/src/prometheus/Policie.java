@@ -31,10 +31,15 @@ public class Policie {
     int poz1=0;
     private List<PolicieStrana> strany=new ArrayList<>();
     private List<PolKomb> kombinace=new ArrayList<>();
-    private int time=666, maxTime=0, dealeyTime=10;
+    private int time=666, maxTime=0;
+    private int waitTime=10;
     private PolKomb selectedPK=null;
     private double startX, startY, distX, distY;
-    private boolean dealey=false;
+    private boolean wait=false;
+    private final Image handL=new Image("resources/police/handL.png");
+    private final Image handR=new Image("resources/police/handR.png");
+    private final Image handLup=new Image("resources/police/handLup.png");
+    private final Image handRup=new Image("resources/police/handRup.png");
     private final String STYLE_SELECT="-fx-border-color: blue;"
             + "-fx-border-width: 2;"
             + "-fx-border-style: solid;"; 
@@ -46,12 +51,12 @@ public class Policie {
         Prometheus.addNode(hbox);
     }
 
-    public int getDealey() {
-        return dealeyTime;
+    public int getWaitTime() {
+        return waitTime;
     }
 
-    public void setDealey(int dealey) {
-        this.dealeyTime = dealey;
+    public void setWaitTime(int waitTime) {
+        this.waitTime = waitTime;
     }
     private boolean checkExist()
     {
@@ -157,9 +162,9 @@ public class Policie {
         hbox.setLayoutX(x  - distX);
         hbox.setLayoutY(y - distY);
         p.setLocation(hbox.getLayoutX(), hbox.getLayoutY());
-        ivLH.setLayoutX(p.getX()+5);
+        ivLH.setLayoutX(p.getX());
         ivLH.setLayoutY(p.getY()-40);
-        ivRH.setLayoutX(p.getX()+20);
+        ivRH.setLayoutX(p.getX()+15);
         ivRH.setLayoutY(p.getY()-40);
 
     }
@@ -169,8 +174,7 @@ public class Policie {
     }
     public void play()
     {
-        System.out.println(kombinace.size());
-        if(kombinace.size()>1){
+        if(kombinace.size()!=0){
             timer=new Timer();
             timertask = new TimerTask() {
                 @Override
@@ -196,19 +200,26 @@ public class Policie {
        
         if(time>=maxTime)
         {
-            dealey=true;
+            wait=true;
             ivRH.setRotate(0);
             ivLH.setRotate(0);
-            if(dealeyTime+maxTime<=time)
+            ivRH.setImage(handRup);
+            ivLH.setImage(handLup);
+            PolKomb act=kombinace.get(poz1);
+            act.setRun(false);
+            if(waitTime+maxTime<=time)
             {
-                dealey=false;
+                ivRH.setImage(handR);
+                ivLH.setImage(handL);
+                wait=false;
                 if(poz1<kombinace.size()-1)
                     poz1++;
                 else
                     poz1=0;
-                PolKomb act=kombinace.get(poz1);
+                act=kombinace.get(poz1);
                 zmenitStrany(act.getPs1().getPoint(), act.getPs2().getPoint());
                 maxTime=act.getTime();
+                act.setRun(true);
                 time=0;
             }
         }
@@ -227,23 +238,23 @@ public class Policie {
     private void imageControl()
     {
         ivPolice=new ImageView(new Image("resources/police/head.png"));
-        ivRH=new ImageView(new Image("resources/police/handR.png"));
-        ivLH=new ImageView(new Image("resources/police/handL.png"));
+        ivRH=new ImageView(handRup);
+        ivLH=new ImageView(handLup);
         ivLH.setFitWidth(15);
         ivLH.setFitHeight(120);
         ivRH.setFitWidth(15);
         ivRH.setFitHeight(120);
 
         
-        ivPolice.setFitWidth(40);
-        ivPolice.setFitHeight(40);
+        ivPolice.setFitWidth(30);
+        ivPolice.setFitHeight(30);
         hbox=new HBox();
         hbox.setLayoutX(40);
         hbox.setLayoutY(45);
         hbox.setStyle(STYLE_SELECT);
-        ivLH.setLayoutX(45);
+        ivLH.setLayoutX(40);
         ivLH.setLayoutY(5);
-        ivRH.setLayoutX(60);
+        ivRH.setLayoutX(55);
         ivRH.setLayoutY(5);
             
         p.setLocation(hbox.getLayoutX(), hbox.getLayoutY());
@@ -272,7 +283,7 @@ public class Policie {
                 }
             }
             if(event1.getButton()==MouseButton.SECONDARY){
-                if(Prometheus.getActUsek()!=null)
+                if(Prometheus.getActUsek()!=null && Prometheus.getActPol().getActPK()!=null)
                 {
                     Usek actUs=Prometheus.getActUsek();
                     boolean exist=false;

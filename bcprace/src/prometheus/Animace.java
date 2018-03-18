@@ -17,11 +17,16 @@ import javafx.application.Platform;
 public class Animace {
 
     private final Timer timer=new Timer();
+    private final Timer timerRem=new Timer();
     private List<Auto> cars;
-    private TimerTask timertask;
+    private List<Auto> toRemove;
+    private TimerTask timertask, ttRem;
+    private int tim=0;
     public Animace() {
         cars=new ArrayList<Auto>();
+        toRemove=new ArrayList<Auto>();
         newAnim();
+         remTimer();
     } 
     private void newAnim()
     {
@@ -37,8 +42,15 @@ public class Animace {
     }
     public void stop()
     {
+        ttRem.cancel();
         timertask.cancel();
         timer.cancel();
+        timerRem.cancel();
+        
+    }
+    public void addToRemove(Auto a)
+    {
+        toRemove.add(a);
     }
     private void tickTack()
     {
@@ -47,6 +59,35 @@ public class Animace {
         }
         
     } 
+    private void remTimer()
+    {
+        ttRem = new TimerTask() {
+            @Override
+            public void run(){
+                Platform.runLater(() -> {
+                    for (int i = 0; i < toRemove.size(); i++) {
+                        int ttr=toRemove.get(i).getTimeToRemove();
+                        if(ttr%2==0)
+                            toRemove.get(i).getIv().setVisible(false);
+                        else
+                            toRemove.get(i).getIv().setVisible(true);
+                        if(ttr<=0){
+                            Prometheus.removeNode(toRemove.get(i).getIv());
+                            toRemove.get(i).removeCar();
+                            toRemove.remove(i);
+                            
+                        }
+                        
+                    }
+                });
+            }
+        };
+        timerRem.schedule(ttRem, 500, 500);
+    }
+    public List<Auto> getToRemove()
+    {
+        return toRemove;
+    }
     public void addCar(Auto car)
     {
         cars.add(car);
@@ -54,5 +95,9 @@ public class Animace {
     public void removeCar(Auto car)
     {
         cars.remove(car);
+    }
+    public List<Auto> getCars()
+    {
+        return cars;
     }
 }
