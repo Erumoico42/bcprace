@@ -16,13 +16,15 @@ import javafx.scene.shape.CubicCurve;
  */
 public class Rozdeleni {
 
-    private List<Usek> startUseky;
+    private List<Usek> startUsekyCar;
+    private List<Usek> startUsekyTram;
     private Usek u, u2;
     private Point p;
     private Point p12, p21;
     private final int SEG_LENGTH=30;
     public Rozdeleni(List<Connect> connects) {
-        startUseky=new ArrayList<Usek>();
+        startUsekyCar=new ArrayList<Usek>();
+        startUsekyTram=new ArrayList<Usek>();
         for (Connect con : connects) {
             deDone(con);
         }
@@ -31,7 +33,12 @@ public class Rozdeleni {
             u=new Usek();
             u.setP1(p);
             u.setP2(p);
-            startUseky.add(u);
+            if(!connect.isTram())
+                startUsekyCar.add(u);
+            else{
+                startUsekyTram.add(u);
+                u.setStrTram(true);
+            }
             split(u, connect);
         }
     }
@@ -136,9 +143,13 @@ public class Rozdeleni {
             }
         }
     }
-    public List<Usek> getStartUseky()
+    public List<Usek> getStartUsekyCar()
     {
-        return startUseky;
+        return startUsekyCar;
+    }
+    public List<Usek> getStartUsekyTram()
+    {
+        return startUsekyTram;
     }
     
     private void callBez(CubicCurve curve)
