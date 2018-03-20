@@ -121,10 +121,10 @@ public class Prometheus extends Application {
         root = new Group();
         scene = new Scene(root, 900,600);
         rootSS=new Group();
-        canvas=new Canvas(765,520);
+        canvas=new Canvas(765,515);
         bgInit();
         rootSS.getChildren().addAll(backgroundBox, canvas);
-        subScene=new SubScene(rootSS, 765, 520);
+        subScene=new SubScene(rootSS, 765, 515);
         primaryStage.setTitle("Prometheus");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -150,7 +150,7 @@ public class Prometheus extends Application {
         });
         primaryStage.heightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             
-            subScene.setHeight(newValue.intValue()-115);
+            subScene.setHeight(newValue.intValue()-110);
             canvas.setHeight(subScene.getHeight());
         });
         scene.setOnKeyReleased(new EventHandler<KeyEvent>() {
@@ -438,7 +438,7 @@ public class Prometheus extends Application {
             new BorderWidths(2))));
         pane.setCenter(subScene);
         pane.setLayoutX(120);
-        pane.setLayoutY(65);
+        pane.setLayoutY(70);
 
         autoGenBtn=new Button("Auta on");
         autoGenBtn.setLayoutX(250);
