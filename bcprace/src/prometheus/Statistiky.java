@@ -12,6 +12,7 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
+import prometheus.Vehicles.Vehicle;
 
 /**
  *
@@ -27,7 +28,7 @@ public class Statistiky {
     private double maxTime=0;
     private Label countLab, maxSpeedLab, maxTimeLab, actCountLab, countLabData, 
             maxSpeedLabData, maxTimeLabData, actCountLabData, maxLenghtLabData, maxLenghtLab;
-    private List<Auto> auta=new ArrayList<Auto>();
+    private List<Vehicle> auta=new ArrayList<>();
     private int actCarCount=0;
     private static final DecimalFormat DF=new DecimalFormat("#.###");
     public Statistiky() {
@@ -48,14 +49,14 @@ public class Statistiky {
         actCarCount++;
         showData();
     }
-    public void addCar(Auto a)
+    public void addCar(Vehicle a)
     {
         
         actCarCount--;
         if(maxSpeed<a.getSpeed())
             maxSpeed=a.getSpeed();
-        if(maxLength<a.getT())
-            maxLength=a.getT();
+        if(maxLength<a.getTime())
+            maxLength=a.getTime();
         if(maxTime<a.getTime())
             maxTime=a.getTime();
         showData();

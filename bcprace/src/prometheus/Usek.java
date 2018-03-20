@@ -13,6 +13,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import prometheus.Vehicles.Vehicle;
 
 /**
  *
@@ -22,13 +23,15 @@ public class Usek {
     private Point p1, p2, p12=null, p21=null;
     private List<Usek> dalsiUseky=new ArrayList<Usek>();
     private List<Usek> predchoziUseky=new ArrayList<Usek>();
-    private Auto car;
+    private Vehicle veh;
     private Circle cir;
     private List<Usek> checkPoints=new ArrayList<Usek>();
     private List<Semafor> semafory=new ArrayList<Semafor>();
+    private List<PolKomb> policieKombinace=new ArrayList<PolKomb>();
     private Usek selectedUsek;
     private final Color DEF_COLOR=Color.GREEN;
     private int id;
+    private boolean strTram=false;
     public Usek() {
         id=Prometheus.getLastUsekId();
         Prometheus.setLastUsekId(id+1);
@@ -45,9 +48,18 @@ public class Usek {
         return id;
     }
 
+    public boolean isStrTram() {
+        return strTram;
+    }
+
+    public void setStrTram(boolean strTram) {
+        this.strTram = strTram;
+    }
+    
     public void setCir() {
         cir=new Circle(p2.getX(), p2.getY(), 4, Color.GREEN);
         Prometheus.addNode(cir);
+        Prometheus.addToHideShow(cir);
         Prometheus.addCircle(cir);
         cir.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
@@ -62,18 +74,18 @@ public class Usek {
                         {
                             circleStyle(selectedUsek.getCir(),DEF_COLOR, 4);
                             deSelectCheckPoints(selectedUsek);
-                            deselectSemafory();
+                            deselectSemafory(selectedUsek);
                         }
                         Prometheus.setActUsek(getUsek());
                         circleStyle(cir,Color.BLUE, 5);
                         selectCheckPoints(getUsek());
-                        selectSemafory();
+                        selectSemafory(getUsek());
                     }
                     else
                     {
                         circleStyle(cir,DEF_COLOR, 4);
                         deSelectCheckPoints(getUsek());
-                        deselectSemafory();
+                        deselectSemafory(getUsek());
                         Prometheus.setActUsek(null);
                     }
                 }
@@ -122,18 +134,27 @@ public class Usek {
             circleStyle(cp.getCir(),DEF_COLOR, 4);
         }
     }
-    public void selectSemafory()
+    public void selectSemafory(Usek u)
     {
-        for (Semafor sem : semafory) {
+        for (Semafor sem : u.getSemafory()) {
             sem.setStyle(2);
         }
     }
-    public void deselectSemafory()
+    public void deselectSemafory(Usek u)
     {
-        for (Semafor sem : semafory) {
+        for (Semafor sem : u.getSemafory()) {
             sem.setStyle(0);
         }
     }
+    public void addPK(PolKomb pk)
+    {
+        policieKombinace.add(pk);
+    }
+    public List<PolKomb> getPK()
+    {
+        return policieKombinace;
+    }
+    
     public void addSemafor(Semafor s)
     {
         semafory.add(s);
@@ -190,12 +211,12 @@ public class Usek {
         this.p21 = p21;
     }
     
-    public Auto getCar() {
-        return car;
+    public Vehicle getVehicle() {
+        return veh;
     }
 
-    public void setCar(Auto car) {
-        this.car=car;
+    public void setVehicle(Vehicle veh) {
+        this.veh=veh;
     }
 
     public List<Usek> getDalsiUseky() {
