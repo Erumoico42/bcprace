@@ -34,7 +34,7 @@ public class Control {
     }
     private void setCircle()
     {
-        c=new Circle(p.getX(), p.getY(), 4, Color.RED);
+        c=new Circle(p.getX(), p.getY(), 5, Color.RED);
         c.setOnMouseDragged((MouseEvent t) -> {
             moveControl(t.getX(),t.getY());
             curve.setChanged();
@@ -54,6 +54,7 @@ public class Control {
             }
         });
         Prometheus.addNode(c);
+        Prometheus.addToHideShow(c);
     }
     public void moveControl(double x, double y)
     {

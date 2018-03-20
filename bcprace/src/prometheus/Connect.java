@@ -25,16 +25,22 @@ public class Connect {
     private Circle c;
     private int id;
     private boolean start=false;
-    public Connect(Point p) {
+    private boolean tram;
+    public Connect(Point p, boolean tram) {
         this.p = p;
         setCircle();
         Prometheus.addConnect(this);
         setID();
+        this.tram=tram;
     }
     public void setID()
     {
         this.id=Prometheus.getLastConnId();
         Prometheus.setLastConnId(id+1);
+    }
+    public boolean isTram()
+    {
+        return tram;
     }
     public void setID(int id)
     {
@@ -117,6 +123,7 @@ public class Connect {
             }
         });
         Prometheus.addNode(c);
+        Prometheus.addToHideShow(c);
     }
     public void select()
     {

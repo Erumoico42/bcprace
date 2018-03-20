@@ -50,6 +50,7 @@ public final class MyCurve {
         curve.setStroke(javafx.scene.paint.Color.BROWN);
         curve.setFill(null);
         Prometheus.addNode(1,curve);
+        Prometheus.addToHideShow(curve);
         rotateControl();
         moveControls();
         Prometheus.rozdel();
