@@ -8,13 +8,11 @@ package prometheus;
 import java.awt.Point;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -31,11 +29,13 @@ import org.xml.sax.SAXException;
  */
 public class XMLStore {
     private static List<Usek> useky=new ArrayList<Usek>();
-    private static List<Usek> startUseky=new ArrayList<Usek>();
+    private static List<Usek> startUsekyCar=new ArrayList<Usek>();
+    private static List<Usek> startUsekyTram=new ArrayList<Usek>();
     private static List<MyCurve> mycurves=new ArrayList<MyCurve>();
     private static List<Connect> connects=new ArrayList<Connect>();
     private static List<Connect> startConnects=new ArrayList<Connect>();
     private static List<Semafor> semafory=new ArrayList<Semafor>();  
+    private static List<PolKomb> policKombs=new ArrayList<PolKomb>(); 
     private static List<PolicieStrana> polStrany=new ArrayList<PolicieStrana>(); 
     public XMLStore()
     {
@@ -52,14 +52,14 @@ public class XMLStore {
         }
         
     }
-    public static void saveFile(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, List<Semafor> semafory,List<Policie> poldas, String bgSource, ImageView iv)
+    public static void saveFile(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, List<Semafor> semafory,List<Policie> poldas, String bgSource, HBox background)
     {
         FileChooser fch=new FileChooser();
         FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("XML soubory (*.xml)", "*.xml");
         fch.getExtensionFilters().add(filter);
         File file = fch.showSaveDialog(null);
         if (file != null) { 
-            writer(curves, useky, connects, semafory,poldas, file, bgSource, iv);
+            writer(curves, useky, connects, semafory,poldas, file, bgSource, background);
         }
     }
     private static void reader(File input)
@@ -80,8 +80,9 @@ public class XMLStore {
             readSemafory(doc);
             readPolicie(doc);
             readUseky(doc);
-            Prometheus.setStartUseky(startUseky);
             
+            Prometheus.setStartUsekyCar(startUsekyCar);
+            Prometheus.setStartUsekyTram(startUsekyTram);
             
             NodeList bg=doc.getElementsByTagName("background");
             Node background=bg.item(0);
@@ -95,22 +96,18 @@ public class XMLStore {
                 String p= background.getAttributes().getNamedItem("position").getNodeValue();
                 String[] pos=p.split(",");
                 Point position=new Point(Integer.parseInt(pos[0]),Integer.parseInt(pos[1]));
-                ImageView iv=new ImageView(new Image(source));
-                iv.setLayoutX(position.getX());
-                iv.setLayoutY(position.getY());
-                iv.setFitHeight(Integer.parseInt(height));
-                iv.setFitWidth(Integer.parseInt(width));
-                Prometheus.setBg(iv);
-                Prometheus.loadBg(iv);
+                Prometheus.loadBackground(new Image(source));
+                Prometheus.moveDefBg(position.getX(), position.getY(), Double.valueOf(width), Double.valueOf(height));
                 Prometheus.setBgSource(source);            
             }
+            Prometheus.unlockBG();
             
         } catch (ParserConfigurationException ex) {
-            Logger.getLogger(XMLStore.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(ex);
         } catch (SAXException ex) {
-            Logger.getLogger(XMLStore.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(ex);
         } catch (IOException ex) {
-            Logger.getLogger(XMLStore.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(ex);
         }
         
         
@@ -124,7 +121,7 @@ public class XMLStore {
             Policie polda=new Policie();
             Prometheus.addPolicie(polda);
             String p=police.getAttributes().getNamedItem("policePoz").getNodeValue();
-            
+            polda.setWaitTime(Integer.parseInt(police.getAttributes().getNamedItem("waitTime").getNodeValue()));
             String[] s=p.split(",");
             polda.move(Integer.parseInt(s[0]),Integer.parseInt(s[1]));
             for (int j = 0; j < polSides.getLength(); j++) {
@@ -133,24 +130,52 @@ public class XMLStore {
                 s=p.split(",");
                 Point point=new Point(Integer.parseInt(s[0]),Integer.parseInt(s[1]));
                 String idPs=polSides.item(j).getAttributes().getNamedItem("psId").getNodeValue();
-                PolicieStrana ps=new PolicieStrana(point);
+                PolicieStrana ps=new PolicieStrana(point, polda);
                 ps.setId(Integer.parseInt(idPs));
                 polda.pridatStranu(ps);
                 Prometheus.setLastPsId(Integer.parseInt(idPs));
                 polStrany.add(ps);
             }
+            NodeList polKombs=((Element)police).getElementsByTagName("polKomb");
+            for (int j = 0; j < polKombs.getLength(); j++) {
+                int pkId=Integer.parseInt(polKombs.item(j).getAttributes().getNamedItem("pkId").getNodeValue());
+                int pkS1=Integer.parseInt(polKombs.item(j).getAttributes().getNamedItem("pkS1").getNodeValue());
+                int pkS2=Integer.parseInt(polKombs.item(j).getAttributes().getNamedItem("pkS2").getNodeValue());
+                PolicieStrana ps1=null;
+                PolicieStrana ps2=null;
+                for (PolicieStrana ps : polStrany) {
+                    if(ps.getId()==pkS1){
+                        ps1=ps;
+                        break;
+                    }
+                }
+                for (PolicieStrana ps : polStrany) {
+                    if(ps.getId()==pkS2){
+                        ps2=ps;
+                        break;
+                    }
+                }
+                PolKomb pk=new PolKomb(ps1, ps2);
+                pk.setId(pkId);
+                pk.setTime(Integer.parseInt(polKombs.item(j).getAttributes().getNamedItem("pkTime").getNodeValue()));
+                policKombs.add(pk);
+                polda.addKomb(pk);
+            }
         }
     }
     private static void writePolicie(Element root, Document doc, List<Policie> pols)
     {
+        System.out.println(pols.size());
         for (Policie p : pols) {
             Element polda=doc.createElement("policie");
             
             Attr polPoz=doc.createAttribute("policePoz");
             polPoz.setValue(String.valueOf((int)p.getPoz().getX()+","+(int)p.getPoz().getY()));
             polda.setAttributeNode(polPoz);
-
-
+            Attr waitTime=doc.createAttribute("waitTime");
+            waitTime.setValue(String.valueOf(p.getWaitTime()));
+            polda.setAttributeNode(waitTime);
+            
             for (PolicieStrana ps : p.getStrany()) {
                 Element pStrana=doc.createElement("polSide");
                 Attr psId=doc.createAttribute("psId");
@@ -160,6 +185,26 @@ public class XMLStore {
                 psPoz.setValue(String.valueOf(String.valueOf((int)ps.getPoint().getX()+","+(int)ps.getPoint().getY())));
                 pStrana.setAttributeNode(psPoz);
                 polda.appendChild(pStrana);
+            }
+            for (PolKomb pk : p.getPk()) {
+                Element polKomb=doc.createElement("polKomb");
+                Attr pkId=doc.createAttribute("pkId");
+                pkId.setValue(String.valueOf(pk.getId()));
+                polKomb.setAttributeNode(pkId);
+                
+                Attr pkS1=doc.createAttribute("pkS1");
+                pkS1.setValue(String.valueOf(pk.getPs1().getId()));
+                polKomb.setAttributeNode(pkS1);
+                
+                Attr pkS2=doc.createAttribute("pkS2");
+                pkS2.setValue(String.valueOf(pk.getPs2().getId()));
+                polKomb.setAttributeNode(pkS2);
+                
+                Attr pkTime=doc.createAttribute("pkTime");
+                pkTime.setValue(String.valueOf(pk.getTime()));
+                polKomb.setAttributeNode(pkTime);
+                
+                polda.appendChild(polKomb);
             }
 
             root.appendChild(polda);
@@ -173,11 +218,12 @@ public class XMLStore {
             Node con=conn.item(i);           
             int idConn=Integer.parseInt(con.getAttributes().getNamedItem("idConnect").getNodeValue());
             boolean start=Boolean.parseBoolean(con.getAttributes().getNamedItem("start").getNodeValue());
+            boolean tram=Boolean.parseBoolean(con.getAttributes().getNamedItem("tram").getNodeValue());
             String p=con.getAttributes().getNamedItem("pointConn").getNodeValue();
             String[] s=p.split(",");
             Point pp=new Point(Integer.parseInt(s[0]),Integer.parseInt(s[1]));
             
-            Connect connect=new Connect(pp);
+            Connect connect=new Connect(pp, tram);
             connect.setID(idConn);
             connect.setStart(start);
             if(start)
@@ -200,6 +246,10 @@ public class XMLStore {
             Attr start=doc.createAttribute("start");
             start.setValue(String.valueOf(c.getStart()));
             connect.setAttributeNode(start);
+            
+            Attr tram=doc.createAttribute("tram");
+            tram.setValue(String.valueOf(c.isTram()));
+            connect.setAttributeNode(tram);
             
             Attr point=doc.createAttribute("pointConn");
             point.setValue(String.valueOf((int)c.getPoint().getX()+","+(int)c.getPoint().getY()));
@@ -232,13 +282,21 @@ public class XMLStore {
             Point p4=new Point(Integer.parseInt(s4[0]),Integer.parseInt(s4[1]));
             u.setP2(p4); 
             u.setCir();
+            
+            boolean tram=Boolean.valueOf(usek.getAttributes().getNamedItem("tramStart").getNodeValue());
+            u.setStrTram(tram);
             useky.add(u);
         }
         for (int i = 0; i < us.getLength(); i++) {
             Node usek=us.item(i); 
             NodeList predch=((Element)usek).getElementsByTagName("predchUsek");
             if(predch.getLength()==0)
-                startUseky.add(useky.get(i));
+            {
+                if(!useky.get(i).isStrTram())
+                    startUsekyCar.add(useky.get(i));
+                else
+                    startUsekyTram.add(useky.get(i));
+            }
             for (int j = 0; j < predch.getLength(); j++) {
                 String id=predch.item(j).getAttributes().getNamedItem("idPredchUsek").getNodeValue();
                 useky.get(i).setPredchoziUseky(useky.get(Integer.parseInt(id)));
@@ -265,13 +323,13 @@ public class XMLStore {
                 }
                 
             }
-            NodeList pols=((Element)usek).getElementsByTagName("polSides");
-            for (int j = 0; j < pols.getLength(); j++) {
-                int idPs=Integer.parseInt(pols.item(j).getAttributes().getNamedItem("idPs").getNodeValue());
-                for (PolicieStrana polStr : polStrany) {
-                    if(polStr.getId()==idPs)
+            NodeList polKombs=((Element)usek).getElementsByTagName("polKomb");
+            for (int j = 0; j < polKombs.getLength(); j++) {
+                int idPk=Integer.parseInt(polKombs.item(j).getAttributes().getNamedItem("idPk").getNodeValue());
+                for (PolKomb pk : policKombs) {
+                    if(pk.getId()==idPk)
                     {
-                        useky.get(i).addPolicii(polStr);
+                        useky.get(i).addPK(pk);
                     }
                 }
                 
@@ -385,7 +443,11 @@ public class XMLStore {
             Attr p4=doc.createAttribute("p4");
             p4.setValue(String.valueOf((int)u.getP2().getX()+","+(int)u.getP2().getY()));
             usek.setAttributeNode(p4);
-
+            
+            Attr tram=doc.createAttribute("tramStart");
+            tram.setValue(String.valueOf(u.isStrTram()));
+            usek.setAttributeNode(tram);
+            
             for (Usek uu : u.getDalsiUseky()) {
                 Element dalsiUsek=doc.createElement("dalsiUsek");
 
@@ -418,13 +480,13 @@ public class XMLStore {
                 sem.setAttributeNode(idsem);
                 usek.appendChild(sem);
             }
-            for (PolicieStrana ps : u.getPolicii()) {
-                Element polda=doc.createElement("polSides");
+            for (PolKomb pk : u.getPK()) {
+                Element polKomb=doc.createElement("polKomb");
 
-                Attr psId=doc.createAttribute("idPs");
-                psId.setValue(String.valueOf(ps.getId()));
-                polda.setAttributeNode(psId);
-                usek.appendChild(polda);
+                Attr pkId=doc.createAttribute("idPk");
+                pkId.setValue(String.valueOf(pk.getId()));
+                polKomb.setAttributeNode(pkId);
+                usek.appendChild(polKomb);
             }
             root.appendChild(usek);
         }
@@ -556,7 +618,7 @@ public class XMLStore {
         }
     }
     
-    public static void writer(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, List<Semafor> semafory,List<Policie> poldas, File file, String bgSource, ImageView iv)
+    public static void writer(List<MyCurve> curves, List<Usek> useky, List<Connect> connects, List<Semafor> semafory,List<Policie> poldas, File file, String bgSource, HBox bg)
     {
         DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();
         DocumentBuilder db;
@@ -581,12 +643,12 @@ public class XMLStore {
                 Attr height=doc.createAttribute("height");
                 Attr pos=doc.createAttribute("position");       
                 bgs.setValue(bgSource);
-                if(iv!=null)
+                if(bg!=null)
                 {
                     
-                    width.setValue(String.valueOf((int)iv.getFitWidth()));
-                    height.setValue(String.valueOf((int)iv.getFitHeight()));
-                    pos.setValue(String.valueOf((int)iv.getLayoutX()+","+(int)iv.getLayoutY()));
+                    width.setValue(String.valueOf((int)bg.getWidth()));
+                    height.setValue(String.valueOf((int)bg.getHeight()));
+                    pos.setValue(String.valueOf((int)bg.getLayoutX()+","+(int)bg.getLayoutY()));
                     
                 }
                 else
