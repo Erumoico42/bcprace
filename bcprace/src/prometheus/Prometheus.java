@@ -150,7 +150,7 @@ public class Prometheus extends Application {
         });
         primaryStage.heightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             
-            subScene.setHeight(newValue.intValue()-110);
+            subScene.setHeight(newValue.intValue()-120);
             canvas.setHeight(subScene.getHeight());
         });
         scene.setOnKeyReleased(new EventHandler<KeyEvent>() {
@@ -358,17 +358,14 @@ public class Prometheus extends Application {
     {
         if(!startUsekyCar.isEmpty()){
             Usek rndUsek=startUsekyCar.get((int)(Math.random()*(startUsekyCar.size())));
-            if(!rndUsek.getDalsiUseky().isEmpty()){
-                rndUsek=rndUsek.getDalsiUseky().get((int)(Math.random()*(rndUsek.getDalsiUseky().size())));
-                boolean free=true;
-                if(rndUsek.getVehicle()==null){
-                    for (Usek uNext : rndUsek.getDalsiUseky()) {
-                        if(uNext.getVehicle()!=null)
-                            free=false;
-                    }
-                    if(free){
-                        BotCar car=new BotCar(a, rndUsek);
-                    }
+            boolean free=true;
+            if(rndUsek.getVehicle()==null){
+            for (Usek uNext : rndUsek.getDalsiUseky()) {
+                if(uNext.getVehicle()!=null)
+                    free=false;
+                }
+                if(free){
+                    BotCar car=new BotCar(a, rndUsek);
                 }
             }
         }
@@ -610,7 +607,7 @@ public class Prometheus extends Application {
                     Usek rndUsek;
                     if(actConnect!=null && !actConnect.getStartCurves().isEmpty())
                     {
-                        rndUsek=actConnect.getStartCurves().get(0).getPrvni();
+                        rndUsek=actConnect.getStartCurves().get(0).getFirst();
                     }
                     else
                     {
@@ -1024,13 +1021,13 @@ public class Prometheus extends Application {
     public static void rozdel()
     {
         hideShowList.removeAll(checkPoints);
-        removeCircles();
+        //removeCircles();
         setLastUsekId(0);
-        cleanUseky();
+        //cleanUseky();
         
-        Rozdeleni roz=new Rozdeleni(startConnects);
-        startUsekyCar=roz.getStartUsekyCar();
-        startUsekyTram=roz.getStartUsekyTram();
+        Split s=new Split(connects);
+        startUsekyCar=s.getStartUsekyCar();
+        startUsekyTram=s.getStartUsekyTram();
     }
     public static void setConnect(Connect con)
     {
