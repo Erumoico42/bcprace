@@ -165,7 +165,6 @@ public class XMLStore {
     }
     private static void writePolicie(Element root, Document doc, List<Policie> pols)
     {
-        System.out.println(pols.size());
         for (Policie p : pols) {
             Element polda=doc.createElement("policie");
             
@@ -262,29 +261,39 @@ public class XMLStore {
         NodeList us=doc.getElementsByTagName("usek");
         Prometheus.setLastUsekId(0);
         for (int i = 0; i < us.getLength(); i++) {
-            Usek u=new Usek();
+            
             
             Node usek=us.item(i);           
             String p=usek.getAttributes().getNamedItem("p1").getNodeValue();
             String[] s1=p.split(",");
             Point p1=new Point(Integer.parseInt(s1[0]),Integer.parseInt(s1[1]));
-            u.setP1(p1);
+            
             p=usek.getAttributes().getNamedItem("p2").getNodeValue();
             String[] s2=p.split(",");
             Point p2=new Point(Integer.parseInt(s2[0]),Integer.parseInt(s2[1]));
-            u.setP12(p2);
+            
             p=usek.getAttributes().getNamedItem("p3").getNodeValue();
             String[] s3=p.split(",");
             Point p3=new Point(Integer.parseInt(s3[0]),Integer.parseInt(s3[1]));
-            u.setP21(p3);
+            
             p=usek.getAttributes().getNamedItem("p4").getNodeValue();
             String[] s4=p.split(",");
             Point p4=new Point(Integer.parseInt(s4[0]),Integer.parseInt(s4[1]));
-            u.setP2(p4); 
+             
+            Usek u=new Usek(p1, p4);
+            u.setP1(p2);
+            u.setP2(p3);
             u.setCir();
             
             boolean tram=Boolean.valueOf(usek.getAttributes().getNamedItem("tramStart").getNodeValue());
             u.setStrTram(tram);
+            
+            boolean winkStart=Boolean.valueOf(usek.getAttributes().getNamedItem("winkStart").getNodeValue());
+            u.setStartWinker(winkStart);
+            boolean winkStop=Boolean.valueOf(usek.getAttributes().getNamedItem("winkStop").getNodeValue()); 
+            u.setStopWinker(winkStop);
+            double winkAngle=Double.valueOf(usek.getAttributes().getNamedItem("winkAngle").getNodeValue());
+            u.setWinkAngle(winkAngle);
             useky.add(u);
         }
         for (int i = 0; i < us.getLength(); i++) {
@@ -366,11 +375,17 @@ public class XMLStore {
                         conn3=conn;
                 }
                 int idCurve=Integer.parseInt(curve.getAttributes().getNamedItem("idCurve").getNodeValue());
-                if(conn0!=null && conn3!= null)
-                {
-                    mc=new MyCurve(conn0,conn3);
-                    initMC(mc, p2, p3, idCurve);
+                mc=new MyCurve(conn0,conn3);
+                initMC(mc, p2, p3, idCurve);
+                NodeList subUseky=((Element)curve).getElementsByTagName("subUs");
+                for (int j = 0; j < subUseky.getLength(); j++) {
+                    int idSu=Integer.parseInt(subUseky.item(j).getAttributes().getNamedItem("idSU").getNodeValue());
+                    for (Usek usek : useky) {     
+                        if(usek.getId()==idSu)
+                            mc.addUsek(usek);
+                    }
                 }
+                
             }
     }
     
@@ -417,6 +432,15 @@ public class XMLStore {
             p4.setValue(String.valueOf((int)c.getCurve().getEndX()+","+(int)c.getCurve().getEndY()));
             curve.setAttributeNode(p4);
             root.appendChild(curve);
+            
+            for (Usek u : c.getUseky()) {
+                Element subUs=doc.createElement("subUs");
+
+                Attr idSu=doc.createAttribute("idSU");
+                idSu.setValue(String.valueOf(u.getId()));
+                subUs.setAttributeNode(idSu);
+                curve.appendChild(subUs);
+            }
         }
     }
     private static void writeUseky(Element root, Document doc, List<Usek> useky)
@@ -429,24 +453,34 @@ public class XMLStore {
             usek.setAttributeNode(idUsek);
             
             Attr p1=doc.createAttribute("p1");
-            p1.setValue(String.valueOf((int)u.getP1().getX()+","+(int)u.getP1().getY()));
+            p1.setValue(String.valueOf((int)u.getP0().getX()+","+(int)u.getP0().getY()));
             usek.setAttributeNode(p1);
 
             Attr p2=doc.createAttribute("p2");
-            p2.setValue(String.valueOf((int)u.getP12().getX()+","+(int)u.getP12().getY()));
+            p2.setValue(String.valueOf((int)u.getP1().getX()+","+(int)u.getP1().getY()));
             usek.setAttributeNode(p2);
             
             Attr p3=doc.createAttribute("p3");
-            p3.setValue(String.valueOf((int)u.getP21().getX()+","+(int)u.getP21().getY()));
+            p3.setValue(String.valueOf((int)u.getP2().getX()+","+(int)u.getP2().getY()));
             usek.setAttributeNode(p3);
 
             Attr p4=doc.createAttribute("p4");
-            p4.setValue(String.valueOf((int)u.getP2().getX()+","+(int)u.getP2().getY()));
+            p4.setValue(String.valueOf((int)u.getP3().getX()+","+(int)u.getP3().getY()));
             usek.setAttributeNode(p4);
             
             Attr tram=doc.createAttribute("tramStart");
             tram.setValue(String.valueOf(u.isStrTram()));
             usek.setAttributeNode(tram);
+            
+            Attr winkStart=doc.createAttribute("winkStart");
+            winkStart.setValue(String.valueOf(u.isStartWinker()));
+            usek.setAttributeNode(winkStart);
+            Attr winkStop=doc.createAttribute("winkStop"); 
+            winkStop.setValue(String.valueOf(u.isStopWinker()));
+            usek.setAttributeNode(winkStop);
+            Attr winkAngle=doc.createAttribute("winkAngle");
+            winkAngle.setValue(String.valueOf(u.getWinkAngle()));
+            usek.setAttributeNode(winkAngle);
             
             for (Usek uu : u.getDalsiUseky()) {
                 Element dalsiUsek=doc.createElement("dalsiUsek");
