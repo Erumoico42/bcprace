@@ -20,30 +20,92 @@ import prometheus.Vehicles.Vehicle;
  * @author Honza
  */
 public class Usek {
-    private Point p1, p2, p12=null, p21=null;
-    private List<Usek> dalsiUseky=new ArrayList<Usek>();
-    private List<Usek> predchoziUseky=new ArrayList<Usek>();
+    private Point p0, p3, p1=null, p2=null;
+    private List<Usek> dalsiUseky=new ArrayList<>();
+    private List<Usek> predchoziUseky=new ArrayList<>();
     private Vehicle veh;
     private Circle cir;
-    private List<Usek> checkPoints=new ArrayList<Usek>();
-    private List<Semafor> semafory=new ArrayList<Semafor>();
-    private List<PolKomb> policieKombinace=new ArrayList<PolKomb>();
+    private List<Usek> checkPoints=new ArrayList<>();
+    private List<Usek> checkPointsRev=new ArrayList<>();
+    private List<Semafor> semafory=new ArrayList<>();
+    private List<PolKomb> policieKombinace=new ArrayList<>();
     private Usek selectedUsek;
     private final Color DEF_COLOR=Color.GREEN;
     private int id;
     private boolean strTram=false;
-    public Usek() {
+    private boolean startWinker=false;
+    private boolean stopWinker=false;
+    private double winkAngle;
+    public Usek(Point p0, Point p3) {
+        this.p0=p0;
+        this.p3=p3;
         id=Prometheus.getLastUsekId();
         Prometheus.setLastUsekId(id+1);
         Prometheus.addUsek(this);
+        setCir();
     }
-    public Point getP1() {
-        return p1;
+    public Point getP0() {
+        return p0;
     }
     public Circle getCir() {
         return cir;
     }
 
+    public double getWinkAngle() {
+        return winkAngle;
+    }
+    public void removeNext()
+    {
+        dalsiUseky.clear();        
+    }
+    public void removeFromt()
+    {
+        predchoziUseky.clear();
+    }
+    public void removeUsek()
+    {
+        for (Usek usek : dalsiUseky) {
+            usek.getPredchoziUseky().remove(this);
+        }
+        for (Usek usek : predchoziUseky) {
+            usek.getDalsiUseky().remove(this);
+        }
+        
+        Prometheus.removeNodeSS(cir);
+        removeNext();
+        removeFromt();
+        List<Usek> cpToRem=checkPoints;
+        deSelectCheckPoints(this);
+        /*for (Usek checkPoint : cpToRem) {
+            
+            removeCheckPoint(checkPoint);
+        }*/
+    }
+    public void moveCircle(Point p)
+    {
+        cir.setCenterX(p.getX());
+        cir.setCenterY(p.getY());
+    }
+    public void setWinkAngle(double angle) {
+        this.winkAngle = angle;
+    }
+    
+    public boolean isStartWinker() {
+        return startWinker;
+    }
+
+    public void setStartWinker(boolean startWinker) {
+        this.startWinker = startWinker;
+    }
+
+    public boolean isStopWinker() {
+        return stopWinker;
+    }
+
+    public void setStopWinker(boolean stopWinker) {
+        this.stopWinker = stopWinker;
+    }
+    
     public int getId() {
         return id;
     }
@@ -57,7 +119,7 @@ public class Usek {
     }
     
     public void setCir() {
-        cir=new Circle(p2.getX(), p2.getY(), 4, Color.GREEN);
+        cir=new Circle(p3.getX(), p3.getY(), 4, Color.GREEN);
         Prometheus.addNode(cir);
         Prometheus.addToHideShow(cir);
         Prometheus.addCircle(cir);
@@ -166,10 +228,23 @@ public class Usek {
     public void addCheckPoint(Usek u)
     {
         checkPoints.add(u);
+        u.addRevCP(this);
+    }
+    public void addRevCP(Usek u)
+    {
+        checkPointsRev.add(u);
+    }
+    public void removeRevCP(Usek u)
+    {
+        checkPointsRev.remove(u);
+    }
+    public List<Usek> getRevCP() {
+        return checkPointsRev;
     }
     public void removeCheckPoint(Usek u)
     {
         checkPoints.remove(u);
+        u.removeRevCP(this);
     }
     public List<Usek> getCheckPoints() {
         return checkPoints;
@@ -184,31 +259,31 @@ public class Usek {
     {
         return this;
     }
-    public Point getP2() {
-        return p2;
+    public Point getP3() {
+        return p3;
+    }
+
+    public void setP0(Point p0) {
+        this.p0 = p0;
+    }
+    public void setP3(Point p3) {
+        this.p3 = p3;
+    }
+
+    public Point getP1() {
+        return p1;
     }
 
     public void setP1(Point p1) {
         this.p1 = p1;
     }
+
+    public Point getP2() {
+        return p2;
+    }
+
     public void setP2(Point p2) {
         this.p2 = p2;
-    }
-
-    public Point getP12() {
-        return p12;
-    }
-
-    public void setP12(Point p12) {
-        this.p12 = p12;
-    }
-
-    public Point getP21() {
-        return p21;
-    }
-
-    public void setP21(Point p21) {
-        this.p21 = p21;
     }
     
     public Vehicle getVehicle() {
