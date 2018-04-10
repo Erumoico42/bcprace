@@ -19,8 +19,9 @@ public class Bot extends Vehicle{
     private boolean carFoundStreet;
     private double distNextStreet;
     private Usek u;
-    private boolean semFound;
     private double length;
+    private double defDistSpeed=666;
+    private boolean ignorCP=false;
     public Bot(Animation animation, Usek ss) {
         super(animation, ss);
         a=animation;
@@ -39,6 +40,7 @@ public class Bot extends Vehicle{
     }
     private void colisionDetect()
     {
+        ignorCP=false;
         distNextStreet=666;
         carFoundStreet=findStreet(u, 0);
         if(!carFoundStreet)
@@ -49,96 +51,82 @@ public class Bot extends Vehicle{
         if(distNextStreet >1)
         {
             carFoundStreet=findSem(u,2);
-            //if(!semFound)
+            if(!ignorCP)
                 findCPCross(u, 1);
             
         }
            
         
     }
+    private boolean calcStop(double distNext, double speedNext)
+    {
+        double ay=(speedNext*10/distNext);
+        if(ay<0.3)
+            return true;
+        return false;
+    }
     private boolean findSem(Usek us, double d)
     {
-        boolean semFound=false;
+        boolean semFounded=false;
         for (Usek uNext : us.getDalsiUseky()) {
-            if(d<5 && !semFound)
+            if(d<10 && !semFounded)
             {
-                double dist=d;
+                double dist=d-getTime();
                 for (Semafor sem : uNext.getSemafory()) {
-                    if(sem.getStatus()==0 || sem.getStatus()==1)
+                    if(sem.getStatus()==0 || sem.getStatus()==1 || sem.getStatus()==2)
                     {
-                        semFound=detection(dist-getTime());
-                            
+                        semFounded=true;
+                        setSpeed(newSpeed(getSpeed(), 0, dist));  
+                        if(dist<1.1)
+                            stop();
+                        break;
                     }
-                    else if(!semFound)
-                    {
-                        this.semFound=true;
-                        setForce(getMaxForce());  
+                    else{
+                        ignorCP=true;
+                        break;
+                    }
+                    
+                }
+                if(!semFounded){
+                    for (PolKomb pk : uNext.getPK()) {
+                        if(!pk.getRun())
+                        {
+                            semFounded=true;
+                            setSpeed(newSpeed(getSpeed(), 0, dist));
+                            if(dist<1.1)
+                                stop();
+                            break;
+                        }
+                        
                     }
                 }
-                dist=d;
-                for (PolKomb pk : uNext.getPK()) {
-                    if(!pk.getRun())
-                    {
-                        semFound=detection(dist-getTime());
-                            
-                    }
-                    else if(!semFound)
-                    {
-                        this.semFound=true;
-                        setForce(getMaxForce());  
-                    }
-                }
-                if(!semFound)
+                if(!semFounded)
                 {
-                    semFound=findSem(uNext, d+1);
+                    setForce(getMaxForce());  
+                    semFounded=findSem(uNext, d+1);
                 }
+                else
+                    break;
             }
         }
-        return semFound;
-    }
-    private boolean detection(double dist)
-    {
-        
-        semFound=false;
-        //dist-=getWidth();
-        if(dist<3)
-            setForce(-calcSpeed(getSpeed(), dist+2));
-        if(dist<1.1)
-        {
-            setSpeed(0);
-            setForce(0);
-        }
-        return true;
+        return semFounded;
     }
     private boolean findStreet(Usek us, int d)
     {
         boolean carFound=false;
         for (Usek uNext : us.getDalsiUseky()) {
-            if(d<5 && !carFound)
+            if(d<10 && !carFound)
             {
                 
                 if(uNext.getVehicle()!=null && uNext.getVehicle()!=this)
                 {
-                    double dist=d;
+                    
                     double speedNextCar=uNext.getVehicle().getSpeed();
                     double tNextCar=uNext.getVehicle().getTime();
-                    dist=dist+tNextCar-getTime()-length;
-                    double dSpeed=getSpeed()-speedNextCar;
-                    distNextStreet=dist; 
-                    
-                    if(dSpeed>0 || getSpeed()<getMaxSpeed())
-                    {
-                        setForce(-calcSpeed(dSpeed, dist+2));
-                        if(dist<1)
-                        {
-                            setForce(0);
-                            setSpeed(0);
-                        }
-                        else if(dist>3)
-                            setForce(getMaxForce());
-                        
-                    }
+                    double dist=d+tNextCar-getTime()-length;
+                    setSpeed(newSpeed(getSpeed(), speedNextCar, dist));
                     carFound=true;
+                    break;
                 }
                 else
                 {
@@ -178,21 +166,16 @@ public class Bot extends Vehicle{
             {
                 if(nextVeh==null)
                     nextVeh=uNext.getVehicle();
-                if(nextVeh!=null )
+                if(nextVeh!=null && nextVeh!=this)
                 {
                     double dActVeh=actDist-getTime()-length;
-                    carFound=true;
-                    if((dActVeh>1 && getSpeed()<getMaxSpeed()/1.3) || nextVeh.getSpeed()<0.002)
-                        setForce(getMaxForce());
-                    else if(dActVeh>0.05)
-                        setForce(-getMaxForce());
-                    else
-                    {
-                        setForce(0);
-                        setSpeed(0);
+                    boolean stop=calcStop(nextDist+nextVeh.getTime(), nextVeh.getSpeed());
+                    if((stop || !nextVeh.isSlowing()) && (nextVeh.getSpeed()>0.01 || nextVeh.removing())){
+                        carFound=true;
+                        setSpeed(newSpeed(getSpeed(), 0, dActVeh));
                     }
                 }
-                else if(nextDist<4)
+                else if(nextDist<10)
                 {
                     carFound=findCarCross(uNext, nextDist+1, actDist);
                 }
@@ -200,10 +183,37 @@ public class Bot extends Vehicle{
         }
         return carFound;
     }
-    private double calcSpeed(double dSpeed, double dist)
+    private double newSpeed(double spAct, double spNext, double dist)
     {
-        double s=dSpeed/(dist*dist*(dist/2));
-        return s;
+        double maxForce=getMaxForce();
+        double dSpeed=spAct-spNext;
+        distNextStreet=dist;
+        double ret=0;
+        if(dist>=8 || dSpeed<0)
+        {
+            if(dSpeed<0)
+                ret=spNext;
+            else
+                ret=spAct+maxForce;
+        }
+        else if(dist>=4)
+        {
+            double ya=getMaxSpeed()*((dist-2)/2)-spAct;
+            ret=((ya/(dist+1))*dist)*4/5;
+            if(ret>spAct)
+                ret=spAct;
+        }
+        else if(dist>1.1)
+        {
+            double ya=getMaxSpeed()-(spAct*(5-dist)/4);
+            ret=((ya/(dist+1))*dist);
+            if(ret>spAct)
+                ret=spAct;
+        }
+        else
+            ret=spNext;
+        return ret;
+                
     }
     
     @Override

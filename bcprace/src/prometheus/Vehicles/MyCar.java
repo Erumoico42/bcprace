@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 package prometheus.Vehicles;
+import java.util.Random;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Rectangle;
 import prometheus.Usek;
@@ -24,7 +25,7 @@ public class MyCar extends Vehicle{
     }
     @Override
     public void newImage() {
-        setIv(new ImageView(new VehicleImages().getMyCar()));
+        setIv(new VehicleImages(666));
     }
 
     @Override

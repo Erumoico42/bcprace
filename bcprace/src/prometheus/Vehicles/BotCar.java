@@ -5,6 +5,7 @@
  */
 package prometheus.Vehicles;
 
+import java.util.Random;
 import javafx.scene.image.ImageView;
 import prometheus.Usek;
 
@@ -21,6 +22,7 @@ public class BotCar extends Bot{
     }
     @Override
     public void newImage() {
-        super.setIv(new ImageView(new VehicleImages().getDefImg()));
+        int ddd=new Random().nextInt(12)+1;
+        super.setIv(new VehicleImages(ddd));
     }
 }

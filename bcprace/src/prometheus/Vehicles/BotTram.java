@@ -26,7 +26,7 @@ public class BotTram extends Bot{
 
     @Override
     public void newImage() {
-        setIv(new ImageView(new VehicleImages().getImgTram()), new Rectangle(65, 17));
+        setIv(new VehicleImages(42), new Rectangle(65, 17));
     }
     
     
