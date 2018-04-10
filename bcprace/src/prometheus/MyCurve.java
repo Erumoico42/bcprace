@@ -27,6 +27,7 @@ public final class MyCurve {
     private Point p3;
     private boolean changedCont=false;
     private boolean done=false;
+    private List<Usek> useky=new ArrayList<>();
     private int id;
     public MyCurve(Connect conn0, Connect conn3) {   
         id=Prometheus.getLastCurveId();
@@ -55,6 +56,18 @@ public final class MyCurve {
         moveControls();
         Prometheus.rozdel();
     }
+    public void addUsek(Usek u)
+    {
+        useky.add(u);
+    }
+    public void removeUsek(Usek u)
+    {
+        useky.remove(u);
+    }
+    public List<Usek> getUseky()
+    {
+        return useky;
+    }
     public void setDone(boolean done)
     {
         this.done=done;
@@ -68,20 +81,22 @@ public final class MyCurve {
         return this;
     }
 
-    public Usek getPrvni() {
+    public Usek getFirst() {
         return prvni;
     }
 
-    public void setPrvni(Usek prvni) {
+    public void setFirst(Usek prvni) {
         this.prvni = prvni;
     }
-
-    public Usek getPosledni() {
+    
+    public Usek getLast() {
         return posledni;
     }
 
-    public void setPosledni(Usek posledni) {
+    public void setLast(Usek posledni) {
+        //posledni.setStopWinker(true);
         this.posledni = posledni;
+        
     }
     
     public CubicCurve getCurve() {
