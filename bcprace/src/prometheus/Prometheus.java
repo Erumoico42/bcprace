@@ -67,7 +67,6 @@ public class Prometheus extends Application {
     private static LightsControll lightsControll;
     private static StoreControll storeControll;
     private static boolean run=false;
-    
     @Override
     public void start(Stage primaryStage) {
         gui=new GuiControll(primaryStage);
@@ -137,6 +136,7 @@ public class Prometheus extends Application {
         loadTemp.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                drawControll.clean();
                 storeControll.openFile();
             }
         });
@@ -152,7 +152,7 @@ public class Prometheus extends Application {
         newTemp.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                
+                drawControll.clean();
             }
         });
         
@@ -162,13 +162,17 @@ public class Prometheus extends Application {
             public void handle(ActionEvent event) {
                 if(!run)
                 {
-                    playBtn.setText("Pause");
+                    //playBtn.setText("Pause");
+                    gui.changPlay(false);
                     play();
+                    drawControll.showObjects(false);
                 }
                 else
                 {
-                    playBtn.setText("Play");
+                   // playBtn.setText("Play");
                     pause();
+                    gui.changPlay(true);
+                    drawControll.showObjects(true);
                 }
             }
         });

@@ -75,6 +75,26 @@ public class DrawControll {
         initControll();
         initEvents();
     }
+    public void clean()
+    {
+        lastIdConnect=0;
+        lastIdCurve=0;
+        lastIdSegment=0;
+        endConnect=null;
+        actualCurve=null;
+        actualConnect=null;
+        actualStreetSegment=null;
+        PoliceControll.clean();
+        LightsControll.clean();
+        drawRoot.getChildren().removeAll(nodesToHide);
+        segments.clear();
+        curves.clear();
+        connects.clear();
+        startSegmentsCar.clear();
+        startSegmentsTram.clear();
+        nodesToHide.clear();
+        background.setImage(null);
+    }
     public static void addToHide(Node node)
     {
         nodesToHide.add(node);

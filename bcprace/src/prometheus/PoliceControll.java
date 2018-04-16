@@ -29,7 +29,7 @@ public class PoliceControll {
     private static DrawControll drawing;
     private static PoliceSide actualPolSide;
     private static Police actualPolice;
-    private List<Police> polices=new ArrayList<>();
+    private static List<Police> polices=new ArrayList<>();
     private boolean run=false, sideAdded=true;
     private static int lastPoliceId=0, lastPoliceSideId=0, lastPoliceCombinId=0;
     private static Button addSide, sideDeleyPl, sideDeleyMi, deleyPl, deleyMi;
@@ -160,6 +160,13 @@ public class PoliceControll {
     public List<Police> getPolices()
     {
         return polices;
+    }
+    public static void clean()
+    {
+        for (Police police : polices) {
+            police.remove();
+        }
+        polices.clear();
     }
     public void removePolice()
     {

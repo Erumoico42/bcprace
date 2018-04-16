@@ -47,12 +47,9 @@ public class Police {
     private final Image handR=new Image("resources/police/handR.png");
     private final Image handLup=new Image("resources/police/handLup.png");
     private final Image handRup=new Image("resources/police/handRup.png");
-    private final String STYLE_SELECT="-fx-border-color: blue;"
-            + "-fx-border-width: 2;"
-            + "-fx-border-style: solid;"; 
-    private final String STYLE_CHOOSE="-fx-border-color: red;"
-            + "-fx-border-width: 2;"
-            + "-fx-border-style: solid;"; 
+    private final Image selectedHead=new Image("resources/police/head_selected.png");
+    private final Image choosedHead=new Image("resources/police/head_choosed.png");
+    private final Image defHead=new Image("resources/police/head.png");
     public Police()
     {
         imageControl();
@@ -259,7 +256,7 @@ public class Police {
     }
     private void imageControl()
     {
-        ivPolice=new ImageView(new Image("resources/police/head.png"));
+        ivPolice=new ImageView(defHead);
         ivRH=new ImageView(handRup);
         ivLH=new ImageView(handLup);
         ivLH.setFitWidth(15);
@@ -273,7 +270,7 @@ public class Police {
         hbox=new HBox();
         hbox.setLayoutX(40);
         hbox.setLayoutY(45);
-        hbox.setStyle(STYLE_SELECT);
+
         ivLH.setLayoutX(40);
         ivLH.setLayoutY(5);
         ivRH.setLayoutX(55);
@@ -333,26 +330,26 @@ public class Police {
     private void select()
     {
         selected=true;
-        hbox.setStyle(STYLE_SELECT);
+        ivPolice.setImage(selectedHead);
         PoliceControll.setActualPolice(this);
         PoliceControll.enableSelectedPolice(true);
         PoliceControll.changeDeley(deley);
     }
     public void choose()
     {
-        hbox.setStyle(STYLE_CHOOSE);
+        ivPolice.setImage(choosedHead);
     }
     public void unchoose()
     {
         if(selected)
-            hbox.setStyle(STYLE_SELECT);
+            ivPolice.setImage(selectedHead);
         else
-            hbox.setStyle(null);
+            ivPolice.setImage(defHead);
     }
     private void deselect()
     {
         selected=false;
-        hbox.setStyle(null);
+        ivPolice.setImage(defHead);
         PoliceControll.enableSelectedPolice(false);
         PoliceControll.setActualPolice(null);
         if(ps1!=null)

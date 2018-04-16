@@ -53,9 +53,7 @@ public abstract class Vehicle {
         actualSegment=ss;
         generateStreet(ss);
         actualSegment.setVehicle(this);
-        Point pp=actualSegment.getP1();
-        actualSegment.setP1(actualSegment.getP0());
-        actualSegment.setP0(pp);
+        
         this.animation = animation;
         setPoints();
         animation.addCar(this);
@@ -314,6 +312,7 @@ public abstract class Vehicle {
         rectHeight=controlRectangle.getHeight()/2;
         iv.setFitWidth(imgWidth*2);
         iv.setFitHeight(imgHeight*2);
+        move(time);
         time+=speed;
         move(time);
         iv.setOnMouseClicked(new EventHandler<MouseEvent>() {

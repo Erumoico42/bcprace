@@ -10,6 +10,7 @@ import prometheus.gui.MenuFlap;
 import prometheus.gui.MenuGroup;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
+import javafx.css.CssMetaData;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.SubScene;
@@ -20,6 +21,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.BorderStroke;
@@ -55,10 +58,13 @@ public class GuiControll {
     private CheckBox enableRed;
     private CheckBox enableGreen;
     private Button newTemp, loadTemp, saveTemp;
+    private Image imgPlay=new Image("/resources/icons/play.png");
+    private Image imgPause=new Image("/resources/icons/pause.png");
+    private ImageView ivPlay=new ImageView(imgPlay);
     
     public GuiControll(Stage primaryStage) {
         this.primaryStage=primaryStage;
-        root = new Group();
+        root = new Group(); 
         scene = new Scene(root, 850, 600);
         primaryStage.setTitle("Infinity project");
         primaryStage.setScene(scene);
@@ -88,19 +94,31 @@ public class GuiControll {
         initEditMenu();
         initSimulMenu();
         
-        newTemp=new Button("New");
+        newTemp=new Button();
+        ImageView ivNew=new ImageView(new Image("/resources/icons/new.png"));
+        ivNew.setFitWidth(14);
+        ivNew.setFitHeight(17);
+        newTemp.setGraphic(ivNew);
         newTemp.setMinSize(30, 22);
         newTemp.setMaxSize(30, 22);
         newTemp.setLayoutX(5);
         newTemp.setLayoutY(5);
         
-        loadTemp=new Button("Open");
+        loadTemp=new Button();
+        ImageView ivLoad=new ImageView(new Image("/resources/icons/open.png"));
+        ivLoad.setFitWidth(20);
+        ivLoad.setFitHeight(21);
+        loadTemp.setGraphic(ivLoad);
         loadTemp.setMinSize(30, 22);
         loadTemp.setMaxSize(30, 22);
         loadTemp.setLayoutX(37);
         loadTemp.setLayoutY(5);
         
-        saveTemp=new Button("Save");
+        saveTemp=new Button();
+        ImageView ivSave=new ImageView(new Image("/resources/icons/save.png"));
+        ivSave.setFitWidth(18);
+        ivSave.setFitHeight(18);
+        saveTemp.setGraphic(ivSave);
         saveTemp.setMinSize(30, 22);
         saveTemp.setMaxSize(30, 22);
         saveTemp.setLayoutX(69);
@@ -204,8 +222,12 @@ public class GuiControll {
         mg4.setWidth(50);
         mg4.setLblLayout(8);
         mg4.setLayout(270);
-        play=new Button("Play");
-        play.setMinSize(40, 40);
+        ivPlay.setFitWidth(30);
+        ivPlay.setFitHeight(25);
+        play=new Button();
+        play.setGraphic(ivPlay);
+        play.setMinSize(40, 35);
+        play.setMaxSize(40, 35);
         play.setLayoutX(layout1);
         play.setLayoutY(layout1);
         mg4.addItems(play);
@@ -261,7 +283,11 @@ public class GuiControll {
         mg3.setLayout(224);
         mg3.setWidth(285);
         mg3.setLblLayout(95);
-        addPolice=new Button("Pol img");
+        addPolice=new Button();
+        ImageView ivPol=new ImageView(new Image("/resources/police/head.png"));
+        ivPol.setFitWidth(30);
+        ivPol.setFitHeight(30);
+        addPolice.setGraphic(ivPol);
         addPolice.setLayoutX(5);
         addPolice.setLayoutY(layout1);
         addPolice.setMinSize(35, 45);
@@ -339,12 +365,16 @@ public class GuiControll {
         mg4.setLayout(511);
         mg4.setLblLayout(90);
         
-        addSem=new Button("Sem img");
+        addSem=new Button();
+        ImageView ivSem=new ImageView(new Image("/resources/trafficLights/all.png"));
+        ivSem.setFitWidth(15);
+        ivSem.setFitHeight(35);
+        addSem.setGraphic(ivSem);
         addSem.setLayoutX(5);
         addSem.setLayoutY(layout1);
         addSem.setMinSize(35, 45);
         addSem.setMaxSize(35, 45);
-        
+
         ToggleGroup tgSemColor=new ToggleGroup();
         semColRed=new RadioButton();
         semColRed.setToggleGroup(tgSemColor);
@@ -423,7 +453,7 @@ public class GuiControll {
         enableGreen=new CheckBox();
         enableGreen.setLayoutX(150);
         enableGreen.setLayoutY(35); 
-        
+
         ToggleGroup tgSemPrim=new ToggleGroup();
         semPrimRed=new RadioButton();
         semPrimRed.setToggleGroup(tgSemPrim);
@@ -483,6 +513,13 @@ public class GuiControll {
         groupBorder.setLayoutY(105);
         groupBorder.setLayoutX(2);
         root.getChildren().add(groupBorder);
+    }
+    public void changPlay(boolean chan)
+    {
+        if(chan)
+            ivPlay.setImage(imgPlay);
+        else
+            ivPlay.setImage(imgPause);
     }
     public SubScene getDrawScene()
     {

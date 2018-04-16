@@ -29,12 +29,16 @@ public class Connect {
     private double xOld, yOld;
     private int id;
     private final boolean tram;
+    private Color color=Color.BLUE;
     public Connect(Point p, boolean tram) {
         this.p = p;
         this.tram=tram;
         endCurves=new ArrayList<>();
         startCurves=new ArrayList<>();
-        c=new Circle(p.getX(), p.getY(), 5, Color.BLUE);
+        
+        if(tram)
+            color=Color.PURPLE;
+        c=new Circle(p.getX(), p.getY(), 5, color);
         Prometheus.drawNode(c);
         DrawControll.addToHide(c);
         initControll();
@@ -123,7 +127,7 @@ public class Connect {
         DrawControll.setActualConnect(this);
         
         c.setStroke(Color.AQUA);
-        c.setRadius(6);
+        c.setRadius(7);
     }
     public void deselect()
     {

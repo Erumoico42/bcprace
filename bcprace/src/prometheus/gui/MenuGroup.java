@@ -41,7 +41,6 @@ public class MenuGroup {
         lbl.setLayoutY(53);
         groupScene=new SubScene(group, 100, 70);
         mainBorder = new BorderPane();
-        
         mainBorder.setBorder(new Border(new BorderStroke(Color.BLACK,
             BorderStrokeStyle.SOLID, new CornerRadii(1),
             new BorderWidths(1))));

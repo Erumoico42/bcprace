@@ -79,7 +79,6 @@ public class CurveStore {
             curve.setAttributeNode(idLastSegment);
 
             for (StreetSegment segment : mc.getSegments()) {
-                System.out.println(segment.getId());
                 Element subSegment=doc.createElement("subSegment");
                 Attr idSubSegment=doc.createAttribute("idSubSegment");
                 idSubSegment.setValue(String.valueOf(segment.getId()));

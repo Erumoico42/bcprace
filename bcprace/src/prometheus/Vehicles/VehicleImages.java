@@ -102,18 +102,19 @@ public class VehicleImages {
             }
             case 666:
             {
-                defImg=new Image("/resources/cars/myCar.png");
+                defImg=new Image("/resources/cars/auto-02.png");
 
-                imgA=new Image("/resources/cars/myCar.png");
-                imgL=new Image("/resources/cars/myCar.png");
-                imgR=new Image("/resources/cars/myCar.png");
+                imgA=new Image("/resources/cars/auto-02-b.png");
+                imgL=new Image("/resources/cars/auto-02-b-l.png");
+                imgR=new Image("/resources/cars/auto-02-b-p.png");
                 break;
             }
-            default:
+            default:{
                 defImg=new Image("/resources/cars/auto-01.png");
                 imgA=new Image("/resources/cars/auto-01-b.png");
                 imgL=new Image("/resources/cars/auto-01-b-l.png");
                 imgR=new Image("/resources/cars/auto-01-b-p.png");
+            }
         }
     }
     public Image getDefImg() {

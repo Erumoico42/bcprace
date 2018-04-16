@@ -35,7 +35,7 @@ public class CarControll {
     private Timer generTimerCar, changeSpeedTimer, generTimerTram;
     private boolean deleyChangedCar=false, carGeneratorRun=false, changeSpeedLoop=false, deleyChangedTram=false, tramGeneratorRun=false;
     private int generDeleyCar=1000, generDeleyTram=1000;
-    private int carGenerCount=60, tramGenerCount=60;
+    private int carGenerCount=60, tramGenerCount=2;
     private double myCarSpeedChange;
     private final int MAX_COUNT=120;
     private TextField deleyCar, deleyTram;

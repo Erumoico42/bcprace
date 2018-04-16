@@ -32,7 +32,7 @@ import prometheus.TrafficLights.TrafficLight;
  * @author Honza
  */
 public class LightsControll {
-    private List<TrafficLight> trafficLightList=new ArrayList<>();
+    private static List<TrafficLight> trafficLightList=new ArrayList<>();
     private boolean run=false;
     private CheckBox connectSems;
     private TrafficLight ligthPrim=null, lightSec=null;
@@ -75,7 +75,6 @@ public class LightsControll {
     {
         for (TrafficLight trafficLight : trafficLightList) {
             trafficLight.play();
-            System.out.println(trafficLight.getID());
         }
     }
     private LightsControll getLC()
@@ -107,6 +106,13 @@ public class LightsControll {
     public void remove(TrafficLight tl)
     {
         trafficLightList.remove(tl);
+    }
+    public static void clean()
+    {
+        for (TrafficLight trafficLight : trafficLightList) {
+            trafficLight.remove();
+        }
+        trafficLightList.clear();
     }
     private void initEvents()
     {
