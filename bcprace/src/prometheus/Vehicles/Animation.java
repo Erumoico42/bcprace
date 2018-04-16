@@ -35,7 +35,7 @@ public class Animation {
     {
         Platform.runLater(
         () -> {
-            prometheus.Prometheus.removeNodeSS(car.getIv());
+            Prometheus.removeNode(car.getIv());
         });
         cars.remove(car);
     }
@@ -43,6 +43,11 @@ public class Animation {
     {
         timerTask.cancel();
         timer.cancel();
+        ttRem.cancel();
+        timerRem.cancel();
+        for (Vehicle car : cars) {
+            car.winkerRun(false);
+        }
     }
     private void remTimer()
     {

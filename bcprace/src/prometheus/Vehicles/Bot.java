@@ -5,9 +5,11 @@
  */
 package prometheus.Vehicles;
 
-import prometheus.PolKomb;
-import prometheus.Semafor;
-import prometheus.Usek;
+import prometheus.Police.PoliceCombin;
+import prometheus.Street.StreetSegment;
+import prometheus.TrafficLights.TrafficLight;
+
+
 
 /**
  *
@@ -18,11 +20,11 @@ public class Bot extends Vehicle{
     Animation a;
     private boolean carFoundStreet;
     private double distNextStreet;
-    private Usek u;
+    private StreetSegment u;
     private double length;
     private double defDistSpeed=666;
     private boolean ignorCP=false;
-    public Bot(Animation animation, Usek ss) {
+    public Bot(Animation animation, StreetSegment ss) {
         super(animation, ss);
         a=animation;
     }
@@ -65,14 +67,14 @@ public class Bot extends Vehicle{
             return true;
         return false;
     }
-    private boolean findSem(Usek us, double d)
+    private boolean findSem(StreetSegment us, double d)
     {
         boolean semFounded=false;
-        for (Usek uNext : us.getDalsiUseky()) {
+        for (StreetSegment uNext : us.getDalsiUseky()) {
             if(d<10 && !semFounded)
             {
                 double dist=d-getTime();
-                for (Semafor sem : uNext.getSemafory()) {
+                for (TrafficLight sem : uNext.getSemafory()) {
                     if(sem.getStatus()==0 || sem.getStatus()==1 || sem.getStatus()==2)
                     {
                         semFounded=true;
@@ -88,7 +90,7 @@ public class Bot extends Vehicle{
                     
                 }
                 if(!semFounded){
-                    for (PolKomb pk : uNext.getPK()) {
+                    for (PoliceCombin pk : uNext.getPK()) {
                         if(!pk.getRun())
                         {
                             semFounded=true;
@@ -111,10 +113,10 @@ public class Bot extends Vehicle{
         }
         return semFounded;
     }
-    private boolean findStreet(Usek us, int d)
+    private boolean findStreet(StreetSegment us, int d)
     {
         boolean carFound=false;
-        for (Usek uNext : us.getDalsiUseky()) {
+        for (StreetSegment uNext : us.getDalsiUseky()) {
             if(d<10 && !carFound)
             {
                 
@@ -137,9 +139,9 @@ public class Bot extends Vehicle{
         return carFound;
     }
     
-    private void findCPCross(Usek us, int dist)
+    private void findCPCross(StreetSegment us, int dist)
     {
-        for (Usek uNext : us.getDalsiUseky()) {
+        for (StreetSegment uNext : us.getDalsiUseky()) {
             if(uNext.getCheckPoints().isEmpty())
             {
                 if(dist<4)
@@ -147,8 +149,8 @@ public class Bot extends Vehicle{
             }
             else
             {
-                for (Usek cp : uNext.getCheckPoints()) {
-                    for (Usek uN : cp.getDalsiUseky()) {
+                for (StreetSegment cp : uNext.getCheckPoints()) {
+                    for (StreetSegment uN : cp.getDalsiUseky()) {
                         findCarCross(uN, 1, dist);                        
                     }
                 }
@@ -156,12 +158,12 @@ public class Bot extends Vehicle{
             }
         }
     }
-    private boolean findCarCross(Usek us, int nextDist, double actDist)
+    private boolean findCarCross(StreetSegment us, int nextDist, double actDist)
     {
         
         boolean carFound=false;
         Vehicle nextVeh=us.getVehicle();
-        for (Usek uNext : us.getPredchoziUseky()) {
+        for (StreetSegment uNext : us.getPredchoziUseky()) {
             if(!carFound)
             {
                 if(nextVeh==null)

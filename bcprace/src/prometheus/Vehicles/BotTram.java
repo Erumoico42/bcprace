@@ -5,9 +5,9 @@
  */
 package prometheus.Vehicles;
 
+import prometheus.Street.StreetSegment;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Rectangle;
-import prometheus.Usek;
 
 /**
  *
@@ -15,7 +15,7 @@ import prometheus.Usek;
  */
 public class BotTram extends Bot{
 
-    public BotTram(Animation animation, Usek ss) {
+    public BotTram(Animation animation, StreetSegment ss) {
         super(animation, ss);
         setLength(1);
         setWidth(35);

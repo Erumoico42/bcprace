@@ -5,9 +5,9 @@
  */
 package prometheus.Vehicles;
 
+import prometheus.Street.StreetSegment;
 import java.util.Random;
 import javafx.scene.image.ImageView;
-import prometheus.Usek;
 
 /**
  *
@@ -15,7 +15,7 @@ import prometheus.Usek;
  */
 public class BotCar extends Bot{
     
-    public BotCar(Animation animation, Usek ss) {
+    public BotCar(Animation animation, StreetSegment ss) {
         super(animation, ss);
         newImage();
         

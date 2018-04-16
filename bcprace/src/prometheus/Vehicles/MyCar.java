@@ -4,18 +4,19 @@
  * and open the template in the editor.
  */
 package prometheus.Vehicles;
+import prometheus.Street.StreetSegment;
 import java.util.Random;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Rectangle;
-import prometheus.Usek;
+import prometheus.CarControll;
 
 /**
  *
  * @author Honza
  */
 public class MyCar extends Vehicle{
-    Usek actualSS;
-    public MyCar(Animation animation, Usek ss) {
+    StreetSegment actualSS;
+    public MyCar(Animation animation, StreetSegment ss) {
         super(animation, ss);
         newImage();
         
@@ -31,7 +32,7 @@ public class MyCar extends Vehicle{
     @Override
     public void removeCar()
     {
-        prometheus.Prometheus.setMyCarNull();
+        CarControll.setMyCarNull();
         super.removeCar();
     }
     

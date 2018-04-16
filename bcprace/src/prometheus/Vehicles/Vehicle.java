@@ -5,6 +5,8 @@
  */
 package prometheus.Vehicles;
 
+import prometheus.Street.HelpMath;
+import prometheus.Street.StreetSegment;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +20,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
-import prometheus.MyMath;
 import prometheus.Prometheus;
-import prometheus.Usek;
 
 /**
  *
@@ -29,7 +29,7 @@ import prometheus.Usek;
 public abstract class Vehicle {
     private ImageView iv;
     private double time, totalTime;
-    private Usek actualSegment;
+    private StreetSegment actualSegment;
     private final Animation animation;
     private final double MAX_SPEED=0.07, MAX_FORCE=0.001;
     private double speed=MAX_SPEED, force=MAX_FORCE;
@@ -46,10 +46,10 @@ public abstract class Vehicle {
     private boolean isWink=false, winkRun=false;
     private VehicleImages vi;
     private Image imgAlt;
-    private List<Usek> street=new ArrayList<>();
+    private List<StreetSegment> street=new ArrayList<>();
     private boolean slowing=false;
     
-    public Vehicle(Animation animation, Usek ss) {
+    public Vehicle(Animation animation, StreetSegment ss) {
         actualSegment=ss;
         generateStreet(ss);
         actualSegment.setVehicle(this);
@@ -61,10 +61,10 @@ public abstract class Vehicle {
         animation.addCar(this);
         winkerTimer();
     }
-    private void generateStreet(Usek start)
+    private void generateStreet(StreetSegment start)
     {
-        Usek newUsek=start;
-        Usek lastSplit=newUsek;
+        StreetSegment newUsek=start;
+        StreetSegment lastSplit=newUsek;
         while(!newUsek.getDalsiUseky().isEmpty())
         {
             int size=newUsek.getDalsiUseky().size();
@@ -79,7 +79,7 @@ public abstract class Vehicle {
             street.add(newUsek);
         }
     }
-    private Usek newRandomUsek(Usek u)
+    private StreetSegment newRandomUsek(StreetSegment u)
     {
         return u.getDalsiUseky().get((int)(Math.random()*(u.getDalsiUseky().size())));
     }
@@ -162,7 +162,7 @@ public abstract class Vehicle {
             };
             
     }
-    private void winkerRun(boolean run)
+    public void winkerRun(boolean run)
     {
         winkRun=run;
         if(run)
@@ -187,7 +187,7 @@ public abstract class Vehicle {
             actualSegment=street.get(0);
             street.remove(actualSegment);
             
-            Usek checkWink=actualSegment;
+            StreetSegment checkWink=actualSegment;
             int dist=0;
             boolean startWink=false;
             while(!startWink && dist<10 && street.size()>dist)
@@ -256,7 +256,7 @@ public abstract class Vehicle {
         double t3=t2*t;
         double x = (x0+(t*x1)+(t2*x2)+(t3*x3));
         double y = (y0+(t*y1)+(t2*y2)+(t3*y3)); 
-        angle=Math.toDegrees(MyMath.angle(x, y,xLast, yLast));
+        angle=Math.toDegrees(HelpMath.angle(x, y,xLast, yLast));
         if(angle!=0){
             iv.setRotate(angle);
             controlRectangle.setRotate(angle);
@@ -325,7 +325,7 @@ public abstract class Vehicle {
                     play();
             }
         });
-        prometheus.Prometheus.addNode(iv);
+        Prometheus.drawNode(iv);
         
     }
     public boolean paused()
@@ -381,7 +381,7 @@ public abstract class Vehicle {
         this.force = force;
     }
 
-    public Usek getActualSegment() {
+    public StreetSegment getActualSegment() {
         return actualSegment;
     }
     
