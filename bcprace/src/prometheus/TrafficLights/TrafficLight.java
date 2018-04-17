@@ -30,10 +30,10 @@ public class TrafficLight {
     private List<LightsConnect> controlRed=new ArrayList<>();
     private List<LightsConnect> controlGreen=new ArrayList<>();
     private List<StreetSegment> lightSeg=new ArrayList<>();
-    private Image red=new Image("resources/semafor/red.png");
-    private Image green=new Image("resources/semafor/green.png");
-    private Image orange2green=new Image("/resources/semafor/orange2green.png");
-    private Image orange2red=new Image("resources/semafor/orange2red.png");
+    private Image red=new Image("resources/trafficLights/red.png");
+    private Image green=new Image("resources/trafficLights/green.png");
+    private Image orange2green=new Image("/resources/trafficLights/orange2green.png");
+    private Image orange2red=new Image("resources/trafficLights/orange2red.png");
     private final String STYLE_SELECT_SEC="-fx-border-color: red;"
             + "-fx-border-width: 2;"
             + "-fx-border-style: solid;";  
@@ -180,7 +180,9 @@ public class TrafficLight {
             streetSegment.getSemafory().remove(this);
         }
         lightSeg.clear();
+        lc.remove(this);
     }
+
     public void stop()
     {
         if(timertask!=null)

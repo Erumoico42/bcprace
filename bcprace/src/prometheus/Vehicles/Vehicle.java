@@ -172,8 +172,10 @@ public abstract class Vehicle {
         else
         {
             iv.setImage(vi.getDefImg());
-            timWin.cancel();
-            ttWin.cancel();    
+            if(timWin!=null)
+                timWin.cancel();
+            if(ttWin!=null)
+                ttWin.cancel();    
             winkerTimer();
         }
     }
