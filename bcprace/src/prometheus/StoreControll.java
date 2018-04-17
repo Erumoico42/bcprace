@@ -131,7 +131,9 @@ public class StoreControll {
         fch.getExtensionFilters().add(filter);
         File file = fch.showOpenDialog(null);
         if (file != null) { 
+            DrawControll.clean();
             loader(file);
+            
         } 
     }
 }

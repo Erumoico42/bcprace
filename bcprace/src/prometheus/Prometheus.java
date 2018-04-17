@@ -94,11 +94,11 @@ public class Prometheus extends Application {
                 {
                     if(lightsControll.getSemPrim()!=null)
                         lightsControll.removePrim();
-                    else if(policeControll.getActualPolice()!=null)
+                    if(policeControll.getActualPolice()!=null)
                         policeControll.removePolice();
-                    else if(policeControll.getActualPolSide()!=null)
+                    if(policeControll.getActualPolSide()!=null)
                         policeControll.removePolSide();
-                    else if(drawControll.getActualConnect()!=null)
+                    if(drawControll.getActualConnect()!=null)
                         drawControll.removeConnect();
                 }
             }
@@ -136,7 +136,7 @@ public class Prometheus extends Application {
         loadTemp.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                drawControll.clean();
+                
                 storeControll.openFile();
             }
         });

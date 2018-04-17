@@ -157,6 +157,10 @@ public class PoliceControll {
             }
         });
     }
+    public static void addPolice(Police pol)
+    {
+        polices.add(pol);
+    }
     public List<Police> getPolices()
     {
         return polices;

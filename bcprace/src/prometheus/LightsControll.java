@@ -103,13 +103,22 @@ public class LightsControll {
         trafficLightList.add(s);
         //addSem(s);
     }
+    public static void addLight(TrafficLight tl)
+    {
+        trafficLightList.add(tl);
+    }
     public void remove(TrafficLight tl)
     {
         trafficLightList.remove(tl);
     }
     public static void clean()
     {
+        List<TrafficLight> toRem=new ArrayList<>();
         for (TrafficLight trafficLight : trafficLightList) {
+            
+            toRem.add(trafficLight);
+        }
+        for (TrafficLight trafficLight : toRem) {
             trafficLight.remove();
         }
         trafficLightList.clear();
@@ -414,6 +423,25 @@ public class LightsControll {
             //enableRedChange.setSelected(prim.getEnableRed());
             tfOrange.setText(String.valueOf(prim.getTimeOrange()));
             tfGreen.setText(String.valueOf(prim.getTimeGreen()));
+            setStatus(prim.getStatus());
+        }
+    }
+    private void setStatus(int status)
+    {
+        switch(status)
+        {
+            case 0:{
+                rbRed.setSelected(true);
+                break;
+            }
+            case 1:{
+                rbOrange.setSelected(true);
+                break;
+            }
+            case 3:{
+                rbGreen.setSelected(true);
+                break;
+            }
         }
     }
     private void checkConnection()

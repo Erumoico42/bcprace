@@ -66,7 +66,7 @@ public class GuiControll {
         this.primaryStage=primaryStage;
         root = new Group(); 
         scene = new Scene(root, 850, 600);
-        primaryStage.setTitle("Infinity project");
+        primaryStage.setTitle("Bakalarska prace");
         primaryStage.setScene(scene);
         primaryStage.show();
         stageControll();
@@ -230,6 +230,8 @@ public class GuiControll {
         play.setMaxSize(40, 35);
         play.setLayoutX(layout1);
         play.setLayoutY(layout1);
+                
+        CheckBox hide=new CheckBox("");
         mg4.addItems(play);
         
         

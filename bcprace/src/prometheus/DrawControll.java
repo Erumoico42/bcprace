@@ -37,12 +37,12 @@ import prometheus.Street.StreetSegment;
  * @author Honza
  */
 public class DrawControll {
-    private ImageView background;
+    private static ImageView background;
     private HBox backgroundBox;
     private static Canvas canvas;
     private final int RESIZE_VALUE=50, MOVE_VALUE=25; 
     private double resizeRatio=0;
-    private boolean locked=true;
+    private static boolean locked=true;
     private static Connect endConnect;
     private static MyCurve actualCurve;
     private static Connect actualConnect;
@@ -50,14 +50,14 @@ public class DrawControll {
     private static PoliceControll policeControll;
     private static int lastIdConnect=0, lastIdCurve=0, lastIdSegment=0;
     private static List<Connect> connects=new ArrayList<>();
-    private List<MyCurve> curves=new ArrayList<>();
+    private static List<MyCurve> curves=new ArrayList<>();
     private static List<StreetSegment> segments=new ArrayList<>();
     private static List<StreetSegment> startSegmentsCar=new ArrayList<>();
     private static List<StreetSegment> startSegmentsTram=new ArrayList<>();
     private static List<Node> nodesToHide=new ArrayList<>();
     private double startX, startY, distX, distY, layoutX, layoutY;
-    private CheckBox lockBg;
-    private Group drawRoot;
+    private static CheckBox lockBg;
+    private static Group drawRoot;
     private GuiControll gui;
     private static boolean tram=false, enableSplit=true;
     private String bgSource;
@@ -75,7 +75,7 @@ public class DrawControll {
         initControll();
         initEvents();
     }
-    public void clean()
+    public static void clean()
     {
         lastIdConnect=0;
         lastIdCurve=0;
@@ -94,6 +94,10 @@ public class DrawControll {
         startSegmentsTram.clear();
         nodesToHide.clear();
         background.setImage(null);
+    }
+    public static void addCurve(MyCurve mc)
+    {
+        curves.add(mc);
     }
     public static void addToHide(Node node)
     {
@@ -136,15 +140,7 @@ public class DrawControll {
         lockBg.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                if(!locked)
-                {
-                    locked=true;
-                    canvas.setVisible(true);
-                }else
-                {
-                    locked=false;
-                    canvas.setVisible(false);
-                }
+                lockBackground();
                 
             }
         });
@@ -162,6 +158,31 @@ public class DrawControll {
                 tram=true;
             }
         });
+    }
+    public static void lockBackground(boolean lock)
+    {
+        if(lock)
+        {
+            locked=true;
+            canvas.setVisible(true);
+            lockBg.setSelected(true);
+        }
+        else
+        {
+            locked=false;
+            canvas.setVisible(false);
+            lockBg.setSelected(false);
+        }
+    }
+    public static void lockBackground()
+    {
+        if(!locked)
+        {
+            lockBackground(true);
+        }else
+        {
+            lockBackground(false);
+        }
     }
     public void setPoliceControll(PoliceControll pc)
     {
@@ -217,10 +238,6 @@ public class DrawControll {
     public static void addStartSegmentTram(StreetSegment ss)
     {
         startSegmentsTram.add(ss);     
-    }
-    public void addCurve(MyCurve mc)
-    {
-        curves.add(mc);
     }
     public static void addConnect(Connect con)
     {
