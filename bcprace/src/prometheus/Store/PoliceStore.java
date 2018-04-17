@@ -16,6 +16,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import prometheus.PoliceControll;
 
 /**
  *
@@ -62,6 +63,7 @@ public class PoliceStore {
                 ps.setId(idPoliceSide);
                 polda.addSide(ps);
                 policeSides.add(ps);
+                PoliceControll.addPolice(polda);
             }
             NodeList policeKombin=((Element)police).getElementsByTagName("policeKombin");
             for (int j = 0; j < policeKombin.getLength(); j++) {

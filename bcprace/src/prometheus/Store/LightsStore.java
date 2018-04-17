@@ -59,6 +59,7 @@ public class LightsStore {
             Point p=new Point(Integer.parseInt(pozzz[0]),Integer.parseInt(pozzz[1]));
             semafor.moveIMG(p);
             loadedLights.add(semafor);
+            LightsControll.addLight(semafor);
         }
             
         for (int i = 0; i < lights.getLength(); i++) {

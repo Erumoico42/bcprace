@@ -162,5 +162,6 @@ public class CurveStore {
         //mc.getControl2().moveControls(p3);
         mc.setChangedControlls();
         mycurves.add(mc);
+        DrawControll.addCurve(mc);
     }
 }

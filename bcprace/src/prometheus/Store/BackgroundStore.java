@@ -13,6 +13,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import prometheus.DrawControll;
 import prometheus.Prometheus;
 
 /**
@@ -86,5 +87,6 @@ public class BackgroundStore {
                 Prometheus.getDrawControll().moveDefBg(position.getX(), position.getY(), Double.valueOf(width), Double.valueOf(height));
                 Prometheus.getDrawControll().setBgSource(source);            
             }
+            DrawControll.lockBackground(true);
     }
 }
