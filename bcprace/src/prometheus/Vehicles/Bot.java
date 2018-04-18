@@ -213,7 +213,7 @@ public class Bot extends Vehicle{
                 ret=spAct;
         }
         else
-            ret=spNext;
+            ret=0;
         return ret;
                 
     }

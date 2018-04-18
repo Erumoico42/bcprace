@@ -5,9 +5,6 @@
  */
 package prometheus.Vehicles;
 import prometheus.Street.StreetSegment;
-import java.util.Random;
-import javafx.scene.image.ImageView;
-import javafx.scene.shape.Rectangle;
 import prometheus.CarControll;
 
 /**

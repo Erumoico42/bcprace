@@ -5,7 +5,6 @@
  */
 package prometheus.Vehicles;
 
-import java.util.Random;
 import javafx.scene.image.Image;
 
 /**
@@ -102,11 +101,11 @@ public class VehicleImages {
             }
             case 666:
             {
-                defImg=new Image("/resources/cars/auto-02.png");
+                defImg=new Image("/resources/cars/moje.png");
 
-                imgA=new Image("/resources/cars/auto-02-b.png");
-                imgL=new Image("/resources/cars/auto-02-b-l.png");
-                imgR=new Image("/resources/cars/auto-02-b-p.png");
+                imgA=new Image("/resources/cars/moje-b.png");
+                imgL=new Image("/resources/cars/moje-b-l.png");
+                imgR=new Image("/resources/cars/moje-b-p.png");
                 break;
             }
             default:{

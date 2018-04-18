@@ -41,13 +41,32 @@ public class SegmentStore {
         return loadedSegments;
     }
    
-    public static void saveSegments(List<MyCurve> curves)
+    public static void saveSegments(List<MyCurve> curves, List<StreetSegment> startTram, List<StreetSegment> startCar)
     {
         for (MyCurve curve : curves) {
             for (StreetSegment usek : curve.getSegments()) {
                 saveSegment(usek);
             }
         }
+        for (StreetSegment streetSegment : startCar) {
+            saveStart(streetSegment, false);
+        }
+        for (StreetSegment streetSegment : startTram) {
+            saveStart(streetSegment, true);
+        }
+    }
+    public static void saveStart(StreetSegment s, boolean tram)
+    {
+        Element startSegment=doc.createElement("startSegment");   
+        Attr idStartSegment=doc.createAttribute("idStartSegment");
+        idStartSegment.setValue(String.valueOf(s.getId()));
+        startSegment.setAttributeNode(idStartSegment);
+        
+        Attr isTram=doc.createAttribute("isTram");
+        isTram.setValue(String.valueOf(tram));
+        startSegment.setAttributeNode(isTram);
+        
+        root.appendChild(startSegment);
     }
     public static void saveSegment(StreetSegment u)
     {   
@@ -71,11 +90,7 @@ public class SegmentStore {
         Attr p3=doc.createAttribute("p3");
         p3.setValue(String.valueOf((int)u.getP3().getX()+","+(int)u.getP3().getY()));
         segment.setAttributeNode(p3);
-        
-        Attr tramStart=doc.createAttribute("tramStart");
-        tramStart.setValue(String.valueOf(u.isStrTram()));
-        segment.setAttributeNode(tramStart);
-        
+
         Attr winkAngle=doc.createAttribute("winkAngle");
         winkAngle.setValue(String.valueOf(u.getWinkAngle()));
         segment.setAttributeNode(winkAngle);
@@ -123,6 +138,20 @@ public class SegmentStore {
         }
         root.appendChild(segment);
     }   
+    private static void loadStars()
+    {
+        NodeList starts=doc.getElementsByTagName("startSegment");
+        for (int i = 0; i < starts.getLength(); i++) {
+            Node start=starts.item(i);   
+            int idStartSegment=Integer.valueOf(start.getAttributes().getNamedItem("idStartSegment").getNodeValue());
+            StreetSegment act=getUsekById(idStartSegment);
+            boolean isTram=Boolean.valueOf(start.getAttributes().getNamedItem("isTram").getNodeValue());
+            if(isTram)
+                DrawControll.addStartSegmentTram(act);
+            else
+                DrawControll.addStartSegmentCar(act);
+        }
+    }
     public static void loadSegments(List<TrafficLight> lights, List<PoliceCombin> polKombs)
     {
         NodeList us=doc.getElementsByTagName("segment");
@@ -150,9 +179,6 @@ public class SegmentStore {
             u.setP1(p1);
             u.setP2(p2);
             
-            boolean tram=Boolean.valueOf(usek.getAttributes().getNamedItem("tramStart").getNodeValue());
-            u.setStrTram(tram);
-
             double winkAngle=Double.valueOf(usek.getAttributes().getNamedItem("winkAngle").getNodeValue());
             u.setWinkAngle(winkAngle);
             
@@ -192,13 +218,6 @@ public class SegmentStore {
             StreetSegment actUs=getUsekById(idAct);
             
             NodeList predch=((Element)usek).getElementsByTagName("lastSegment");
-            if(predch.getLength()==0)
-            {
-                if(!actUs.isStrTram())
-                    DrawControll.addStartSegmentCar(actUs);
-                else
-                    DrawControll.addStartSegmentTram(actUs);
-            }
             
             for (int j = 0; j < predch.getLength(); j++) {                
                 int idLast=Integer.valueOf(predch.item(j).getAttributes().getNamedItem("idLastSegment").getNodeValue());
@@ -221,7 +240,7 @@ public class SegmentStore {
                 
             }
         }   
-        
+        loadStars();
     }
     private static StreetSegment getUsekById(int id)
     {

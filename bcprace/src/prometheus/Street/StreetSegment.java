@@ -116,13 +116,6 @@ public class StreetSegment {
         return id;
     }
 
-    public boolean isStrTram() {
-        return strTram;
-    }
-
-    public void setStrTram(boolean strTram) {
-        this.strTram = strTram;
-    }
     
     public void setCir() {
         cir=new Circle(p3.getX(), p3.getY(), 4, Color.GREEN);
@@ -230,6 +223,10 @@ public class StreetSegment {
     public void addSemafor(TrafficLight s)
     {
         semafory.add(s);
+    }
+    public void removeSem(TrafficLight s)
+    {
+        semafory.remove(s);
     }
     public List<TrafficLight> getSemafory()
     {

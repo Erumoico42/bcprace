@@ -17,7 +17,6 @@ import prometheus.DrawControll;
  */
 public class Split {
     private List<Connect> connects=new ArrayList<>();
-    private List<StreetSegment> startUsekyCar, startUsekyTram;
     private final int SEG_LENGTH=30;
     private Point pOld, pNew;
     private StreetSegment newSS, lastSS, firstSS;;
@@ -111,19 +110,15 @@ public class Split {
                 
             }
         }
-        startUsekyCar=new ArrayList<>();
-        startUsekyTram=new ArrayList<>();
         for (Connect connect : connects) {
             if(connect.getEndCurves().isEmpty())
             {
                 for (MyCurve startCurve : connect.getStartCurves()) {
                     if(connect.isTram()){
                         DrawControll.addStartSegmentTram(startCurve.getFirst());
-                        startUsekyTram.add(startCurve.getFirst());
                     }
                     else{
                         DrawControll.addStartSegmentCar(startCurve.getFirst());
-                        startUsekyCar.add(startCurve.getFirst());
                     }
                 }
                 
@@ -139,14 +134,6 @@ public class Split {
                 angle-=360;
             us.setWinkAngle(angle);
         }
-    }
-    public List<StreetSegment> getStartUsekyTram()
-    {
-        return startUsekyTram;
-    }
-    public List<StreetSegment> getStartUsekyCar()
-    {
-        return startUsekyCar;
     }
     private void connectSegments(StreetSegment oldS, StreetSegment newS)
     {
