@@ -118,14 +118,21 @@ public class TrafficLight {
         hbox.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+                TrafficLight actSec=lc.getSemSec();
+                TrafficLight actPrim=lc.getSemPrim();
                 if(event.getButton()==MouseButton.PRIMARY){
-                    TrafficLight act=lc.getSemPrim();    
-                    if(act!=getThis())
+                    if(actSec!=null)
+                    {
+                        actSec.setStyle(0);
+                        lc.selectSemSec(null);
+                    }
+                    if(actPrim!=getThis())
                     {
                         
-                        if(act!=null)
+                        if(actPrim!=null)
                         {
-                            act.setStyle(0);
+                            actPrim.setStyle(0);
+                            lc.selectSemSec(null);
                         }
                         
                         lc.selectSemPrim(getThis());
@@ -137,36 +144,46 @@ public class TrafficLight {
                         setStyle(0);
                         lc.selectSemPrim(null);
                     } 
+                    
                 }
                 
                 if(event.getButton()==MouseButton.SECONDARY)
                 {
                     StreetSegment actSegment=DrawControll.getActualStreetSegment();
-                    TrafficLight act=lc.getSemSec();
-                    if(act!=getThis())
+                    
+                    if(actPrim!=null)
                     {
- 
-                        if(act!=null)
+                        
+                        if(actSec!=null)
                         {
-                            act.setStyle(0);
+                            actSec.setStyle(0);
+                            lc.selectSemSec(null);
                         }
-                        if(actSegment!=null){
+                        if(actSec!=getThis()){
+                            setStyle(2);
+                            lc.selectSemSec(getThis());
+                        }
+                        else
+                        {
+                            setStyle(0);  
+                            lc.selectSemSec(null);
+                        }
+                        
+                    }
+                    
+                    if(actSegment!=null){
+                        if(actSegment.getSemafory().contains(getThis())){
+                            actSegment.removeSem(getThis());
+                            lightSeg.remove(actSegment);
+                            setStyle(0);
+                        }
+                        else
+                        {
                             actSegment.addSemafor(getThis());
                             lightSeg.add(actSegment);
+                            setStyle(2);
                         }
-                        lc.selectSemSec(getThis());
-                        setStyle(2);
-                    }
-                    else
-                    {
-                        if(actSegment!=null){
-                            actSegment.getSemafory().remove(getThis());
-                            lightSeg.remove(actSegment);
-                        }
-                        setStyle(0);
-                        lc.selectSemSec(null);
-
-                    }
+                    }   
                 }
             }
         });
@@ -244,6 +261,28 @@ public class TrafficLight {
             pre.getSem().setStatus(pre.getStatus(), true);
         }
     }
+    private void changeControlOrRed()
+    {
+        for (LightsConnect pre : controlRed) {
+            int prStat=pre.getStatus();
+            if(prStat==1)
+                prStat=0;
+            else
+                prStat=3;
+            pre.getSem().setStatus(prStat, true);
+        }
+    }
+    private void changeControlOrGreen()
+    {
+        for (LightsConnect pre : controlGreen) {
+            int prStat=pre.getStatus();
+            if(prStat==1)
+                prStat=0;
+            else
+                prStat=3;
+            pre.getSem().setStatus(prStat, true);
+        }
+    }
     private void changeControlGreen()
     {
         for (LightsConnect pre : controlGreen) {
@@ -268,7 +307,7 @@ public class TrafficLight {
     }
     public void setStatus(int status, boolean force)
     { 
-        if(status==0 || status==3 || force  || ((status==1 && runRed) || (status==2 && runGreen))){
+        if(  force  || (((status==1 || status==0 )&& runRed) || ((status==2 || status==3)&& runGreen))){
             time=0;
             this.status=status;
             switch(status)
@@ -276,6 +315,7 @@ public class TrafficLight {
                 case 0:
                 {
                     //red
+                    changeControlOrRed();
                     semImg.setImage(red);
                     max=defRed;
                     break;
@@ -299,6 +339,7 @@ public class TrafficLight {
                 case 3:
                 {
                     //green
+                    changeControlOrGreen();
                     semImg.setImage(green);
                     max=defGreen;
                     break;
