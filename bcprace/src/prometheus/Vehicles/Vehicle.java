@@ -63,19 +63,37 @@ public abstract class Vehicle {
     {
         StreetSegment newUsek=start;
         StreetSegment lastSplit=newUsek;
-        while(!newUsek.getDalsiUseky().isEmpty())
+        int count=0;
+        List<StreetSegment> toAdd=new ArrayList<>();
+        boolean stop=false;
+        while(!stop && !newUsek.getDalsiUseky().isEmpty())
         {
+            
             int size=newUsek.getDalsiUseky().size();
-            if(size>1)
+            if(size>1){
+                street.addAll(toAdd);
                 lastSplit=newUsek;
+                toAdd.clear();
+                count=0;
+            }
             newUsek=newRandomUsek(newUsek);
             
-            while(street.contains(newUsek)){
+            /*while(street.contains(newUsek)){
                 newUsek=newRandomUsek(lastSplit);
+            }*/
+            if(!street.contains(newUsek) && !toAdd.contains(newUsek)){
+                toAdd.add(newUsek);
             }
-            
-            street.add(newUsek);
+            else{
+                toAdd.clear();
+                count++;
+                newUsek=lastSplit;
+            }
+            if(count>10)
+                stop=true;
+            //street.add(newUsek);
         }
+        street.addAll(toAdd);
     }
     private StreetSegment newRandomUsek(StreetSegment u)
     {
@@ -141,32 +159,40 @@ public abstract class Vehicle {
     }
     private void winkerTimer()
     {
-            ttWin = new TimerTask() {
-                @Override
-                public void run(){
-                    Platform.runLater(() -> {
-                        if(isWink)
-                        {
-                            isWink=false;
-                            iv.setImage(vi.getDefImg());
-                        }
-                        else
-                        {
-                            isWink=true;
-                            iv.setImage(imgAlt);
-                        }
-                    });
-                }
-            };
+        isWink=false;
+        
             
+        ttWin = new TimerTask() {
+            @Override
+            public void run(){
+                Platform.runLater(() -> {
+                    if(isWink)
+                    {
+                        isWink=false;
+                        iv.setImage(vi.getDefImg());
+                    }
+                    else
+                    {
+                        isWink=true;
+                        iv.setImage(imgAlt);
+                    }
+                });
+            }
+        };
+        
     }
     public void winkerRun(boolean run)
     {
-        winkRun=run;
+        
         if(run)
         {
-            timWin=new Timer();
-            timWin.schedule(ttWin, 700,700);
+            if(!winkRun)
+            {
+                timWin=new Timer();
+                winkerTimer();
+                timWin.schedule(ttWin, 700,700); 
+            }
+            
             
         }
         else
@@ -176,8 +202,9 @@ public abstract class Vehicle {
                 timWin.cancel();
             if(ttWin!=null)
                 ttWin.cancel();    
-            winkerTimer();
+            
         }
+        winkRun=run;
     }
     private void nextSegment()
     {
@@ -195,25 +222,26 @@ public abstract class Vehicle {
                 
                 checkWink=street.get(dist);
                 dist++;
-                if(checkWink.getWinkAngle()!=0)
+                if(checkWink.getWinkAngle()!=0){
                     startWink=true;
+                    
+                }
                 
             }
             if(startWink)
             {
-                if(!winkRun){
-                    winkerRun(true);
-                    if(checkWink.getWinkAngle()<0)
-                        imgAlt=vi.getRightImg();
-                    else if(checkWink.getWinkAngle()>0)
-                        imgAlt=vi.getLeftImg();
-                }
+                winkerRun(true);
+                if(checkWink.getWinkAngle()<0)
+                    imgAlt=vi.getRightImg();
+                else if(checkWink.getWinkAngle()>0)
+                    imgAlt=vi.getLeftImg();
             }
   
             setPoints();
             actualSegment.setVehicle(this); 
 
             if(actualSegment.isStopWinker()){
+                
                 winkerRun(false);
             }
             //}
