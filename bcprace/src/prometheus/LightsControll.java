@@ -392,6 +392,45 @@ public class LightsControll {
     private void disconnectLights()
     {
         connected=false;
+        
+        if(rbPrimRed.isSelected()){
+            if(rbSecRed.isSelected()){
+                for (LightsConnect lc : ligthPrim.getControlRed()) {
+                    if(lc.getSem().equals(lightSec) && lc.getStatus()==1){
+                        ligthPrim.getControlRed().remove(lc);
+                        break;
+                    }
+                }
+            }
+            else if(rbSecGreen.isSelected())
+            {
+                for (LightsConnect lc : ligthPrim.getControlRed()) {
+                    if(lc.getSem().equals(lightSec) && lc.getStatus()==2){
+                        ligthPrim.getControlRed().remove(lc);
+                        break;
+                    }
+                }
+            }
+        }
+        if(rbPrimGreen.isSelected()){
+            if(rbSecRed.isSelected()){
+                for (LightsConnect lc : ligthPrim.getControlGreen()) {
+                    if(lc.getSem().equals(lightSec) && lc.getStatus()==1){
+                        ligthPrim.getControlGreen().remove(lc);
+                        break;
+                    }
+                }
+            }
+            else if(rbSecGreen.isSelected())
+            {
+                for (LightsConnect lc : ligthPrim.getControlGreen()) {
+                    if(lc.getSem().equals(lightSec) && lc.getStatus()==2){
+                        ligthPrim.getControlGreen().remove(lc);
+                        break;
+                    }
+                }
+            }
+        }
     }
     public TrafficLight getSemSec()
     {
@@ -468,7 +507,7 @@ public class LightsControll {
         else
             connectSems.setDisable(true);
         connectSems.setSelected(select);
-        
+        connected=select;
     }
     /*
     private void showConnections()
