@@ -47,7 +47,7 @@ public class GuiControll {
     private Button loadBG, timeGenCarPl, timeGenCarMi, timeGenTramPl, timeGenTramMi, speedOwnPl, speedOwnMi, addOwn, addPolice, addSide, timeSidPl, timeSidMi, timeWaiPl,timeWaiMi,
             addSem, timeRedPl, timeRedmi, timeOrangePl, timeOrangemi, timeGreenPl, timeGreenmi;
     private TextField timeGenCar, timeGenTram, speedOwn, timeSide, timeWait, timeRed, timeOrange, timeGreen;
-    private CheckBox generCar, generTram, lockBG, connectSides, connectSems;
+    private CheckBox generCar, generTram, lockBG, connectSides, connectSems, enableRed, enableGreen, hide;
     private RadioButton createCar, createTram, semColOrange, semColRed, semColGreen, semPrimRed, semPrimOrange, semPrimGreen, semSecRed, semSecOrange,semSecGreen;
     private Group drawRoot;
     private SubScene drawScene;
@@ -55,8 +55,6 @@ public class GuiControll {
     private Scene scene;
     private Canvas canvas;
     private static MenuFlap fapSim, fapEdit;
-    private CheckBox enableRed;
-    private CheckBox enableGreen;
     private Button newTemp, loadTemp, saveTemp;
     private Image imgPlay=new Image("/resources/icons/play.png");
     private Image imgPause=new Image("/resources/icons/pause.png");
@@ -219,20 +217,23 @@ public class GuiControll {
         mg3.addItems(speedOwnPl, speedOwnMi, speedOwn, addOwn);
         
         MenuGroup mg4=new MenuGroup("Spustit");
-        mg4.setWidth(50);
-        mg4.setLblLayout(8);
+        mg4.setWidth(110);
+        mg4.setLblLayout(40);
         mg4.setLayout(270);
         ivPlay.setFitWidth(30);
         ivPlay.setFitHeight(25);
         play=new Button();
         play.setGraphic(ivPlay);
-        play.setMinSize(40, 35);
-        play.setMaxSize(40, 35);
+        play.setMinSize(100, 30);
+        play.setMaxSize(100, 30);
         play.setLayoutX(layout1);
         play.setLayoutY(layout1);
                 
-        CheckBox hide=new CheckBox("");
-        mg4.addItems(play);
+        hide=new CheckBox("Zobrazit silnice");
+        hide.setSelected(true);
+        hide.setLayoutX(layout1);
+        hide.setLayoutY(35);
+        mg4.addItems(play, hide);
         
         
         fapSim.addGroups(mg1, mg2, mg3, mg4);
@@ -559,6 +560,10 @@ public class GuiControll {
         return enableRed;
     }
 
+    public CheckBox getHide() {
+        return hide;
+    }
+    
     public CheckBox getEnableGreen() {
         return enableGreen;
     }
