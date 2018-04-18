@@ -24,6 +24,7 @@ import javafx.scene.Scene;
 import javafx.scene.SubScene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.RadioButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -145,7 +146,7 @@ public class Prometheus extends Application {
         saveTemp.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                storeControll.saveFile(drawControll.getCurves(), drawControll.getConnects(), lightsControll.getLights(), policeControll.getPolices(), drawControll.getBgSource(), drawControll.getBG());
+                storeControll.saveFile(drawControll.getCurves(), drawControll.getConnects(), lightsControll.getLights(), policeControll.getPolices(), drawControll.getBgSource(), drawControll.getBG(), drawControll.getStartTram(), drawControll.getStartCar());
             }
         });
         Button newTemp=gui.getNewTemp();
@@ -165,15 +166,21 @@ public class Prometheus extends Application {
                     //playBtn.setText("Pause");
                     gui.changPlay(false);
                     play();
-                    drawControll.showObjects(false);
                 }
                 else
                 {
                    // playBtn.setText("Play");
                     pause();
                     gui.changPlay(true);
-                    drawControll.showObjects(true);
+                    
                 }
+            }
+        });
+        CheckBox hide=gui.getHide();
+        hide.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                drawControll.showObjects(hide.isSelected());
             }
         });
         

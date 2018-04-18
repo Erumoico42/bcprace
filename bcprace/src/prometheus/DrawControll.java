@@ -197,21 +197,28 @@ public class DrawControll {
             sstoGen=startSegmentsTram;
         if(!sstoGen.isEmpty()){
             StreetSegment ret=sstoGen.get((int)(Math.random()*sstoGen.size()));
-            if(ret!=null && ret.getVehicle()==null)
-                return ret;
+            if(ret!=null){
+                for (StreetSegment streetSegment : ret.getDalsiUseky()) {
+                    if(streetSegment.getVehicle()!=null)
+                        return null;
+                }
+                if(ret.getVehicle()==null)
+                    return ret;
+                else
+                    return null;
+            }
             else
                 return null;
         }
         return null;
     }
-    public static void cleanSegments()
+    public List<StreetSegment> getStartCar()
     {
-        lastIdSegment=0;
-        for (StreetSegment segment : segments) {
-            Prometheus.removeNode(segment.getCir());
-        }
-        startSegmentsCar.clear();
-        segments.clear();
+        return startSegmentsCar;
+    }
+    public List<StreetSegment> getStartTram()
+    {
+        return startSegmentsTram;
     }
     public void newSplit()
     {
@@ -233,11 +240,15 @@ public class DrawControll {
     }
     public static void addStartSegmentCar(StreetSegment ss)
     {
-        startSegmentsCar.add(ss);     
+        if(ss!=null && !startSegmentsCar.contains(ss)){
+            startSegmentsCar.add(ss);     
+        }
     }
     public static void addStartSegmentTram(StreetSegment ss)
     {
-        startSegmentsTram.add(ss);     
+        if(ss!=null && !startSegmentsTram.contains(ss)){
+            startSegmentsTram.add(ss);     
+        }
     }
     public static void addConnect(Connect con)
     {
