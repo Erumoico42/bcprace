@@ -81,7 +81,7 @@ public class StoreControll {
             throw new Error(ex);
         } 
     }
-    public static void saver(List<MyCurve> curves, List<Connect> connects, List<TrafficLight> semafory,List<Police> polices, File file, String bgSource, HBox bg)
+    public static void saver(List<MyCurve> curves, List<Connect> connects, List<TrafficLight> semafory,List<Police> polices, File file, String bgSource, HBox bg, List<StreetSegment> startsTram, List<StreetSegment> startsCar)
     {
         DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();
         DocumentBuilder db;
@@ -93,7 +93,7 @@ public class StoreControll {
             
             new CurveStore(doc, root, prometheus.Prometheus.getDrawControll()).saveCurve(curves);
             new ConnectStore(doc, root).saveConnects(connects);
-            new SegmentStore(root, doc).saveSegments(curves);
+            new SegmentStore(root, doc).saveSegments(curves,startsTram, startsCar);
             new LightsStore(doc, root).saveLights(semafory);
             new PoliceStore(doc, root).savePolice(polices);
             new BackgroundStore(doc, root).saveBackground(bgSource, bg);
@@ -114,14 +114,14 @@ public class StoreControll {
         }
     }
     
-    public static void saveFile(List<MyCurve> curves, List<Connect> connects, List<TrafficLight> semafory,List<Police> poldas, String bgSource, HBox background)
+    public static void saveFile(List<MyCurve> curves, List<Connect> connects, List<TrafficLight> semafory,List<Police> poldas, String bgSource, HBox background, List<StreetSegment> startsTram, List<StreetSegment> startsCar)
     {
         FileChooser fch=new FileChooser();
         FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("XML soubory (*.xml)", "*.xml");
         fch.getExtensionFilters().add(filter);
         File file = fch.showSaveDialog(null);
         if (file != null) { 
-            saver(curves, connects, semafory,poldas, file, bgSource, background);
+            saver(curves, connects, semafory,poldas, file, bgSource, background, startsTram, startsCar);
         }
     }
     public static void openFile()
