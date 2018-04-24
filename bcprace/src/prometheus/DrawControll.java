@@ -232,7 +232,8 @@ public class DrawControll {
     }
     public static void split()
     {
-        //new Split(connects);
+        if(enableSplit)
+            new Split(connects);
     }
     public void addSegment(StreetSegment ss)
     {
