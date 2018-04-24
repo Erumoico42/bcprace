@@ -56,7 +56,7 @@ public abstract class Vehicle {
         
         this.animation = animation;
         setPoints();
-        animation.addCar(this);
+        animation.addVehicle(this);
         winkerTimer();
     }
     private void generateStreet(StreetSegment start)
@@ -275,7 +275,7 @@ public abstract class Vehicle {
     public void removeCar()
     {
         actualSegment.setVehicle(null);
-        animation.removeCar(this);
+        animation.removeVehicle(this);
     }
     private void move(double t)
     {

@@ -17,7 +17,7 @@ import prometheus.Prometheus;
  * @author Honza
  */
 public class Animation {
-    private List<Vehicle> cars=new ArrayList<>();
+    private List<Vehicle> vehicles=new ArrayList<>();
     private List<Vehicle> toRemove=new ArrayList<>();
     private Timer timer=new Timer();
     private TimerTask timerTask;
@@ -27,17 +27,17 @@ public class Animation {
         timer();
         remTimer();;
     }
-    public void addCar(Vehicle car)
+    public void addVehicle(Vehicle car)
     {
-        cars.add(car);
+        vehicles.add(car);
     }
-    public void removeCar(Vehicle car)
+    public void removeVehicle(Vehicle car)
     {
         Platform.runLater(
         () -> {
             Prometheus.removeNode(car.getIv());
         });
-        cars.remove(car);
+        vehicles.remove(car);
     }
     public void stop()
     {
@@ -45,7 +45,7 @@ public class Animation {
         timer.cancel();
         ttRem.cancel();
         timerRem.cancel();
-        for (Vehicle car : cars) {
+        for (Vehicle car : vehicles) {
             car.winkerRun(false);
         }
     }
@@ -84,7 +84,7 @@ public class Animation {
     }
     public List<Vehicle> getVehicles()
     {
-        return cars;
+        return vehicles;
     }
     private void timer()
     {
@@ -100,8 +100,14 @@ public class Animation {
     }
     private void tick()
     {
-        for (int i = 0; i < cars.size(); i++) {
-            cars.get(i).tick();
+        for (int i = 0; i < vehicles.size(); i++) {
+            vehicles.get(i).tick();
+        }
+    }
+    public void removeAll()
+    {
+        for (Vehicle veh : vehicles) {
+            veh.removeCar();
         }
     }
 }

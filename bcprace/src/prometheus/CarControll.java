@@ -29,7 +29,7 @@ import javafx.scene.input.ScrollEvent;
  * @author Honza
  */
 public class CarControll {
-    private Animation animation;
+    private static Animation animation;
     private DrawControll drawing;
     private TimerTask generTimerTaskCar, changeSpeedTimerTask, generTimerTaskTram;
     private Timer generTimerCar, changeSpeedTimer, generTimerTram;
@@ -57,7 +57,7 @@ public class CarControll {
         changeDeleyTram(tramGenerCount);
         setMyCarNull();
     }
-    public Animation getAnimation()
+    public static Animation getAnimation()
     {
         return animation;
     }

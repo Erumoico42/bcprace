@@ -94,6 +94,7 @@ public class DrawControll {
         startSegmentsTram.clear();
         nodesToHide.clear();
         background.setImage(null);
+        CarControll.getAnimation().removeAll();
     }
     public static void addCurve(MyCurve mc)
     {
