@@ -35,6 +35,8 @@ public class Split {
             for (MyCurve startCurve : connect.getStartCurves()) { 
                 if(connect.getStartCurves().size()>1)
                     newWink=true;
+                else
+                    newWink=false;
                 winkAngle=Math.toDegrees(HelpMath.angle(startCurve.getC0().getPoint(), 
                     startCurve.getC1().getP())-HelpMath.angle(startCurve.getC0().getPoint(), startCurve.getC3().getPoint()));
                 
@@ -86,25 +88,6 @@ public class Split {
                     StreetSegment ssEnd=endCurve.getLast();
                     StreetSegment ssStart=startCurve.getFirst();
                     connectSegments(ssEnd,ssStart);  
-                    /*if(ssEnd!= null && ssStart!= null &&
-                            MyMath.length(ssEnd.getP3(), ssStart.getP3())<SEG_LENGTH+10)
-                    {
-                        connectSegments(ssEnd,ssStart);
-                    }
-                    
-                    else
-                    {
-                        Usek ssMid=new Usek(ssEnd.getP3(), ssStart.getP0());      
-                        double angle=MyMath.angle(ssEnd.getP3(), ssStart.getP0());    
-                        Point p12=MyMath.rotate(ssEnd.getP3(), 15, angle);
-                        ssMid.setP1(p12);
-                        ssMid.setP2(p12);
-                        endCurve.setLast(ssMid);
-                        curveUseky.add(ssMid);
-                        connectSegments(ssEnd,ssMid);
-                        ssEnd=ssMid;
-                        connectSegments(ssEnd,ssStart);
-                    }*/
                       
                 }
                 
@@ -126,8 +109,6 @@ public class Split {
                 
             }
         }
-        //Prometheus.setStartUsekyCar(startUsekyCar);
-        //Prometheus.setStartUsekyTram(startUsekyTram);
     }
     private void setWink(StreetSegment us, double angle)
     {
@@ -135,6 +116,10 @@ public class Split {
             if(angle>180)
                 angle-=360;
             us.setWinkAngle(angle);
+        }
+        else
+        {
+            us.setWinkAngle(0);
         }
     }
     private void connectSegments(StreetSegment oldS, StreetSegment newS)
@@ -175,6 +160,10 @@ public class Split {
                 setWink(newSS, winkAngle);
                 newWink=false;
             }
+            else
+            {
+                setWink(newSS, 0);
+            }
             
             if(lastSS==null)
             {
@@ -199,15 +188,6 @@ public class Split {
                     connectSegments(lastSS, newSS);
                 
             }
-            /*
-            angle=MyMath.angle(u2.getP0(),u.getP2());
-            p12=MyMath.rotate(u2.getP0(), 10, angle);
-            u2.setP1(p12);
-            
-            angle=MyMath.angle(p12,u2.getP3());
-            p21=MyMath.rotate(p, 10, angle); 
-            u2.setP2(p21);
-            */
             lastSS=newSS;
             pOld=pNew;
         }

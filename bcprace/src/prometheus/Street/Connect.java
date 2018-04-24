@@ -53,7 +53,8 @@ public class Connect {
         for (MyCurve endCurve : endCurves) {
             endCurve.getC0().getStartCurves().remove(endCurve);
             Prometheus.removeNode(endCurve.getCurve(), endCurve.getC1().getC(), endCurve.getC2().getC());
-            endCurve.getFirst().removeFromt();
+            if(endCurve.getFirst()!=null)
+                endCurve.getFirst().removeFront();
             for (StreetSegment segment : endCurve.getSegments()) {
                 segment.removeUsek();
             }
@@ -61,7 +62,8 @@ public class Connect {
         for (MyCurve startCurve : startCurves) {
             startCurve.getC3().getEndCurves().remove(startCurve);
             Prometheus.removeNode(startCurve.getCurve(), startCurve.getC1().getC(), startCurve.getC2().getC());
-            startCurve.getLast().removeUsek();
+            if(startCurve.getLast()!=null)
+                startCurve.getLast().removeUsek();
             for (StreetSegment segment : startCurve.getSegments()) {
                 segment.removeUsek();
             }

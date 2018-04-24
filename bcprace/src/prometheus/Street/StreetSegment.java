@@ -63,24 +63,25 @@ public class StreetSegment {
     }
     public void removeNext()
     {
+        for (StreetSegment usek : dalsiUseky) {
+            usek.getPredchoziUseky().remove(this);
+        }
         dalsiUseky.clear();        
     }
-    public void removeFromt()
+    public void removeFront()
     {
+        for (StreetSegment usek : predchoziUseky) {
+            usek.getDalsiUseky().remove(this);
+        }
         predchoziUseky.clear();
     }
     public void removeUsek()
     {
-        for (StreetSegment usek : dalsiUseky) {
-            usek.getPredchoziUseky().remove(this);
-        }
-        for (StreetSegment usek : predchoziUseky) {
-            usek.getDalsiUseky().remove(this);
-        }
+        
+        
         Prometheus.removeNode(cir);
         removeNext();
-        removeFromt();
-        List<StreetSegment> cpToRem=checkPoints;
+        removeFront();
         deSelectCheckPoints(this);
         /*for (StreetSegment checkPoint : cpToRem) {
             
