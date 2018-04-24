@@ -110,6 +110,8 @@ public class Split {
                 
             }
         }
+        DrawControll.cleanStartCar();
+        DrawControll.cleanStartTram();
         for (Connect connect : connects) {
             if(connect.getEndCurves().isEmpty())
             {

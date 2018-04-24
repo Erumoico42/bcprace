@@ -250,6 +250,14 @@ public class DrawControll {
             startSegmentsTram.add(ss);     
         }
     }
+    public static void cleanStartTram()
+    {
+        startSegmentsTram.clear();
+    }
+    public static void cleanStartCar()
+    {
+        startSegmentsCar.clear();
+    }
     public static void addConnect(Connect con)
     {
         connects.add(con);
