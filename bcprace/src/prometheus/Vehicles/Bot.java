@@ -62,10 +62,10 @@ public class Bot extends Vehicle{
     }
     private boolean calcStop(double distNext, double speedNext)
     {
-        double ay=(speedNext*10/distNext);
-        if(ay<0.3)
-            return true;
-        return false;
+        double ay=((speedNext*10)/distNext);
+        if(ay<0.25)
+            return false;
+        return true;
     }
     private boolean findSem(StreetSegment us, double d)
     {

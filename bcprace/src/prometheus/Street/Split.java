@@ -87,6 +87,8 @@ public class Split {
                 for (MyCurve endCurve : connect.getEndCurves()) {
                     StreetSegment ssEnd=endCurve.getLast();
                     StreetSegment ssStart=startCurve.getFirst();
+                    if(ssEnd!=null)
+                        ssEnd.setStopWinker(true);
                     connectSegments(ssEnd,ssStart);  
                       
                 }

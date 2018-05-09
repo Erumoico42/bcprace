@@ -52,7 +52,7 @@ public class Connect {
         Prometheus.removeNode(c);
         for (MyCurve endCurve : endCurves) {
             endCurve.getC0().getStartCurves().remove(endCurve);
-            Prometheus.removeNode(endCurve.getCurve(), endCurve.getC1().getC(), endCurve.getC2().getC());
+            Prometheus.removeNode(endCurve.getCurve(), endCurve.getC1().getC(), endCurve.getC2().getC(), endCurve.getC1().getControlLine(), endCurve.getC2().getControlLine());
             if(endCurve.getFirst()!=null)
                 endCurve.getFirst().removeFront();
             for (StreetSegment segment : endCurve.getSegments()) {
@@ -61,7 +61,7 @@ public class Connect {
         }
         for (MyCurve startCurve : startCurves) {
             startCurve.getC3().getEndCurves().remove(startCurve);
-            Prometheus.removeNode(startCurve.getCurve(), startCurve.getC1().getC(), startCurve.getC2().getC());
+            Prometheus.removeNode(startCurve.getCurve(), startCurve.getC1().getC(), startCurve.getC2().getC(), startCurve.getC1().getControlLine(), startCurve.getC2().getControlLine());
             if(startCurve.getLast()!=null)
                 startCurve.getLast().removeUsek();
             for (StreetSegment segment : startCurve.getSegments()) {
@@ -172,9 +172,11 @@ public class Connect {
         }
         for (MyCurve startCurve : startCurves) {
             startCurve.moveCurveP0(x, y);
+            startCurve.getC1().moveStartLine(x, y);
         }
         for (MyCurve endCurve : endCurves) {  
-            endCurve.moveCurveP3(x, y);     
+            endCurve.moveCurveP3(x, y);  
+            endCurve.getC2().moveStartLine(x, y);
         }
     }
     public void addStartCurve(MyCurve curve)

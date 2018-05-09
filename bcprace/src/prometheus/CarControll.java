@@ -30,22 +30,23 @@ import javafx.scene.input.ScrollEvent;
  */
 public class CarControll {
     private static Animation animation;
-    private DrawControll drawing;
+    private static DrawControll drawing;
     private TimerTask generTimerTaskCar, changeSpeedTimerTask, generTimerTaskTram;
     private Timer generTimerCar, changeSpeedTimer, generTimerTram;
-    private boolean deleyChangedCar=false, carGeneratorRun=false, changeSpeedLoop=false, deleyChangedTram=false, tramGeneratorRun=false;
-    private int generDeleyCar=1000, generDeleyTram=1000;
-    private int carGenerCount=60, tramGenerCount=2;
-    private double myCarSpeedChange;
-    private final int MAX_COUNT=120;
-    private TextField deleyCar, deleyTram;
+    private static boolean deleyChangedCar=false, carGeneratorRun=false, changeSpeedLoop=false, deleyChangedTram=false, tramGeneratorRun=false;
+    private static int generDeleyCar=1000, generDeleyTram=1000;
+    private static int carGenerCount=60, tramGenerCount=2;
+    private static double myCarSpeedChange;
+    private static final int MAX_COUNT=120;
+    private static TextField deleyCar, deleyTram;
     private static MyCar myCar;
     private GuiControll gui;
-    private Button delTramMin;
-    private Button delTramPlus;
+    private static Button delTramMin;
+    private static Button delTramPlus;
     private static  Button upMyCarSpeed, downMyCarSpeed, delCarPlus, delCarMin;
     private static TextField tfMyCarSpeed;
     private static Button insertMyCar;
+    private static CheckBox carGener, tramGener;
     public CarControll(DrawControll draw, GuiControll gui) {
         this.gui=gui;
         animation=new Animation();
@@ -55,19 +56,19 @@ public class CarControll {
         enableTramDel(false);
         changeDeleyCar(carGenerCount);
         changeDeleyTram(tramGenerCount);
-        setMyCarNull();
+        disableMyCar();
     }
     public static Animation getAnimation()
     {
         return animation;
     }
-    private void enableCarDel(boolean enab)
+    private static void enableCarDel(boolean enab)
     {
         deleyCar.setDisable(!enab);
         delCarPlus.setDisable(!enab);
         delCarMin.setDisable(!enab);
     }
-    private void enableTramDel(boolean enab)
+    private static void enableTramDel(boolean enab)
     {
         deleyTram.setDisable(!enab);
         delTramPlus.setDisable(!enab);
@@ -80,7 +81,7 @@ public class CarControll {
     }
     private void initEvents()
     {
-        CheckBox carGener=gui.getGenerCar();
+        carGener=gui.getGenerCar();
         carGener.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -133,7 +134,7 @@ public class CarControll {
             }
         });
         
-        CheckBox tramGener=gui.getGenerTram();
+        tramGener=gui.getGenerTram();
         
         tramGener.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -229,6 +230,7 @@ public class CarControll {
             tramGenerator();
         if(carGeneratorRun)
             carGenerator();
+        
     }
     public void myCarHandlerUp(KeyEvent event)
     {
@@ -273,15 +275,23 @@ public class CarControll {
         if(changeSpeedTimerTask!=null)
             changeSpeedTimerTask.cancel();
     }
-    public static void setMyCarNull()
+    private static void disableMyCar()
     {
-        myCar=null;
         tfMyCarSpeed.setDisable(true);
         upMyCarSpeed.setDisable(true);
         downMyCarSpeed.setDisable(true);
-        insertMyCar.setDisable(false);
     }
-    private void newMyCar()
+    public static void setMyCarNull()
+    {
+        myCar=null;
+        disableMyCar();
+        
+        if(!GuiControll.editable())
+            newMyCar();
+        else
+            insertMyCar.setDisable(false);
+    }
+    public static void newMyCar()
     {
         if(myCar==null){
             StreetSegment newSeg=drawing.getRandomStart(false);
@@ -293,7 +303,11 @@ public class CarControll {
                 upMyCarSpeed.setDisable(false);
                 downMyCarSpeed.setDisable(false);
             }
+            else
+                newMyCar();
         }
+        else
+            System.out.println("exist");
     }
     private void setMyCarSpeed(double newSpeed)
     {
@@ -307,7 +321,7 @@ public class CarControll {
             tfMyCarSpeed.setText(String.valueOf(myCar.getSpeed()*1000));
         }
     }
-    private void changeDeleyCar(int count)
+    private static void changeDeleyCar(int count)
     {
         if(count>MAX_COUNT)
         {
@@ -320,6 +334,47 @@ public class CarControll {
         generDeleyCar=60000/count;
         deleyChangedCar=true;
     }
+    public boolean isCarGeneratorRun() {
+        return carGeneratorRun;
+    }
+
+    public static void setCarGeneratorRun(boolean carGeneratorRunn) {
+        carGeneratorRun = carGeneratorRunn;
+        carGener.setSelected(carGeneratorRunn);
+        if(GuiControll.editable())
+            enableCarDel(carGeneratorRunn);
+    }
+
+    public static boolean isTramGeneratorRun() {
+        return tramGeneratorRun;
+    }
+
+    public static void setTramGeneratorRun(boolean tramGeneratorRunn) {
+        tramGeneratorRun = tramGeneratorRunn;
+        tramGener.setSelected(tramGeneratorRunn);
+        
+        if(GuiControll.editable())
+            enableTramDel(tramGeneratorRunn);
+    }
+
+    public int getGenerDeleyCar() {
+        return carGenerCount;
+    }
+
+    public static void setGenerDeleyCar(int carGenerCountt) {
+        carGenerCount = carGenerCountt;
+        changeDeleyCar(carGenerCountt);
+    }
+
+    public int getGenerDeleyTram() {
+        return tramGenerCount;
+    }
+
+    public static void setGenerDeleyTram(int tramGenerCountt) {
+        tramGenerCount = tramGenerCountt;
+        changeDeleyTram(tramGenerCountt);
+    }
+    
     private void carGenerator()
     {
         generTimerCar = new Timer();
@@ -347,7 +402,7 @@ public class CarControll {
             new BotCar(animation,newSeg);
     }
     
-    private void changeDeleyTram(int count)
+    private static void changeDeleyTram(int count)
     {
         if(count>MAX_COUNT)
         {

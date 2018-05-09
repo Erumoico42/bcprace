@@ -1,0 +1,50 @@
+﻿Vložení pozadí
+-pozadí lze vložit stisknutím tlačítka vložit pozadí, a poté vybráním vhodného obrázku
+-samotným pozadím lze hýbat tažením myši, a také jej lze zmenšit, či zvětšit točením kolečkem na myši.
+-po umístění pozadí je nutno jej uzamknout zaškrtnutím možnosti "Uzamknout pozadí", což umožní návrh dalších objektů
+
+Návrh silnice
+
+-kliknutím levou myší na "plátno" se vytvoří nový propojovací bod
+-pokud je při kliknutí, nebo tažení myší jeden z propojovacích bodů označen, vytvoří se 
+nová křivka představující silnici.
+-v případě, že je označen propojovací bod, lze kliknout pravou myší na druhý bod, 
+čímž se tyto body spojí novou křivkou
+-lze vybrat mezi dvěma typy silnice, a to pro automobily, nebo tramvaje, a to jednoduchým přepnutím, mezi možnostmi
+
+Nastavení kontrolních bodů
+
+-prvním krokem je označení úseku cesty, kde se vozidlo má zastavit, tohoto lze dosáhnout kliknutím levé myši
+na jedno z malých zelených koleček, představujících úseky silnice.
+-když je tento úsek označen, pravým tlačítkem myši lze označit jiné úseky, kam se bude vozidlo "dívat"
+
+Vložení policisty
+
+-policistu lze vložit kliknutím na tlačítko, s obrázkem policisty, ten se objeví v levém horním rohu
+návrhu.
+-tažením myši jej lze umístit na libovolné místo
+-pro určení, jakým směrem bude policista ukazovat, je nutno umístit "směrové body". Pro jejich vložení
+musí být policista označen, poté kliknutím na tlačítko "Smerový bod" se umožní, aby se vytvořil nový bod, 
+při kliknutí pravým tlačítkem myši na plátno. Ten reprezentuje jeden směr. Ovšem aby tímto směrem policista ukazoval,
+musí být tento bod propojen ještě s jedním, což znázorní, kterým směrem vozidla smí jet. 
+-Po označení dvou směrových bodů je lze tedy propojit, a poté, stejně jako u základních kontrolních bodů, lze označit policistu, čímž 
+se zajistí, že vozidla pojedou jen v případě, kdy policista bude ukazovat tímto určitým směrem
+-každému policistovi lze nastavit časování, tedy prodlevu mezi jednotlivými směry, a dobu jízdy pro každý směr zvlášť
+
+Vložení semaforu
+-semafor lze vložit kliknutím na tlačítko s obrázkem semaforu, který se poté objeví v levém horním rohu návrhu.
+-lze s nim také libovolně pohybovat
+-přepínáním mezi třemi "kolečky" lze nastavit počáteční barvu vybraného semaforu
+-změnou hodnoty v textových polích lze nastavit dobu, po kterou bude zobrazena určitá barva semaforu
+-lze také nastavit, zda se bude semafor sám přepínat, nebo ne, a to pro přechod z červené, nebo zelené.
+toto je určeno především pro propojení více semaforů, které usnadní jejich nastavení
+-propojit semafory lze označením "primárního" semaforu, kliknutím levým tlačítkem myši, a poté označením "sekundárního", 
+kliknutím pravým tlačítkem myši. poté lze určit přepínacími kolečky, které barvy se mají jak propojit, a poté zaškrtutím možnosti "propojit"
+
+Odebrání objektu
+-v aplikaci lze jakýkoliv objekt odebrat, a to jeho označením levým tlačítkem myši, a stisknutím klávesy "DELETE".
+-v případě mazání silnic je nutno označit propojovací bod, čímž se vymaže samotný bod, a všechny přolehlé křivky 
+
+Generování vozidel
+-lze vybrat, zda se budou automaticky generovat automobily, nebo tramvaje, zaškrtnutím možnosti generovat.
+-také je možnost určit počet generovaných vozidel, a to nastavením hodnoty, která reprezentuje počet vozidel za minutu

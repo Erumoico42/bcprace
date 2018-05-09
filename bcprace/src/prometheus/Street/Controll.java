@@ -11,6 +11,7 @@ import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import prometheus.DrawControll;
 import prometheus.Prometheus;
 
@@ -24,17 +25,37 @@ public class Controll {
     private final MyCurve curve;
     private final boolean c1;
     private Connect conn;
+    private final Line controlLine;
     public Controll(Connect coonn, MyCurve curve, boolean c1) {
         
         this.conn=coonn;
         this.curve=curve;
         this.c1=c1;
+        
         p=new Point(coonn.getPoint());
+        controlLine=new Line(coonn.getPoint().getX(), conn.getPoint().getY(), p.getX(), p.getY());
+        controlLine.getStrokeDashArray().addAll(7d, 7d);
+        controlLine.setStroke(Color.DODGERBLUE);
         this.c = new Circle(p.getX(), p.getY(), 4, Color.RED);
-        Prometheus.drawNode(c);
+        Prometheus.drawNode(controlLine, c);
         DrawControll.addToHide(c);
+        DrawControll.addToHide(controlLine);
         initControll();
         
+    }
+    public void moveStartLine(double x, double y)
+    {
+        controlLine.setStartX(x);
+        controlLine.setStartY(y);
+    }
+    public void moveEndLine(double x, double y)
+    {
+        controlLine.setEndX(x);
+        controlLine.setEndY(y);
+    }
+
+    public Line getControlLine() {
+        return controlLine;
     }
     
     public void move(double x, double y)
@@ -43,6 +64,7 @@ public class Controll {
         p.setLocation(x,y);
         c.setCenterX(x);
         c.setCenterY(y);
+        moveEndLine(x,y);
         if(c1)
             curve.moveCurveP1(x, y);
         else
@@ -63,6 +85,13 @@ public class Controll {
             @Override
             public void handle(MouseEvent event) {
                 c.toFront();
+                curve.selectCurve();
+            }
+        });
+        c.setOnMouseExited(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                curve.deselectCurve();
             }
         });
     }

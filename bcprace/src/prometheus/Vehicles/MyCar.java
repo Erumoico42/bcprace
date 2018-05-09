@@ -29,8 +29,9 @@ public class MyCar extends Vehicle{
     @Override
     public void removeCar()
     {
-        CarControll.setMyCarNull();
         super.removeCar();
+        CarControll.setMyCarNull();
+        
     }
     
 }

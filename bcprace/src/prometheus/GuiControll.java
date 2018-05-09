@@ -59,8 +59,16 @@ public class GuiControll {
     private Image imgPlay=new Image("/resources/icons/play.png");
     private Image imgPause=new Image("/resources/icons/pause.png");
     private ImageView ivPlay=new ImageView(imgPlay);
+    private static boolean edit=false;
     
-    public GuiControll(Stage primaryStage) {
+    public GuiControll(Stage primaryStage, String[] args) {
+        for (String arg : args) {
+            if(arg.split("=").length==2 && arg.split("=")[1].equals("-e")){
+                edit=true;
+                break;
+            }  
+        }
+        
         this.primaryStage=primaryStage;
         root = new Group(); 
         scene = new Scene(root, 850, 600);
@@ -70,7 +78,12 @@ public class GuiControll {
         stageControll();
         initMenu();
         initDrawingPlace();
-        
+        if(!edit)
+            editDisableMenu();
+    }
+    public static boolean editable()
+    {
+        return edit;
     }
     private void stageControll()
     {
@@ -124,6 +137,18 @@ public class GuiControll {
         
         root.getChildren().addAll(menu.getMenu(), saveTemp,loadTemp, newTemp);
         menu.changeWidth(primaryStage.getWidth());
+    }
+    private void editDisableMenu()
+    {
+        saveTemp.setDisable(true);
+        newTemp.setDisable(true);
+        fapEdit.getFlap().setDisable(true);
+        generCar.setDisable(true);
+        generTram.setDisable(true);
+        canvas.setDisable(true);
+        drawRoot.setDisable(true);
+        addOwn.setDisable(true);
+        menu.changeContent(fapSim);
     }
     private void initSimulMenu()
     {

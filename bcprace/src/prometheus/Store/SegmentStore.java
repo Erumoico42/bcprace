@@ -95,6 +95,10 @@ public class SegmentStore {
         winkAngle.setValue(String.valueOf(u.getWinkAngle()));
         segment.setAttributeNode(winkAngle);
         
+        Attr stopWink=doc.createAttribute("stopWink");
+        stopWink.setValue(String.valueOf(u.isStopWinker()));
+        segment.setAttributeNode(stopWink);
+        
         for (StreetSegment uNext : u.getDalsiUseky()) {
             Element nextSegment=doc.createElement("nextSegment");
 
@@ -179,6 +183,11 @@ public class SegmentStore {
             u.setP1(p1);
             u.setP2(p2);
             
+            
+            //boolean stopWink=Boolean.valueOf(usek.getAttributes().getNamedItem("stopWink").getNodeValue());
+            //u.setStopWinker(stopWink);
+                    
+                    
             double winkAngle=Double.valueOf(usek.getAttributes().getNamedItem("winkAngle").getNodeValue());
             u.setWinkAngle(winkAngle);
             

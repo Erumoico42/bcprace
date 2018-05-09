@@ -190,7 +190,7 @@ public abstract class Vehicle {
             {
                 timWin=new Timer();
                 winkerTimer();
-                timWin.schedule(ttWin, 700,700); 
+                timWin.schedule(ttWin, 400,400); 
             }
             
             

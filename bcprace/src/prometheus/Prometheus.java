@@ -68,9 +68,10 @@ public class Prometheus extends Application {
     private static LightsControll lightsControll;
     private static StoreControll storeControll;
     private static boolean run=false;
+    private static String[] argss;
     @Override
     public void start(Stage primaryStage) {
-        gui=new GuiControll(primaryStage);
+        gui=new GuiControll(primaryStage, argss);
         root=gui.getRoot();
         drawRoot=gui.getDrawRoot();
         Scene scene=gui.getScene();
@@ -146,7 +147,7 @@ public class Prometheus extends Application {
         saveTemp.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                storeControll.saveFile(drawControll.getCurves(), drawControll.getConnects(), lightsControll.getLights(), policeControll.getPolices(), drawControll.getBgSource(), drawControll.getBG(), drawControll.getStartTram(), drawControll.getStartCar());
+                storeControll.saveFile(drawControll, lightsControll, policeControll, carControll);
             }
         });
         Button newTemp=gui.getNewTemp();
@@ -191,6 +192,8 @@ public class Prometheus extends Application {
         carControll.play();
         policeControll.play();
         lightsControll.play();
+        if(!gui.editable())
+            carControll.newMyCar();
     }
     public static void pause()
     {
@@ -222,6 +225,7 @@ public class Prometheus extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        argss=args;
         launch(args);
     }
     

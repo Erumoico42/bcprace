@@ -35,9 +35,9 @@ public class MyCurve {
         p2=new Point();
         this.drawing=draw;
         curve = new CubicCurve(p0.getX(), p0.getY(),p1.getX(), p1.getY(), p2.getX(), p2.getY(),p3.getX(), p3.getY()); 
-        
         curve.setStroke(Color.BLACK);
         curve.setFill(null);
+        
         Prometheus.drawNode(0,curve);
         draw.addToHide(curve);
         this.c0 = start;
@@ -46,6 +46,16 @@ public class MyCurve {
         c1=new Controll(c0, this, true);
         c2=new Controll(c3, this, false);
         autoMoveP12();
+    }
+    public void selectCurve()
+    {
+        curve.setStrokeWidth(2);
+        curve.setStroke(Color.FUCHSIA);
+    }
+    public void deselectCurve()
+    {
+        curve.setStrokeWidth(1);
+        curve.setStroke(Color.BLACK);
     }
     public void addSegment(StreetSegment u)
     {

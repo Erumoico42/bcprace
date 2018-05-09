@@ -200,16 +200,17 @@ public class DrawControll {
             StreetSegment ret=sstoGen.get((int)(Math.random()*sstoGen.size()));
             if(ret!=null){
                 for (StreetSegment streetSegment : ret.getDalsiUseky()) {
-                    if(streetSegment.getVehicle()!=null)
-                        return null;
+                    if(streetSegment.getVehicle()!=null){
+                        getRandomStart(tram);
+                        break;
+                    }
                 }
                 if(ret.getVehicle()==null)
                     return ret;
-                else
-                    return null;
+
             }
             else
-                return null;
+                getRandomStart(tram);
         }
         return null;
     }

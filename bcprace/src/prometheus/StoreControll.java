@@ -43,6 +43,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import prometheus.Store.GeneratorStore;
 
 /**
  *
@@ -69,8 +70,9 @@ public class StoreControll {
             cs.loadConnects();
             CurveStore cus=new CurveStore(doc, null, prometheus.Prometheus.getDrawControll());
             cus.loadCurves(ss.getLoadedSegments(), cs.getLoadedConnects());
-            
+            new GeneratorStore(doc, null).loadGenerConfig();
             new BackgroundStore(doc, null).loadBackground();
+            
             //load commands (doc);
             DrawControll.setEnableSplit(true);
         } catch (ParserConfigurationException ex) {
@@ -81,7 +83,8 @@ public class StoreControll {
             throw new Error(ex);
         } 
     }
-    public static void saver(List<MyCurve> curves, List<Connect> connects, List<TrafficLight> semafory,List<Police> polices, File file, String bgSource, HBox bg, List<StreetSegment> startsTram, List<StreetSegment> startsCar)
+    public static void saver(List<MyCurve> curves, List<Connect> connects, List<TrafficLight> semafory,List<Police> polices, File file, String bgSource, HBox bg, 
+            List<StreetSegment> startsTram, List<StreetSegment> startsCar, int carDeley, int tramDeley, boolean generRunCar , boolean generRunTram)
     {
         DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();
         DocumentBuilder db;
@@ -97,6 +100,8 @@ public class StoreControll {
             new LightsStore(doc, root).saveLights(semafory);
             new PoliceStore(doc, root).savePolice(polices);
             new BackgroundStore(doc, root).saveBackground(bgSource, bg);
+            
+            new GeneratorStore(doc, root).saveGenerConfig(carDeley, tramDeley, generRunCar, generRunTram);
             //save commands (doc, root)
             TransformerFactory tfc=TransformerFactory.newInstance();
             Transformer tf=tfc.newTransformer();
@@ -114,14 +119,15 @@ public class StoreControll {
         }
     }
     
-    public static void saveFile(List<MyCurve> curves, List<Connect> connects, List<TrafficLight> semafory,List<Police> poldas, String bgSource, HBox background, List<StreetSegment> startsTram, List<StreetSegment> startsCar)
+    public static void saveFile(DrawControll dc, LightsControll lc, PoliceControll pc, CarControll cc)
     {
+        
         FileChooser fch=new FileChooser();
         FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("XML soubory (*.xml)", "*.xml");
         fch.getExtensionFilters().add(filter);
         File file = fch.showSaveDialog(null);
         if (file != null) { 
-            saver(curves, connects, semafory,poldas, file, bgSource, background, startsTram, startsCar);
+            saver(dc.getCurves(), dc.getConnects(), lc.getLights(), pc.getPolices(), file, dc.getBgSource(), dc.getBG(), dc.getStartTram(), dc.getStartCar(), cc.getGenerDeleyCar(), cc.getGenerDeleyTram(), cc.isCarGeneratorRun(), cc.isTramGeneratorRun());
         }
     }
     public static void openFile()
