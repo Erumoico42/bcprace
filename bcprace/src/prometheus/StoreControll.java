@@ -16,13 +16,11 @@ import prometheus.Street.Connect;
 import prometheus.Street.MyCurve;
 import prometheus.Street.StreetSegment;
 import prometheus.TrafficLights.TrafficLight;
-import java.awt.Point;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javax.xml.parsers.DocumentBuilder;
@@ -33,15 +31,10 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import org.w3c.dom.Attr;
-import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import prometheus.Store.GeneratorStore;
 
@@ -72,8 +65,7 @@ public class StoreControll {
             cus.loadCurves(ss.getLoadedSegments(), cs.getLoadedConnects());
             new GeneratorStore(doc, null).loadGenerConfig();
             new BackgroundStore(doc, null).loadBackground();
-            
-            //load commands (doc);
+
             DrawControll.setEnableSplit(true);
         } catch (ParserConfigurationException ex) {
             throw new Error(ex);
@@ -102,7 +94,6 @@ public class StoreControll {
             new BackgroundStore(doc, root).saveBackground(bgSource, bg);
             
             new GeneratorStore(doc, root).saveGenerConfig(carDeley, tramDeley, generRunCar, generRunTram);
-            //save commands (doc, root)
             TransformerFactory tfc=TransformerFactory.newInstance();
             Transformer tf=tfc.newTransformer();
             tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
@@ -139,7 +130,9 @@ public class StoreControll {
         if (file != null) { 
             DrawControll.clean();
             loader(file);
-            
+            Prometheus.getGui().getPlay().setDisable(false);
+            Prometheus.getGui().getHide().setSelected(false);
+            Prometheus.getDrawControll().showObjects(false);
         } 
     }
 }

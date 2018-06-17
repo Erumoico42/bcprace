@@ -5,16 +5,24 @@
  */
 package prometheus;
 
+import java.awt.RenderingHints;
+import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import prometheus.gui.Menu;
 import prometheus.gui.MenuFlap;
 import prometheus.gui.MenuGroup;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.css.CssMetaData;
+import javafx.event.EventHandler;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.SubScene;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -23,6 +31,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.BorderStroke;
@@ -32,6 +44,7 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 /**
  *
@@ -47,7 +60,7 @@ public class GuiControll {
     private Button loadBG, timeGenCarPl, timeGenCarMi, timeGenTramPl, timeGenTramMi, speedOwnPl, speedOwnMi, addOwn, addPolice, addSide, timeSidPl, timeSidMi, timeWaiPl,timeWaiMi,
             addSem, timeRedPl, timeRedmi, timeOrangePl, timeOrangemi, timeGreenPl, timeGreenmi;
     private TextField timeGenCar, timeGenTram, speedOwn, timeSide, timeWait, timeRed, timeOrange, timeGreen;
-    private CheckBox generCar, generTram, lockBG, connectSides, connectSems, enableRed, enableGreen, hide;
+    private CheckBox generCar, generTram, lockBG, connectSides, connectSems, enableRed, enableGreen, hide, lockWays;
     private RadioButton createCar, createTram, semColOrange, semColRed, semColGreen, semPrimRed, semPrimOrange, semPrimGreen, semSecRed, semSecOrange,semSecGreen;
     private Group drawRoot;
     private SubScene drawScene;
@@ -59,15 +72,13 @@ public class GuiControll {
     private Image imgPlay=new Image("/resources/icons/play.png");
     private Image imgPause=new Image("/resources/icons/pause.png");
     private ImageView ivPlay=new ImageView(imgPlay);
-    private static boolean edit=false;
+    private static boolean edit=false, saver=false;
+    private MenuGroup mgs1, mgs2, mgs3, mgs4, mge1, mge2, mge3, mge4;
+    private boolean enableMouseMoveExit=false;
+    private BorderPane groupBorder;
     
     public GuiControll(Stage primaryStage, String[] args) {
-        for (String arg : args) {
-            if(arg.split("=").length==2 && arg.split("=")[1].equals("-e")){
-                edit=true;
-                break;
-            }  
-        }
+        
         
         this.primaryStage=primaryStage;
         root = new Group(); 
@@ -75,15 +86,90 @@ public class GuiControll {
         primaryStage.setTitle("Bakalarska prace");
         primaryStage.setScene(scene);
         primaryStage.show();
-        stageControll();
+        
         initMenu();
         initDrawingPlace();
-        if(!edit)
-            editDisableMenu();
+        stageControll();
+        modSwitch(args);    
     }
     public static boolean editable()
     {
         return edit;
+    }
+    public boolean isSaver()
+    {
+        return saver;
+    }
+    private void modSwitch(String[] args)
+    {
+        for (String arg : args) {
+            boolean found=false;
+            if(arg.split("=").length==2){
+                found=true;
+                String param=arg.split("=")[1];
+                switch(param)
+                {
+                    case "-e":
+                    {
+                        edit=true;
+                        break;
+                    }
+                    case "-s":
+                    {
+                        saver=true;
+                        runScreenSaver();
+                        break;
+                    }
+                }
+            }  
+            if(found)
+                break;
+        }
+        if(!edit)
+            editDisableMenu();
+        
+    }
+    public void tryLoad()
+    {
+        if(saver)
+        {
+            StoreControll.loader(new File("D:\\temp04.xml"));
+            Prometheus.play();
+            DrawControll.showObjects(false);
+        }
+    }
+    private void runScreenSaver()
+    {
+        
+        root.getChildren().removeAll(menu.getMenu(), saveTemp,loadTemp, newTemp);
+        primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
+        primaryStage.setFullScreen(true);
+        groupBorder.setLayoutY(52);
+        drawScene.setWidth(drawScene.getWidth()+16);
+        drawScene.setHeight(drawScene.getHeight()+36);
+        scene.setFill(Color.BLACK);
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(GuiControll.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        scene.setOnMouseMoved(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                
+                if(enableMouseMoveExit)
+                    Prometheus.cancel();
+                enableMouseMoveExit=true;
+            }
+        });
+        
+        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                Prometheus.cancel();
+            }
+        });
+        
     }
     private void stageControll()
     {
@@ -140,24 +226,35 @@ public class GuiControll {
     }
     private void editDisableMenu()
     {
-        saveTemp.setDisable(true);
-        newTemp.setDisable(true);
-        fapEdit.getFlap().setDisable(true);
         generCar.setDisable(true);
         generTram.setDisable(true);
         canvas.setDisable(true);
         drawRoot.setDisable(true);
         addOwn.setDisable(true);
+
+        root.getChildren().removeAll(saveTemp,newTemp);
+        loadTemp.setLayoutX(5);
+        menu.getFlapGroup().getChildren().removeAll(fapEdit.getFlap(), fapSim.getFlap());
+        fapSim.getContent().getChildren().removeAll(mgs1.getMenuGroup(), mgs2.getMenuGroup());
+        mgs3.setLayout(0);
+        mgs3.getGroup().getChildren().remove(addOwn);
+        mgs4.getGroup().getChildren().remove(hide);
+        mgs4.setLayout(90);
         menu.changeContent(fapSim);
+        speedOwnPl.setLayoutY(layout1);
+        speedOwnMi.setLayoutY(layout1);
+        speedOwn.setLayoutY(layout1);
+        play.setDisable(true);
+        
     }
     private void initSimulMenu()
     {
         fapSim=new MenuFlap("Simulace");
-        fapSim.getFlap().setLayoutX(185);
+        fapSim.getFlap().setLayoutX(165);
         
-        MenuGroup mg1=new MenuGroup("Automobily");
-        mg1.setWidth(90);
-        mg1.setLblLayout(15);
+        mgs1=new MenuGroup("Automobily");
+        mgs1.setWidth(90);
+        mgs1.setLblLayout(15);
         
         timeGenCarPl=new Button("+");
         timeGenCarPl.setFont(Font.font(9));
@@ -180,12 +277,12 @@ public class GuiControll {
         generCar=new CheckBox("Zapnout");
         generCar.setLayoutX(5);
         generCar.setLayoutY(layout1);
-        mg1.addItems(timeGenCarPl, timeGenCarMi, timeGenCar, generCar);
+        mgs1.addItems(timeGenCarPl, timeGenCarMi, timeGenCar, generCar);
         
-        MenuGroup mg2=new MenuGroup("Tramvaje");
-        mg2.setWidth(90);
-        mg2.setLblLayout(20);
-        mg2.setLayout(90);
+        mgs2=new MenuGroup("Tramvaje");
+        mgs2.setWidth(90);
+        mgs2.setLblLayout(20);
+        mgs2.setLayout(90);
         
         timeGenTramPl=new Button("+");
         timeGenTramPl.setFont(Font.font(9));
@@ -208,12 +305,12 @@ public class GuiControll {
         generTram=new CheckBox("Zapnout");
         generTram.setLayoutX(5);
         generTram.setLayoutY(layout1);
-        mg2.addItems(timeGenTramPl, timeGenTramMi, timeGenTram, generTram);
+        mgs2.addItems(timeGenTramPl, timeGenTramMi, timeGenTram, generTram);
         
-        MenuGroup mg3=new MenuGroup("Vlastní");
-        mg3.setWidth(90);
-        mg3.setLblLayout(25);
-        mg3.setLayout(180);
+        mgs3=new MenuGroup("Vlastní");
+        mgs3.setWidth(90);
+        mgs3.setLblLayout(25);
+        mgs3.setLayout(180);
         
         speedOwnPl=new Button("+");
         speedOwnPl.setFont(Font.font(9));
@@ -239,12 +336,12 @@ public class GuiControll {
         addOwn.setMaxSize(80, 20);
         addOwn.setLayoutX(5);
         addOwn.setLayoutY(layout1);
-        mg3.addItems(speedOwnPl, speedOwnMi, speedOwn, addOwn);
+        mgs3.addItems(speedOwnPl, speedOwnMi, speedOwn, addOwn);
         
-        MenuGroup mg4=new MenuGroup("Spustit");
-        mg4.setWidth(110);
-        mg4.setLblLayout(40);
-        mg4.setLayout(270);
+        mgs4=new MenuGroup("Spustit");
+        mgs4.setWidth(110);
+        mgs4.setLblLayout(40);
+        mgs4.setLayout(270);
         ivPlay.setFitWidth(30);
         ivPlay.setFitHeight(25);
         play=new Button();
@@ -258,21 +355,21 @@ public class GuiControll {
         hide.setSelected(true);
         hide.setLayoutX(layout1);
         hide.setLayoutY(35);
-        mg4.addItems(play, hide);
+        mgs4.addItems(play, hide);
         
         
-        fapSim.addGroups(mg1, mg2, mg3, mg4);
+        fapSim.addGroups(mgs1, mgs2, mgs3, mgs4);
         menu.addFlaps(fapSim);
     }
     private void initEditMenu()
     {
         fapEdit=new MenuFlap("Editace");
-        fapEdit.getFlap().setLayoutX(125);
+        fapEdit.getFlap().setLayoutX(105);
         
         //Background
-        MenuGroup mg1=new MenuGroup("Pozadí");
-        mg1.setWidth(120);
-        mg1.setLblLayout(40);
+        mge1=new MenuGroup("Pozadí");
+        mge1.setWidth(120);
+        mge1.setLblLayout(40);
         
         loadBG=new Button("Vložit pozadí");
         loadBG.setMinSize(110, 22);
@@ -284,13 +381,13 @@ public class GuiControll {
         lockBG.setLayoutX(5);
         lockBG.setLayoutY(30);
         lockBG.setFont(TEXT_STYLE);
-        mg1.addItems(loadBG, lockBG);
+        mge1.addItems(loadBG, lockBG);
         
         //Street type
-        MenuGroup mg2=new MenuGroup("Druh silnice");
-        mg2.setWidth(100);
-        mg2.setLblLayout(15);
-        mg2.setLayout(122);
+        mge2=new MenuGroup("Druh silnice");
+        mge2.setWidth(100);
+        mge2.setLblLayout(15);
+        mge2.setLayout(122);
         ToggleGroup createVehOprion = new ToggleGroup();
         createCar=new RadioButton("Automobil");
         createCar.setFont(TEXT_STYLE);
@@ -301,16 +398,19 @@ public class GuiControll {
         createTram=new RadioButton("Tramvaj");
         createTram.setFont(TEXT_STYLE);
         createTram.setLayoutX(5);
-        createTram.setLayoutY(layout2);
+        createTram.setLayoutY(20);
         createTram.setToggleGroup(createVehOprion);
-        mg2.addItems(createCar, createTram);
+         lockWays=new CheckBox("Zamknout");
+        lockWays.setLayoutX(5);
+        lockWays.setLayoutY(37);
+        mge2.addItems(createCar, createTram, lockWays);
         
         
         //Police controll
-        MenuGroup mg3=new MenuGroup("Řízení policisty");
-        mg3.setLayout(224);
-        mg3.setWidth(285);
-        mg3.setLblLayout(95);
+        mge3=new MenuGroup("Řízení policisty");
+        mge3.setLayout(224);
+        mge3.setWidth(285);
+        mge3.setLblLayout(95);
         addPolice=new Button();
         ImageView ivPol=new ImageView(new Image("/resources/police/head.png"));
         ivPol.setFitWidth(30);
@@ -385,13 +485,13 @@ public class GuiControll {
         timeWait.setMinSize(40, 20);
         timeWait.setMaxSize(40, 20);
         
-        mg3.addItems(addPolice, addSide, connectSides, timSideLbl, timeSide, timWaitLbl, timeWait, timeSidMi, timeSidPl, timeWaiPl, timeWaiMi);
+        mge3.addItems(addPolice, addSide, connectSides, timSideLbl, timeSide, timWaitLbl, timeWait, timeSidMi, timeSidPl, timeWaiPl, timeWaiMi);
         
         
-        MenuGroup mg4=new MenuGroup("Řízení semaforů");
-        mg4.setWidth(265);
-        mg4.setLayout(511);
-        mg4.setLblLayout(90);
+        mge4=new MenuGroup("Řízení semaforů");
+        mge4.setWidth(265);
+        mge4.setLayout(511);
+        mge4.setLblLayout(90);
         
         addSem=new Button();
         ImageView ivSem=new ImageView(new Image("/resources/trafficLights/all.png"));
@@ -518,10 +618,10 @@ public class GuiControll {
         connectSems.setLayoutY(25);
         
         
-        mg4.addItems(addSem, semColGreen, semColOrange, semColRed, timeRedPl, timeRedmi, timeRed, timeOrangePl, timeOrangemi, timeOrange, timeGreenPl, timeGreenmi, timeGreen,
+        mge4.addItems(addSem, semColGreen, semColOrange, semColRed, timeRedPl, timeRedmi, timeRed, timeOrangePl, timeOrangemi, timeOrange, timeGreenPl, timeGreenmi, timeGreen,
                 semPrimRed, semPrimOrange, semPrimGreen, lblConSems, connectSems, semSecRed, semSecOrange, semSecGreen, enableGreen, enableRed);
         
-        fapEdit.addGroups(mg1, mg2, mg3, mg4);
+        fapEdit.addGroups(mge1, mge2, mge3, mge4);
         
         menu.addFlaps(fapEdit);
         
@@ -533,7 +633,7 @@ public class GuiControll {
         drawRoot=new Group();
         //drawRoot.getChildren().add(canvas);
         drawScene=new SubScene(drawRoot, 844, 491);
-        BorderPane groupBorder = new BorderPane();
+        groupBorder = new BorderPane();
         groupBorder.setBorder(new Border(new BorderStroke(Color.BLACK,
             BorderStrokeStyle.SOLID, new CornerRadii(2),
             new BorderWidths(1))));
@@ -804,6 +904,11 @@ public class GuiControll {
     public Scene getScene() {
         return scene;
     }
+
+    public CheckBox getLockWays() {
+        return lockWays;
+    }
+    
     
     
 }

@@ -69,6 +69,10 @@ public class Menu {
         }
         
     }
+    public Group getFlapGroup()
+    {
+        return flapGroup;
+    }
     private void initBorderSelected()
     {
         flapBorder=new Border(new BorderStroke(Color.BLACK,

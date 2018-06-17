@@ -5,6 +5,7 @@
  */
 package prometheus.Vehicles;
 
+import java.util.List;
 import prometheus.Police.PoliceCombin;
 import prometheus.Street.StreetSegment;
 import prometheus.TrafficLights.TrafficLight;
@@ -20,10 +21,12 @@ public class Bot extends Vehicle{
     Animation a;
     private boolean carFoundStreet;
     private double distNextStreet;
-    private StreetSegment u;
+    private StreetSegment actualSegment;
     private double length;
     private double defDistSpeed=666;
     private boolean ignorCP=false;
+    private List<StreetSegment> lastSplit;
+    private int distLastSplit=10;
     public Bot(Animation animation, StreetSegment ss) {
         super(animation, ss);
         a=animation;
@@ -31,10 +34,18 @@ public class Bot extends Vehicle{
     @Override
     public void tick()
     {
-        u=getActualSegment();
+        actualSegment=getActualSegment();
         super.tick();
         if(!paused())
             colisionDetect();
+    }
+    @Override
+    public void nextSegment()
+    {
+        
+        super.nextSegment();
+        checkSplitStreet(getActualSegment());
+        
     }
     public void setLength(double length)
     {
@@ -44,7 +55,9 @@ public class Bot extends Vehicle{
     {
         ignorCP=false;
         distNextStreet=666;
-        carFoundStreet=findStreet(u, 0);
+        carFoundStreet=findStreet(actualSegment, 0);
+        if(distLastSplit<6)
+            findSplitStreet();
         if(!carFoundStreet)
         {
             setForce(getMaxForce());  
@@ -52,13 +65,65 @@ public class Bot extends Vehicle{
         
         if(distNextStreet >1)
         {
-            carFoundStreet=findSem(u,2);
+            carFoundStreet=findSem(actualSegment,2);
             if(!ignorCP)
-                findCPCross(u, 1);
+                findCPCross(actualSegment, 1);
             
         }
            
         
+    }
+    private void checkSplitStreet(StreetSegment actSeg)
+    {
+        
+        if(actSeg.getDalsiUseky().size()>1)
+        {
+            lastSplit=actSeg.getDalsiUseky();
+            distLastSplit=0;
+            
+        }
+        else if(distLastSplit<6 && lastSplit!=null )
+        {
+            distLastSplit++;   
+        }
+       
+    }
+    private void findSplit(int dist, StreetSegment ss)
+    {
+        if(dist<6){
+            dist++;
+            if(ss.getVehicle()!=null)
+            {
+                if(!ss.getVehicle().equals(this)){
+                    double speedNextCar=ss.getVehicle().getSpeed();
+                    double tNextCar=ss.getVehicle().getTime();
+                    double distt=dist+tNextCar-length-(distLastSplit+getTime())-2;
+                    if(distt>0){
+                        setSpeed(newSpeed(getSpeed(), speedNextCar, distt));
+                        carFoundStreet=true;
+                        
+                    }
+                    
+                }
+            }
+            else {
+                
+                for (StreetSegment streetSegment : ss.getDalsiUseky()) {
+                    if(!getOriginalStreet().contains(streetSegment)){
+                        findSplit(dist, streetSegment);
+                    }
+                }
+            }
+        }
+    }
+    private void findSplitStreet()
+    {
+        if(lastSplit!=null){
+            for (StreetSegment streetSegment : lastSplit) {
+                if(!getOriginalStreet().contains(streetSegment))
+                    findSplit(1, streetSegment);
+            }
+        }
     }
     private boolean calcStop(double distNext, double speedNext)
     {

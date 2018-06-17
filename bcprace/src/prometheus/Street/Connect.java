@@ -47,6 +47,10 @@ public class Connect {
     {
         return tram;
     }
+    public Circle getCircle()
+    {
+        return c;
+    }
     public void remove()
     {
         Prometheus.removeNode(c);
@@ -96,7 +100,7 @@ public class Connect {
                 }
                 if(event.getButton()==MouseButton.SECONDARY)
                 {
-                    if(DrawControll.getActualConnect()!=null && DrawControll.getActualConnect()!=getConnect()){
+                    if(DrawControll.getActualConnect()!=null && DrawControll.getActualConnect()!=getConnect() && !(isTram() ^ DrawControll.getActualConnect().isTram())){
                         Prometheus.getDrawControll().drawCurve(getConnect());
                     }
                 }

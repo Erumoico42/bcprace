@@ -306,8 +306,6 @@ public class CarControll {
             else
                 newMyCar();
         }
-        else
-            System.out.println("exist");
     }
     private void setMyCarSpeed(double newSpeed)
     {

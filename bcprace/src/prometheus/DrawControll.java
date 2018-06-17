@@ -145,7 +145,7 @@ public class DrawControll {
                 
             }
         });
-        RadioButton rbCar=gui.getCreateTram();
+        RadioButton rbCar=gui.getCreateCar();
         rbCar.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -157,6 +157,18 @@ public class DrawControll {
             @Override
             public void handle(ActionEvent event) {
                 tram=true;
+            }
+        });
+        CheckBox cbLock=gui.getLockWays();
+        cbLock.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                gui.getCanvas().setDisable(cbLock.isSelected());
+                gui.getCreateCar().setDisable(cbLock.isSelected());
+                gui.getCreateTram().setDisable(cbLock.isSelected());
+                for (Connect connect : connects) {
+                    connect.getCircle().setDisable(cbLock.isSelected());
+                }
             }
         });
     }
@@ -191,26 +203,33 @@ public class DrawControll {
     }
     public StreetSegment getRandomStart(boolean tram)
     {
-        List<StreetSegment> sstoGen;
+        List<StreetSegment> sstoGen=new ArrayList<>();
         if(!tram)
-            sstoGen=startSegmentsCar;
+            sstoGen.addAll(startSegmentsCar);
         else
-            sstoGen=startSegmentsTram;
-        if(!sstoGen.isEmpty()){
+            sstoGen.addAll(startSegmentsTram);
+        
+        
+        
+        while(!sstoGen.isEmpty())
+        {
+            boolean next=false;
             StreetSegment ret=sstoGen.get((int)(Math.random()*sstoGen.size()));
-            if(ret!=null){
-                for (StreetSegment streetSegment : ret.getDalsiUseky()) {
-                    if(streetSegment.getVehicle()!=null){
-                        getRandomStart(tram);
-                        break;
-                    }
+            sstoGen.remove(ret);
+            if(ret!=null)
+            {
+                for (StreetSegment ss : ret.getDalsiUseky()) {
+                    if(ss.getVehicle()!=null)
+                        next=true;   
                 }
-                if(ret.getVehicle()==null)
-                    return ret;
-
+                if(ret.getVehicle()!=null)
+                    next=true;
             }
             else
-                getRandomStart(tram);
+                next=true;
+            if(!next){
+                return ret;
+            }
         }
         return null;
     }
@@ -490,6 +509,10 @@ public class DrawControll {
         lastIdConnect++;
         connects.add(newConn);
         return newConn;
+    }
+    public static boolean drawTram()
+    {
+        return tram;
     }
     public List<Connect> getConnects()
     {

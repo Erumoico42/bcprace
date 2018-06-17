@@ -30,7 +30,7 @@ public abstract class Vehicle {
     private ImageView iv;
     private double time, totalTime;
     private StreetSegment actualSegment;
-    private final Animation animation;
+    private Animation animation;
     private final double MAX_SPEED=0.07, MAX_FORCE=0.001;
     private double speed=MAX_SPEED, force=MAX_FORCE;
     private double x0, y0, x1, y1, x2, y2, x3, y3, xLast, yLast, angle;
@@ -47,17 +47,31 @@ public abstract class Vehicle {
     private VehicleImages vi;
     private Image imgAlt;
     private List<StreetSegment> street=new ArrayList<>();
+    private List<StreetSegment> streetOriginal=new ArrayList<>();
     private boolean slowing=false;
     
     public Vehicle(Animation animation, StreetSegment ss) {
         actualSegment=ss;
         generateStreet(ss);
-        actualSegment.setVehicle(this);
         
+        streetOriginal.addAll(street);
+        actualSegment.setVehicle(this);
+
         this.animation = animation;
-        setPoints();
-        animation.addVehicle(this);
-        winkerTimer();
+        if(street.size()<2){
+            removeCar();
+        }
+        else
+        {
+            setPoints();
+            animation.addVehicle(this);
+            winkerTimer();
+        }
+        
+    }
+    public List<StreetSegment> getOriginalStreet()
+    {
+        return streetOriginal;
     }
     private void generateStreet(StreetSegment start)
     {
@@ -125,6 +139,7 @@ public abstract class Vehicle {
         speed=0;
         force=0;
     }
+    
     public void tick()
     {
         totalTime+=20;
@@ -206,7 +221,11 @@ public abstract class Vehicle {
         }
         winkRun=run;
     }
-    private void nextSegment()
+    public List<StreetSegment> getStreet()
+    {
+        return street;
+    }
+    public void nextSegment()
     {
         actualSegment.setVehicle(null);
         if(!street.isEmpty())

@@ -64,6 +64,11 @@ public class MenuGroup {
     {
         group.getChildren().addAll(nodes);
     }
+
+    public Group getGroup() {
+        return group;
+    }
+    
     public BorderPane getMenuGroup()
     {
         return mainBorder;

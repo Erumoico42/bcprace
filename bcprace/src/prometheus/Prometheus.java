@@ -5,53 +5,22 @@
  */
 package prometheus;
 
-import javafx.scene.control.Button;
-import java.awt.Point;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import javafx.scene.control.Button;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.SubScene;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.RadioButton;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.WritableImage;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.BorderStroke;
-import javafx.scene.layout.BorderStrokeStyle;
-import javafx.scene.layout.BorderWidths;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.paint.Color;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleGroup;
+
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.layout.HBox;
-import javafx.scene.shape.Circle;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import prometheus.Vehicles.Animation;
-import prometheus.Vehicles.BotCar;
-import prometheus.Vehicles.BotTram;
-import prometheus.Vehicles.MyCar;
 
 
 /**
@@ -88,23 +57,25 @@ public class Prometheus extends Application {
                 cancel();
             }
         });
-        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent event) {
-                carControll.myCarHandlerDown(event);
-                if(event.getCode()==KeyCode.DELETE)
-                {
-                    if(lightsControll.getSemPrim()!=null)
-                        lightsControll.removePrim();
-                    if(policeControll.getActualPolice()!=null)
-                        policeControll.removePolice();
-                    if(policeControll.getActualPolSide()!=null)
-                        policeControll.removePolSide();
-                    if(drawControll.getActualConnect()!=null)
-                        drawControll.removeConnect();
+        if(!gui.isSaver()){
+            scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+                @Override
+                public void handle(KeyEvent event) {
+                    carControll.myCarHandlerDown(event);
+                    if(event.getCode()==KeyCode.DELETE)
+                    {
+                        if(lightsControll.getSemPrim()!=null)
+                            lightsControll.removePrim();
+                        if(policeControll.getActualPolice()!=null)
+                            policeControll.removePolice();
+                        if(policeControll.getActualPolSide()!=null)
+                            policeControll.removePolSide();
+                        if(drawControll.getActualConnect()!=null)
+                            drawControll.removeConnect();
+                    }
                 }
-            }
-        });
+            });
+        }
         scene.setOnKeyReleased(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
@@ -112,7 +83,8 @@ public class Prometheus extends Application {
             }
         });
         initEvents();
-        
+        gui.tryLoad();
+
         
     }
 
@@ -164,13 +136,11 @@ public class Prometheus extends Application {
             public void handle(ActionEvent event) {
                 if(!run)
                 {
-                    //playBtn.setText("Pause");
                     gui.changPlay(false);
                     play();
                 }
                 else
                 {
-                   // playBtn.setText("Play");
                     pause();
                     gui.changPlay(true);
                     
@@ -186,13 +156,16 @@ public class Prometheus extends Application {
         });
         
     }
-    private void play()
+    public static GuiControll getGui(){
+        return gui;
+    }
+    public static void play()
     {
         run=true;
         carControll.play();
         policeControll.play();
         lightsControll.play();
-        if(!gui.editable())
+        if(!gui.editable() && !gui.isSaver())
             carControll.newMyCar();
     }
     public static void pause()
@@ -202,10 +175,12 @@ public class Prometheus extends Application {
         policeControll.stop();
         lightsControll.stop();
     }
-    private void cancel()
+    public static void cancel()
     {
         pause();
-        carControll.cancel();;
+        carControll.cancel();
+        Platform.exit();
+        System.exit(0);
     }
     public static void drawNode(Node ... nodes)
     {
