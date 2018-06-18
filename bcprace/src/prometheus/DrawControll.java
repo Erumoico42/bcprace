@@ -23,7 +23,13 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
+import javafx.scene.layout.BorderWidths;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import prometheus.Police.Police;
 import prometheus.Police.PoliceSide;
@@ -42,7 +48,7 @@ public class DrawControll {
     private static Canvas canvas;
     private final int RESIZE_VALUE=50, MOVE_VALUE=25; 
     private double resizeRatio=0;
-    private static boolean locked=true;
+    private static boolean locked=true, moveAll=false;
     private static Connect endConnect;
     private static MyCurve actualCurve;
     private static Connect actualConnect;
@@ -56,6 +62,7 @@ public class DrawControll {
     private static List<StreetSegment> startSegmentsTram=new ArrayList<>();
     private static List<Node> nodesToHide=new ArrayList<>();
     private double startX, startY, distX, distY, layoutX, layoutY;
+    private double drstartX, drstartY, drdistX, drdistY, drlayoutX, drlayoutY;
     private static CheckBox lockBg;
     private static Group drawRoot;
     private GuiControll gui;
@@ -74,6 +81,12 @@ public class DrawControll {
         drawRoot.getChildren().add(canvas);
         initControll();
         initEvents();
+    }
+    public static void setMoveAll(boolean move)
+    {
+        moveAll=move;
+        if(move)
+            lockBackground(true);
     }
     public static void clean()
     {
@@ -177,14 +190,18 @@ public class DrawControll {
         if(lock)
         {
             locked=true;
-            canvas.setVisible(true);
-            lockBg.setSelected(true);
+            if(canvas!=null)
+                canvas.setVisible(true);
+            if(lockBg!=null)
+                lockBg.setSelected(true);
         }
         else
         {
             locked=false;
-            canvas.setVisible(false);
-            lockBg.setSelected(false);
+            if(canvas!=null)
+                canvas.setVisible(false);
+            if(lockBg!=null)
+                lockBg.setSelected(false);
         }
     }
     public static void lockBackground()
@@ -330,14 +347,14 @@ public class DrawControll {
         backgroundBox.setOnMousePressed(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if(!locked)
+                if(!locked && !moveAll)
                     bgClick(event.getX(),event.getY());
             }
         });
          backgroundBox.setOnMouseDragged(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if(!locked)
+                if(!locked && !moveAll)
                     bgDrag(event.getX(),event.getY());
             }
         });
@@ -349,7 +366,7 @@ public class DrawControll {
         canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if(locked){
+                if(locked && !moveAll){
                     if(event.getButton()==MouseButton.PRIMARY)
                     {
                         if(actualConnect==null || (actualConnect!=null && (actualConnect.isTram() ^ tram))){
@@ -368,12 +385,14 @@ public class DrawControll {
                     }
                     
                 }
+                if(moveAll)
+                    drClick(event.getX(),event.getY());
             }
         });
         canvas.setOnMouseDragged(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if(locked)
+                if(locked && !moveAll)
                 {
                     if(event.getButton()==MouseButton.PRIMARY){
                         if(actualConnect!=null){
@@ -382,6 +401,11 @@ public class DrawControll {
                                 drawCurve(event.getX(), event.getY());
                         }
                     }
+                }
+                if(moveAll)
+                {
+                    drDrag(event.getX(),event.getY());
+                    
                 }
             }
         });
@@ -415,6 +439,21 @@ public class DrawControll {
         distY = startY - backgroundBox.getLayoutY();
         
     }
+    private void drClick(double x, double y)
+    {
+        drstartX = x;
+        drstartY = y;
+        drdistX = drstartX - gui.getXYDrawScene().getX();
+        drdistY = drstartY - gui.getXYDrawScene().getY();
+    }
+    private void drDrag(double x, double y)
+    {
+        drlayoutX = x - drdistX;
+        drlayoutY = y - drdistY;
+        gui.setXYDrawScene(drlayoutX, drlayoutY);
+        drdistX = drstartX - drlayoutX;
+        drdistY = drstartY - drlayoutY;
+    }
     private void bgDrag(double x, double y)
     {
         layoutX = x - distX;
@@ -423,6 +462,7 @@ public class DrawControll {
         backgroundBox.setLayoutY(layoutY);
         distX = startX - layoutX;
         distY = startY - layoutY;
+        
     }
     public void moveDefBg(double layoutX, double layoutY, double width, double height)
     {

@@ -5,6 +5,7 @@
  */
 package prometheus;
 
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.io.File;
 import java.util.logging.Level;
@@ -42,6 +43,7 @@ import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -67,6 +69,7 @@ public class GuiControll {
     private Button play;
     private Scene scene;
     private Canvas canvas;
+    private Rectangle menuBg=new Rectangle();
     private static MenuFlap fapSim, fapEdit;
     private Button newTemp, loadTemp, saveTemp;
     private Image imgPlay=new Image("/resources/icons/play.png");
@@ -83,6 +86,7 @@ public class GuiControll {
         this.primaryStage=primaryStage;
         root = new Group(); 
         scene = new Scene(root, 850, 600);
+        scene.setFill(Color.rgb(250, 250, 250));
         primaryStage.setTitle("Bakalarska prace");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -175,18 +179,22 @@ public class GuiControll {
     {
         primaryStage.widthProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             menu.changeWidth(newValue.intValue());
-            drawScene.setWidth(drawScene.getWidth()+(newValue.doubleValue()-oldValue.doubleValue()));
-            canvas.setWidth(canvas.getWidth()+(newValue.doubleValue()-oldValue.doubleValue()));
-            //drawScene.setWidth(newValue.doubleValue()-22);
+            double newWidth=newValue.doubleValue()-oldValue.doubleValue();
+            drawScene.setWidth(drawScene.getWidth()+newWidth);
+            canvas.setWidth(canvas.getWidth()+newWidth);
+            menuBg.setWidth(menuBg.getWidth()+newWidth);
         });
         primaryStage.heightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
-            drawScene.setHeight(drawScene.getHeight()+(newValue.doubleValue()-oldValue.doubleValue()));
-            canvas.setHeight(canvas.getHeight()+(newValue.doubleValue()-oldValue.doubleValue()));
-            //drawScene.setHeight(newValue.doubleValue()-149);
+            double newHeight=newValue.doubleValue()-oldValue.doubleValue();
+            drawScene.setHeight(drawScene.getHeight()+newHeight);
+            canvas.setHeight(canvas.getHeight()+newHeight);
         });
     }
     private void initMenu()
     {
+        menuBg.setWidth(850);
+        menuBg.setHeight(102);
+        menuBg.setFill(Color.WHITE);
         menu=new Menu();
         initEditMenu();
         initSimulMenu();
@@ -221,15 +229,15 @@ public class GuiControll {
         saveTemp.setLayoutX(69);
         saveTemp.setLayoutY(5);
         
-        root.getChildren().addAll(menu.getMenu(), saveTemp,loadTemp, newTemp);
+        root.getChildren().addAll(menuBg, menu.getMenu(), saveTemp,loadTemp, newTemp);
         menu.changeWidth(primaryStage.getWidth());
     }
     private void editDisableMenu()
     {
         generCar.setDisable(true);
         generTram.setDisable(true);
-        canvas.setDisable(true);
-        drawRoot.setDisable(true);
+        //canvas.setDisable(true);
+        //drawRoot.setDisable(true);
         addOwn.setDisable(true);
 
         root.getChildren().removeAll(saveTemp,newTemp);
@@ -245,7 +253,7 @@ public class GuiControll {
         speedOwnMi.setLayoutY(layout1);
         speedOwn.setLayoutY(layout1);
         play.setDisable(true);
-        
+        DrawControll.setMoveAll(true);
     }
     private void initSimulMenu()
     {
@@ -378,6 +386,7 @@ public class GuiControll {
         loadBG.setLayoutY(5);
         loadBG.setFont(TEXT_STYLE);
         lockBG=new CheckBox("Zamnkout pozadí");
+        lockBG.setSelected(true);
         lockBG.setLayoutX(5);
         lockBG.setLayoutY(30);
         lockBG.setFont(TEXT_STYLE);
@@ -631,8 +640,8 @@ public class GuiControll {
     {
         canvas=new Canvas(844, 491);
         drawRoot=new Group();
-        //drawRoot.getChildren().add(canvas);
         drawScene=new SubScene(drawRoot, 844, 491);
+        drawScene.setFill(Color.WHITE);
         groupBorder = new BorderPane();
         groupBorder.setBorder(new Border(new BorderStroke(Color.BLACK,
             BorderStrokeStyle.SOLID, new CornerRadii(2),
@@ -640,7 +649,17 @@ public class GuiControll {
         groupBorder.setCenter(drawScene);
         groupBorder.setLayoutY(105);
         groupBorder.setLayoutX(2);
-        root.getChildren().add(groupBorder);
+        root.getChildren().add(0, groupBorder);
+    }
+    public void setXYDrawScene(double x, double y)
+    {
+        groupBorder.setLayoutX(x);
+        groupBorder.setLayoutY(y);
+        
+    }
+    public Point getXYDrawScene()
+    {
+        return new Point((int)groupBorder.getLayoutX(), (int)groupBorder.getLayoutY());
     }
     public void changPlay(boolean chan)
     {
@@ -664,6 +683,8 @@ public class GuiControll {
     public static void setActualMenuFlap(MenuFlap mf)
     {
         selectedFap=mf;
+        if(edit)
+            DrawControll.setMoveAll(mf.equals(fapSim));
     }
     public static MenuFlap getActualMenuFlap()
     {

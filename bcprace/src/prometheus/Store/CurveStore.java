@@ -71,6 +71,8 @@ public class CurveStore {
 
 
             Attr idFirstSegment=doc.createAttribute("idFirstSegment");
+            if(mc.getFirst()==null)
+                System.out.println("null");
             idFirstSegment.setValue(String.valueOf(mc.getFirst().getId()));
             curve.setAttributeNode(idFirstSegment);
 
