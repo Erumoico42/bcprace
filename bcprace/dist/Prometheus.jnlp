@@ -8,11 +8,13 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="Prometheus.jar" size="482389" download="eager" />
+    <jar href="Prometheus.jar" size="487149" download="eager" />
   </resources>
   <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="Prometheus" >
     <param name="requiredFXVersion" value="8.0+"/>
   </applet-desc>
-  <jfx:javafx-desc  width="800" height="600" main-class="prometheus.Prometheus"  name="Prometheus" />
+  <jfx:javafx-desc  width="800" height="600" main-class="prometheus.Prometheus"  name="Prometheus" >
+    <fx:param name="asdas" value="-s"/>
+  </jfx:javafx-desc>
   <update check="always"/>
 </jnlp>

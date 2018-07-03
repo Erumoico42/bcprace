@@ -21,15 +21,15 @@ import prometheus.Prometheus;
  * @author Honza
  */
 public class BackgroundStore {
-    private static Document doc;
-    private static Element root;
+    private Document doc;
+    private Element root;
 
     public BackgroundStore(Document doc, Element root) {
         this.doc=doc;
         this.root=root;
     }
     
-    public static void saveBackground(String bgSource, HBox bg)
+    public void saveBackground(String bgSource, HBox bg)
     {
         
             Element background=doc.createElement("background");
@@ -68,7 +68,7 @@ public class BackgroundStore {
             background.setAttributeNode(isnull); 
             root.appendChild(background);
     }
-    public static void loadBackground()
+    public void loadBackground()
     {
         
             NodeList bg=doc.getElementsByTagName("background");

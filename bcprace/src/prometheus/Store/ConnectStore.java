@@ -21,15 +21,15 @@ import prometheus.DrawControll;
  * @author Honza
  */
 public class ConnectStore {
-    private static Document doc;
-    private static Element root;
-    private static List<Connect> loadedConnects=new ArrayList<>();
+    private Document doc;
+    private Element root;
+    private List<Connect> loadedConnects=new ArrayList<>();
 
     public ConnectStore(Document doc, Element root) {
         this.doc = doc;
         this.root = root;
     }
-    public static void saveConnects(List<Connect> connects)
+    public void saveConnects(List<Connect> connects)
     {
         for (Connect connect : connects) {
             Element conn=doc.createElement("connect"); 
@@ -53,7 +53,7 @@ public class ConnectStore {
             root.appendChild(conn);
         }
     }
-    public static void loadConnects()
+    public void loadConnects()
     {
         NodeList conn=doc.getElementsByTagName("connect");
         for (int i = 0; i < conn.getLength(); i++) {

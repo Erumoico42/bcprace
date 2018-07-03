@@ -23,19 +23,19 @@ import prometheus.DrawControll;
  * @author Honza
  */
 public class CurveStore {
-    private static Document doc;
-    private static Element root;
-    private static List<Connect> connects=new ArrayList<>();
-    private static List<StreetSegment> segments;
-    private static List<MyCurve> mycurves=new ArrayList<>();
-    private static DrawControll draw;
+    private Document doc;
+    private Element root;
+    private List<Connect> connects=new ArrayList<>();
+    private List<StreetSegment> segments;
+    private List<MyCurve> mycurves=new ArrayList<>();
+    private DrawControll draw;
     public CurveStore(Document doc, Element root, DrawControll draw)
     {
         this.draw=draw;
         this.doc=doc;
         this.root=root;
     }
-    public static void saveCurve(List<MyCurve> curves)
+    public void saveCurve(List<MyCurve> curves)
     {
         for (MyCurve mc : curves) {
             Element curve=doc.createElement("curve");   
@@ -90,7 +90,7 @@ public class CurveStore {
             root.appendChild(curve);
         }
     }
-    private static Connect getConnectById(int id)
+    private Connect getConnectById(int id)
     {
         for (Connect connect : connects) {
             if(connect.getId()==id)
@@ -98,9 +98,10 @@ public class CurveStore {
         }
         return null;
     }      
-    public static void loadCurves(List<StreetSegment> segmentss, List<Connect> connectss)
+    public void loadCurves(List<StreetSegment> segmentss, List<Connect> connectss)
     {
-        connects=connectss;
+        connects=new ArrayList<>();
+        connects.addAll(connectss);
         segments=segmentss;
         NodeList curves=doc.getElementsByTagName("curve");
             MyCurve mc;
@@ -146,7 +147,7 @@ public class CurveStore {
                 }
             }
     }
-    private static StreetSegment getUsekById(int id)
+    private StreetSegment getUsekById(int id)
     {
         for (StreetSegment usek : segments) {
             if(usek.getId()==id){
@@ -155,7 +156,7 @@ public class CurveStore {
         }
         return null;
     }
-    private static void initMC(MyCurve mc, Point p2, Point p3, int id)
+    private void initMC(MyCurve mc, Point p2, Point p3, int id)
     {
         mc.setId(id);
         mc.getC1().move(p2.getX(), p2.getY());

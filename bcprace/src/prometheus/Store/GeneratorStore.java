@@ -13,6 +13,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import prometheus.CarControll;
 import prometheus.DrawControll;
+import prometheus.LightsControll;
+import prometheus.Police.PoliceCombin;
+import prometheus.PoliceControll;
 import prometheus.Street.Connect;
 
 /**
@@ -21,13 +24,13 @@ import prometheus.Street.Connect;
  */
 public class GeneratorStore {
 
-    private final Document doc;
-    private final Element root;
+    private Document doc;
+    private Element root;
     public GeneratorStore(Document doc, Element root) {
         this.doc=doc;
         this.root=root;
     }
-    public void saveGenerConfig(int carDeley, int tramDeley, boolean generRunCar, boolean generRunTram)
+    public void saveGenerConfig(int carDeley, int tramDeley, boolean generRunCar, boolean generRunTram, boolean runPol, boolean runLigh)
     {
         Element generator=doc.createElement("generator");
         Attr carDel=doc.createAttribute("carDel");
@@ -46,6 +49,13 @@ public class GeneratorStore {
         generTram.setValue(String.valueOf(generRunTram));
         generator.setAttributeNode(generTram);
         
+        Attr runPolice=doc.createAttribute("runPolice"); 
+        runPolice.setValue(String.valueOf(runPol));
+        generator.setAttributeNode(runPolice);
+        
+        Attr runLights=doc.createAttribute("runLights"); 
+        runLights.setValue(String.valueOf(runLigh));
+        generator.setAttributeNode(runLights);
         root.appendChild(generator);
 
     }
@@ -60,10 +70,13 @@ public class GeneratorStore {
 
         boolean generTram=Boolean.parseBoolean(generator.getAttributes().getNamedItem("generTram").getNodeValue());
         boolean generCar=Boolean.parseBoolean(generator.getAttributes().getNamedItem("generCar").getNodeValue());
-        
+        boolean runPolice=Boolean.parseBoolean(generator.getAttributes().getNamedItem("runPolice").getNodeValue());
+        boolean runLights=Boolean.parseBoolean(generator.getAttributes().getNamedItem("runLights").getNodeValue());
         CarControll.setGenerDeleyCar(carDel);
         CarControll.setGenerDeleyTram(tramDel);
         CarControll.setCarGeneratorRun(generCar);
         CarControll.setTramGeneratorRun(generTram);
+        PoliceControll.setPoliceRun(runPolice);
+        LightsControll.setLightsRun(runLights);
     }
 }

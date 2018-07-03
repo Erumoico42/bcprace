@@ -35,7 +35,8 @@ public class PoliceControll {
     private static Button addSide, sideDeleyPl, sideDeleyMi, deleyPl, deleyMi;
     private static TextField tfDeley, tfSideDeley;
     private GuiControll gui;
-    private static CheckBox connectSides;
+    private static CheckBox connectSides, runPolice;
+    private static boolean playPolice=false;
     public PoliceControll(DrawControll drawing, GuiControll gui) {
         this.gui=gui;
         this.drawing = drawing;
@@ -44,19 +45,22 @@ public class PoliceControll {
     }
     private void initEvents()
     {
-        /*policeOn=new Button("Police on");
-        policeOn.setLayoutX(10);
-        policeOn.setLayoutY(80);
-        policeOn.setMinWidth(70);
-        policeOn.setOnAction(new EventHandler<ActionEvent>() {
+        runPolice=gui.getRunPolice();
+        runPolice.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                if(run)
-                    stop();
+                if(!playPolice){
+                    playPolice=true;
+                    if(Prometheus.simulationRun())
+                        play();
+                }
                 else
-                    play();
+                {
+                    playPolice=false;
+                    stop();
+                }
             }
-        });*/
+        });
         
         Button addPolice=gui.getAddPolice();
         addPolice.setOnAction(new EventHandler<ActionEvent>() {
@@ -157,6 +161,10 @@ public class PoliceControll {
             }
         });
     }
+    public static boolean getRunPolice()
+    {
+        return playPolice;
+    }
     public static void addPolice(Police pol)
     {
         polices.add(pol);
@@ -170,7 +178,12 @@ public class PoliceControll {
         for (Police police : polices) {
             police.remove();
         }
-        polices.clear();
+        polices=new ArrayList<>();
+    }
+    public static void setPoliceRun(boolean run)
+    {
+        runPolice.setSelected(run);
+        playPolice=run;
     }
     public void removePolice()
     {
@@ -196,10 +209,12 @@ public class PoliceControll {
     }
     public void play()
     {
-        run=true;
-        //policeOn.setText("Police off");
-        for (Police pol : polices) {
-            pol.play();
+        if(playPolice)
+        {
+            run=true;
+            for (Police pol : polices) {
+                pol.play();
+            }
         }
     }
     public void stop()

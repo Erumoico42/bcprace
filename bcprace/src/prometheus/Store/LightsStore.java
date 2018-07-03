@@ -26,7 +26,7 @@ import prometheus.Prometheus;
 public class LightsStore {
     private static Document doc;
     private static Element root;
-    private static List<TrafficLight> loadedLights=new ArrayList<>();
+    private List<TrafficLight> loadedLights=new ArrayList<>();
 
     public LightsStore(Document doc, Element root) {
         this.root=root;
@@ -34,7 +34,7 @@ public class LightsStore {
     }
     
     
-    public static void loadLights()
+    public void loadLights()
     {
         LightsControll sc=Prometheus.getLightsControll();
         NodeList lights=doc.getElementsByTagName("light");
@@ -47,12 +47,14 @@ public class LightsStore {
             String status=light.getAttributes().getNamedItem("status").getNodeValue();
             String timeRed=light.getAttributes().getNamedItem("timeRed").getNodeValue();
             String timeGreen=light.getAttributes().getNamedItem("timeGreen").getNodeValue();
+            String timeOrange=light.getAttributes().getNamedItem("timeOrange").getNodeValue();
             String autoRed=light.getAttributes().getNamedItem("autoRed").getNodeValue();
             String autoGreen=light.getAttributes().getNamedItem("autoGreen").getNodeValue();
             String position=light.getAttributes().getNamedItem("position").getNodeValue();
             semafor.setStatus(Integer.parseInt(status), true);
             semafor.setTimeGreen(Integer.parseInt(timeGreen));
             semafor.setTimeRed(Integer.parseInt(timeRed));
+            semafor.setTimeOrange(Integer.parseInt(timeOrange));
             semafor.enableChangeGreen(Boolean.parseBoolean(autoGreen));
             semafor.enableChangeRed(Boolean.parseBoolean(autoRed));
             String[] pozzz=position.split(",");
@@ -84,11 +86,11 @@ public class LightsStore {
             }
         }           
     }
-    public static List<TrafficLight> getLights()
+    public List<TrafficLight> getLights()
     {
         return loadedLights;
     }
-    private static TrafficLight getLightById(int id)
+    private TrafficLight getLightById(int id)
     {
         for (TrafficLight loadedLight : loadedLights) {
             if(loadedLight.getID()==id)

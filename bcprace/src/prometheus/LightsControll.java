@@ -41,11 +41,11 @@ public class LightsControll {
     private static int lastLightId=0, lastIDPrechod=0;
     private boolean runSem=false, connected=false;
     private DrawControll dc;
-  
+    private static boolean playLights=false;
     private GuiControll gui;
     private RadioButton rbPrimRed, rbPrimOrange, rbPrimGreen, rbSecRed, rbSecOrange, rbSecGreen, rbRed, rbOrange, rbGreen;
     private CheckBox enableRed;
-    private CheckBox enableGreen;
+    private static CheckBox enableGreen, runLights;
     public LightsControll(DrawControll dc, GuiControll gui) {
         this.gui=gui;
         this.dc=dc;
@@ -73,9 +73,20 @@ public class LightsControll {
     }
     public void play()
     {
-        for (TrafficLight trafficLight : trafficLightList) {
-            trafficLight.play();
+        if(playLights){
+            for (TrafficLight trafficLight : trafficLightList) {
+                trafficLight.play();
+            }
         }
+    }
+    public static boolean getRunLights()
+    {
+        return playLights;
+    }
+    public static void setLightsRun(boolean run)
+    {
+        runLights.setSelected(run);
+        playLights=run;
     }
     private LightsControll getLC()
     {
@@ -121,10 +132,27 @@ public class LightsControll {
         for (TrafficLight trafficLight : toRem) {
             trafficLight.remove();
         }
-        trafficLightList.clear();
+        trafficLightList=new ArrayList<>();
     }
     private void initEvents()
     {
+        runLights=gui.getRunLights();
+        runLights.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                if(!playLights){
+                    playLights=true;
+                    if(Prometheus.simulationRun())
+                        play();
+                }
+                else
+                {
+                    playLights=false;
+                    stop();
+                }
+            }
+        });
+        
         gui.getAddSem().setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {

@@ -89,6 +89,7 @@ public class Split {
                     StreetSegment ssStart=startCurve.getFirst();
                     if(ssEnd!=null)
                         ssEnd.setStopWinker(true);
+                    
                     connectSegments(ssEnd,ssStart);  
                       
                 }

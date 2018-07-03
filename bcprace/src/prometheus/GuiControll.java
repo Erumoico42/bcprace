@@ -7,7 +7,14 @@ package prometheus;
 
 import java.awt.Point;
 import java.awt.RenderingHints;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import prometheus.gui.Menu;
@@ -62,7 +69,7 @@ public class GuiControll {
     private Button loadBG, timeGenCarPl, timeGenCarMi, timeGenTramPl, timeGenTramMi, speedOwnPl, speedOwnMi, addOwn, addPolice, addSide, timeSidPl, timeSidMi, timeWaiPl,timeWaiMi,
             addSem, timeRedPl, timeRedmi, timeOrangePl, timeOrangemi, timeGreenPl, timeGreenmi;
     private TextField timeGenCar, timeGenTram, speedOwn, timeSide, timeWait, timeRed, timeOrange, timeGreen;
-    private CheckBox generCar, generTram, lockBG, connectSides, connectSems, enableRed, enableGreen, hide, lockWays;
+    private CheckBox generCar, generTram, lockBG, connectSides, connectSems, enableRed, enableGreen, hide, lockWays, runPolice, runLights;
     private RadioButton createCar, createTram, semColOrange, semColRed, semColGreen, semPrimRed, semPrimOrange, semPrimGreen, semSecRed, semSecOrange,semSecGreen;
     private Group drawRoot;
     private SubScene drawScene;
@@ -76,9 +83,10 @@ public class GuiControll {
     private Image imgPause=new Image("/resources/icons/pause.png");
     private ImageView ivPlay=new ImageView(imgPlay);
     private static boolean edit=false, saver=false;
-    private MenuGroup mgs1, mgs2, mgs3, mgs4, mge1, mge2, mge3, mge4;
+    private MenuGroup mgs1, mgs2, mgs3, mgs4, mgs5, mge1, mge2, mge3, mge4;
     private boolean enableMouseMoveExit=false;
     private BorderPane groupBorder;
+    private double defWidthDist, defHeightdist;
     
     public GuiControll(Stage primaryStage, String[] args) {
         
@@ -86,7 +94,7 @@ public class GuiControll {
         this.primaryStage=primaryStage;
         root = new Group(); 
         scene = new Scene(root, 850, 600);
-        scene.setFill(Color.rgb(250, 250, 250));
+        scene.setFill(Color.rgb(210, 210, 210));
         primaryStage.setTitle("Bakalarska prace");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -137,15 +145,56 @@ public class GuiControll {
     {
         if(saver)
         {
-            StoreControll.loader(new File("D:\\temp04.xml"));
-            Prometheus.play();
-            DrawControll.showObjects(false);
+            try {
+                String path=Prometheus.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+                path=path.substring(0, path.lastIndexOf("/"))+"/sleeperConfig.cfg";
+                path=path.replaceAll("/", "\\\\");
+                StoreControll sc=new StoreControll();
+                String tempPath=loadSleeperConfig(path);
+                
+
+                if(tempPath!=null && !tempPath.equals(""))
+                {
+                    sc.loader(new File(tempPath));
+                    Prometheus.play();
+                    DrawControll.showObjects(false);
+                }
+                else
+                    Prometheus.cancel();
+                
+            } catch (URISyntaxException ex) {
+                Logger.getLogger(Prometheus.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
+    }
+    private String loadSleeperConfig(String path)
+    {
+        List<String> paths=new ArrayList<>();
+        File pathFile=new File(path);
+        if(pathFile.exists()){
+            try (BufferedReader br = new BufferedReader(new FileReader(pathFile))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                   // process the line.
+                   paths.add(line);
+                }
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(GuiControll.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(GuiControll.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            if(!paths.isEmpty()){
+                paths.set(0, paths.get(0).substring(1));
+                int rnd=(int)(Math.random()*paths.size());
+                return paths.get(rnd);
+            }
+        }
+        return null;
     }
     private void runScreenSaver()
     {
         
-        root.getChildren().removeAll(menu.getMenu(), saveTemp,loadTemp, newTemp);
+        root.getChildren().removeAll(menuBg, menu.getMenu(), saveTemp,loadTemp, newTemp);
         primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
         primaryStage.setFullScreen(true);
         groupBorder.setLayoutY(52);
@@ -179,16 +228,60 @@ public class GuiControll {
     {
         primaryStage.widthProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             menu.changeWidth(newValue.intValue());
+            double oldWidth=canvas.getWidth();
             double newWidth=newValue.doubleValue()-oldValue.doubleValue();
-            drawScene.setWidth(drawScene.getWidth()+newWidth);
-            canvas.setWidth(canvas.getWidth()+newWidth);
-            menuBg.setWidth(menuBg.getWidth()+newWidth);
+
+            double groupWidth=findWidthOfGroup();
+            if(drawScene.getWidth()<groupWidth){
+                drawScene.setWidth(groupWidth+3);
+                canvas.setWidth(groupWidth+3);
+                menuBg.setWidth(groupWidth+3);
+            }else if(newWidth>0)
+            {
+                drawScene.setWidth(newValue.intValue()-defWidthDist);
+                canvas.setWidth(newValue.intValue()-defWidthDist);
+                menuBg.setWidth(newValue.intValue()+defWidthDist);
+            }
+            
         });
         primaryStage.heightProperty().addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
             double newHeight=newValue.doubleValue()-oldValue.doubleValue();
-            drawScene.setHeight(drawScene.getHeight()+newHeight);
-            canvas.setHeight(canvas.getHeight()+newHeight);
+            double oldHeight=canvas.getHeight();
+            /*drawScene.setHeight(oldHeight+newHeight);
+            canvas.setHeight(oldHeight+newHeight);
+            */
+            double groupHeighh=findHeightOfGroup();
+            if(drawScene.getHeight()<groupHeighh){
+                drawScene.setHeight(groupHeighh+3);
+                canvas.setHeight(groupHeighh+3);
+            }else if(newHeight>0)
+            {
+                drawScene.setHeight(newValue.intValue()-defHeightdist);
+                canvas.setHeight(newValue.intValue()-defHeightdist);
+            }
         });
+    }
+    private double findWidthOfGroup()
+    {
+        double width=0;
+        for (Node node : drawRoot.getChildren()) {
+            double actWidth=node.getLayoutBounds().getMaxX();
+            if(width<actWidth)
+                width=actWidth;
+        }
+        //System.out.println(width);
+        return width;
+    }
+    private double findHeightOfGroup()
+    {
+        double height=0;
+        for (Node node : drawRoot.getChildren()) {
+            double actHeight=node.getLayoutBounds().getMaxY();
+            if(height<actHeight)
+                height=actHeight;
+        }
+        //System.out.println(height);
+        return height;
     }
     private void initMenu()
     {
@@ -243,11 +336,11 @@ public class GuiControll {
         root.getChildren().removeAll(saveTemp,newTemp);
         loadTemp.setLayoutX(5);
         menu.getFlapGroup().getChildren().removeAll(fapEdit.getFlap(), fapSim.getFlap());
-        fapSim.getContent().getChildren().removeAll(mgs1.getMenuGroup(), mgs2.getMenuGroup());
-        mgs3.setLayout(0);
-        mgs3.getGroup().getChildren().remove(addOwn);
-        mgs4.getGroup().getChildren().remove(hide);
-        mgs4.setLayout(90);
+        fapSim.getContent().getChildren().removeAll(mgs1.getMenuGroup(), mgs2.getMenuGroup(), mgs3.getMenuGroup());
+        mgs4.setLayout(0);
+        mgs4.getGroup().getChildren().remove(addOwn);
+        mgs5.getGroup().getChildren().remove(hide);
+        mgs5.setLayout(90);
         menu.changeContent(fapSim);
         speedOwnPl.setLayoutY(layout1);
         speedOwnMi.setLayoutY(layout1);
@@ -315,10 +408,23 @@ public class GuiControll {
         generTram.setLayoutY(layout1);
         mgs2.addItems(timeGenTramPl, timeGenTramMi, timeGenTram, generTram);
         
-        mgs3=new MenuGroup("Vlastní");
-        mgs3.setWidth(90);
-        mgs3.setLblLayout(25);
+        mgs3=new MenuGroup("Řízení dopravy");
+        mgs3.setWidth(110);
+        mgs3.setLblLayout(15);
         mgs3.setLayout(180);
+        
+        runLights=new CheckBox("Semafory");
+        runLights.setLayoutX(5);
+        runLights.setLayoutY(layout1);
+        runPolice=new CheckBox("Policie");
+        runPolice.setLayoutX(5);
+        runPolice.setLayoutY(layout2);
+        mgs3.addItems(runLights, runPolice);
+        
+        mgs4=new MenuGroup("Vlastní");
+        mgs4.setWidth(90);
+        mgs4.setLblLayout(25);
+        mgs4.setLayout(290);
         
         speedOwnPl=new Button("+");
         speedOwnPl.setFont(Font.font(9));
@@ -344,12 +450,12 @@ public class GuiControll {
         addOwn.setMaxSize(80, 20);
         addOwn.setLayoutX(5);
         addOwn.setLayoutY(layout1);
-        mgs3.addItems(speedOwnPl, speedOwnMi, speedOwn, addOwn);
+        mgs4.addItems(speedOwnPl, speedOwnMi, speedOwn, addOwn);
         
-        mgs4=new MenuGroup("Spustit");
-        mgs4.setWidth(110);
-        mgs4.setLblLayout(40);
-        mgs4.setLayout(270);
+        mgs5=new MenuGroup("Spustit");
+        mgs5.setWidth(110);
+        mgs5.setLblLayout(40);
+        mgs5.setLayout(380);
         ivPlay.setFitWidth(30);
         ivPlay.setFitHeight(25);
         play=new Button();
@@ -363,10 +469,10 @@ public class GuiControll {
         hide.setSelected(true);
         hide.setLayoutX(layout1);
         hide.setLayoutY(35);
-        mgs4.addItems(play, hide);
+        mgs5.addItems(play, hide);
         
         
-        fapSim.addGroups(mgs1, mgs2, mgs3, mgs4);
+        fapSim.addGroups(mgs1, mgs2, mgs3, mgs4, mgs5);
         menu.addFlaps(fapSim);
     }
     private void initEditMenu()
@@ -639,6 +745,8 @@ public class GuiControll {
     private void initDrawingPlace()
     {
         canvas=new Canvas(844, 491);
+        defWidthDist=primaryStage.getWidth()-canvas.getWidth();
+        defHeightdist=primaryStage.getHeight()-canvas.getHeight();
         drawRoot=new Group();
         drawScene=new SubScene(drawRoot, 844, 491);
         drawScene.setFill(Color.WHITE);
@@ -928,6 +1036,14 @@ public class GuiControll {
 
     public CheckBox getLockWays() {
         return lockWays;
+    }
+
+    public CheckBox getRunPolice() {
+        return runPolice;
+    }
+
+    public CheckBox getRunLights() {
+        return runLights;
     }
     
     

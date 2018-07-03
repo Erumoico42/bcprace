@@ -181,6 +181,31 @@ public class Bot extends Vehicle{
     private boolean findStreet(StreetSegment us, int d)
     {
         boolean carFound=false;
+        for (int i = 0; i < 10; i++) {
+            if(getStreet().size()>i){
+                StreetSegment uNext=getStreet().get(i);
+            if(!carFound)
+            {
+                if(uNext.getVehicle()!=null && uNext.getVehicle()!=this)
+                {
+                    
+                    double speedNextCar=uNext.getVehicle().getSpeed();
+                    double tNextCar=uNext.getVehicle().getTime();
+                    double dist=i+tNextCar-getTime()-length;
+                    setSpeed(newSpeed(getSpeed(), speedNextCar, dist));
+                    carFound=true;
+                    break;
+                }
+                /*else
+                {
+                    carFound=findStreet(uNext, d+1);
+                }*/
+            }
+            }
+            else
+                break;
+            
+        }/*
         for (StreetSegment uNext : us.getDalsiUseky()) {
             if(d<10 && !carFound)
             {
@@ -200,13 +225,28 @@ public class Bot extends Vehicle{
                     carFound=findStreet(uNext, d+1);
                 }
             }
-        }
+        }*/
         return carFound;
     }
     
     private void findCPCross(StreetSegment us, int dist)
     {
-        for (StreetSegment uNext : us.getDalsiUseky()) {
+        for (int i = 0; i < 4; i++) {
+            if(getStreet().size()>i){
+                StreetSegment uNext=getStreet().get(i);
+                if(!uNext.getCheckPoints().isEmpty())
+                {
+                    for (StreetSegment cp : uNext.getCheckPoints()) {
+                        for (StreetSegment uN : cp.getDalsiUseky()) {
+                            findCarCross(uN, 1, i+1);                        
+                        }
+                    }
+                }
+            }
+            else
+                break;
+        }
+        /*for (StreetSegment uNext : us.getDalsiUseky()) {
             if(uNext.getCheckPoints().isEmpty())
             {
                 if(dist<4)
@@ -221,7 +261,7 @@ public class Bot extends Vehicle{
                 }
                 
             }
-        }
+        }*/
     }
     private boolean findCarCross(StreetSegment us, int nextDist, double actDist)
     {

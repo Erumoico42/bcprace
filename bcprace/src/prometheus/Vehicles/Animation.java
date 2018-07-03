@@ -106,8 +106,11 @@ public class Animation {
     }
     public void removeAll()
     {
-        for (Vehicle veh : vehicles) {
+        List<Vehicle> toRemove=new ArrayList<>();
+        toRemove.addAll(vehicles);
+        for (Vehicle veh : toRemove) {
             veh.removeCar();
         }
+        vehicles.clear();
     }
 }

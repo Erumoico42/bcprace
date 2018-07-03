@@ -23,20 +23,20 @@ import prometheus.PoliceControll;
  * @author Honza
  */
 public class PoliceStore {
-    private static Document doc;
-    private static Element root;
-    private static List<PoliceSide> policeSides;
-    private static List<PoliceCombin> policeCombs;
+    private Document doc;
+    private Element root;
+    private List<PoliceSide> policeSides;
+    private List<PoliceCombin> policeCombs;
 
     public PoliceStore(Document doc, Element root) {
         this.doc=doc;
         this.root=root;
     }
-    public static List<PoliceCombin> getPolCombs()
+    public List<PoliceCombin> getPolCombs()
     {
         return policeCombs;
     }
-    public static void loadPolice()
+    public void loadPolice()
     {
         policeCombs=new ArrayList<>();
         
@@ -80,7 +80,7 @@ public class PoliceStore {
             }
         }
     }
-    private static PoliceSide getPSbyId(int id)
+    private PoliceSide getPSbyId(int id)
     {
         for (PoliceSide policeSide : policeSides) {
             if(policeSide.getId()==id)
@@ -88,7 +88,7 @@ public class PoliceStore {
         }
         return null;
     }
-    public static void savePolice(List<Police> polices)
+    public void savePolice(List<Police> polices)
     {
         for (Police p : polices) {
             Element police=doc.createElement("police");

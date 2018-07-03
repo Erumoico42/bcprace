@@ -346,7 +346,7 @@ public class Police {
         else
             ivPolice.setImage(defHead);
     }
-    private void deselect()
+    public void deselect()
     {
         selected=false;
         ivPolice.setImage(defHead);

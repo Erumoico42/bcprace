@@ -25,23 +25,23 @@ import prometheus.DrawControll;
  * @author Honza
  */
 public class SegmentStore {
-    private static Element root;
-    private static Document doc;
-    private static List<StreetSegment> loadedSegments=new ArrayList<>();
-    private static List<StreetSegment> startSegmentsTram=new ArrayList<>();
-    private static List<StreetSegment> startSegmentsCar=new ArrayList<>();
+    private Element root;
+    private Document doc;
+    private List<StreetSegment> loadedSegments=new ArrayList<>();
+    private List<StreetSegment> startSegmentsTram=new ArrayList<>();
+    private List<StreetSegment> startSegmentsCar=new ArrayList<>();
     public SegmentStore(Element root, Document doc)
     {
         this.root=root;
         this.doc=doc;
         
     }
-    public static List<StreetSegment> getLoadedSegments()
+    public List<StreetSegment> getLoadedSegments()
     {
         return loadedSegments;
     }
    
-    public static void saveSegments(List<MyCurve> curves, List<StreetSegment> startTram, List<StreetSegment> startCar)
+    public void saveSegments(List<MyCurve> curves, List<StreetSegment> startTram, List<StreetSegment> startCar)
     {
         for (MyCurve curve : curves) {
             for (StreetSegment usek : curve.getSegments()) {
@@ -55,7 +55,7 @@ public class SegmentStore {
             saveStart(streetSegment, true);
         }
     }
-    public static void saveStart(StreetSegment s, boolean tram)
+    public void saveStart(StreetSegment s, boolean tram)
     {
         Element startSegment=doc.createElement("startSegment");   
         Attr idStartSegment=doc.createAttribute("idStartSegment");
@@ -68,7 +68,7 @@ public class SegmentStore {
         
         root.appendChild(startSegment);
     }
-    public static void saveSegment(StreetSegment u)
+    public void saveSegment(StreetSegment u)
     {   
         Element segment=doc.createElement("segment");   
         Attr idSegment=doc.createAttribute("idSegment");
@@ -142,7 +142,7 @@ public class SegmentStore {
         }
         root.appendChild(segment);
     }   
-    private static void loadStars()
+    private void loadStars()
     {
         NodeList starts=doc.getElementsByTagName("startSegment");
         for (int i = 0; i < starts.getLength(); i++) {
@@ -156,7 +156,7 @@ public class SegmentStore {
                 DrawControll.addStartSegmentCar(act);
         }
     }
-    public static void loadSegments(List<TrafficLight> lights, List<PoliceCombin> polKombs)
+    public void loadSegments(List<TrafficLight> lights, List<PoliceCombin> polKombs)
     {
         NodeList us=doc.getElementsByTagName("segment");
         for (int i = 0; i < us.getLength(); i++) {
@@ -251,7 +251,7 @@ public class SegmentStore {
         }   
         loadStars();
     }
-    private static StreetSegment getUsekById(int id)
+    private StreetSegment getUsekById(int id)
     {
         for (StreetSegment loadedSegment : loadedSegments) {
             if(loadedSegment.getId()==id){

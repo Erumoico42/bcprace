@@ -43,7 +43,7 @@ import prometheus.Store.GeneratorStore;
  * @author Honza
  */
 public class StoreControll {
-    public static void loader(File input)
+    public void loader(File input)
     {
         try {
             DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();
@@ -61,7 +61,7 @@ public class StoreControll {
             ss.loadSegments(ls.getLights(), ps.getPolCombs());
             ConnectStore cs=new ConnectStore(doc, null);
             cs.loadConnects();
-            CurveStore cus=new CurveStore(doc, null, prometheus.Prometheus.getDrawControll());
+            CurveStore cus=new CurveStore(doc, null, Prometheus.getDrawControll());
             cus.loadCurves(ss.getLoadedSegments(), cs.getLoadedConnects());
             new GeneratorStore(doc, null).loadGenerConfig();
             new BackgroundStore(doc, null).loadBackground();
@@ -76,7 +76,7 @@ public class StoreControll {
         } 
     }
     public static void saver(List<MyCurve> curves, List<Connect> connects, List<TrafficLight> semafory,List<Police> polices, File file, String bgSource, HBox bg, 
-            List<StreetSegment> startsTram, List<StreetSegment> startsCar, int carDeley, int tramDeley, boolean generRunCar , boolean generRunTram)
+            List<StreetSegment> startsTram, List<StreetSegment> startsCar, int carDeley, int tramDeley, boolean generRunCar , boolean generRunTram, boolean runPolice , boolean runLights)
     {
         DocumentBuilderFactory dbf=DocumentBuilderFactory.newInstance();
         DocumentBuilder db;
@@ -93,7 +93,7 @@ public class StoreControll {
             new PoliceStore(doc, root).savePolice(polices);
             new BackgroundStore(doc, root).saveBackground(bgSource, bg);
             
-            new GeneratorStore(doc, root).saveGenerConfig(carDeley, tramDeley, generRunCar, generRunTram);
+            new GeneratorStore(doc, root).saveGenerConfig(carDeley, tramDeley, generRunCar, generRunTram, runPolice, runLights);
             TransformerFactory tfc=TransformerFactory.newInstance();
             Transformer tf=tfc.newTransformer();
             tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
@@ -118,21 +118,22 @@ public class StoreControll {
         fch.getExtensionFilters().add(filter);
         File file = fch.showSaveDialog(null);
         if (file != null) { 
-            saver(dc.getCurves(), dc.getConnects(), lc.getLights(), pc.getPolices(), file, dc.getBgSource(), dc.getBG(), dc.getStartTram(), dc.getStartCar(), cc.getGenerDeleyCar(), cc.getGenerDeleyTram(), cc.isCarGeneratorRun(), cc.isTramGeneratorRun());
+            saver(dc.getCurves(), dc.getConnects(), lc.getLights(), pc.getPolices(), file, dc.getBgSource(), dc.getBG(), dc.getStartTram(), dc.getStartCar(), cc.getGenerDeleyCar(), cc.getGenerDeleyTram(), cc.isCarGeneratorRun(), cc.isTramGeneratorRun(), pc.getRunPolice(), lc.getRunLights());
         }
     }
-    public static void openFile()
+    public void openFile()
     {
         FileChooser fch=new FileChooser();
         FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("XML soubory (*.xml)", "*.xml");
         fch.getExtensionFilters().add(filter);
         File file = fch.showOpenDialog(null);
         if (file != null) { 
+            Prometheus.getDrawControll().deselectAll();
             DrawControll.clean();
             loader(file);
             Prometheus.getGui().getPlay().setDisable(false);
-            Prometheus.getGui().getHide().setSelected(false);
-            Prometheus.getDrawControll().showObjects(false);
+            Prometheus.getGui().getHide().setSelected(true);
+            Prometheus.getDrawControll().showObjects(GuiControll.editable());
         } 
     }
 }

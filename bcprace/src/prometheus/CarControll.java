@@ -88,11 +88,14 @@ public class CarControll {
                 if(!carGeneratorRun){
                     enableCarDel(true);
                     carGeneratorRun=true;
+                    if(Prometheus.simulationRun())
+                        carGenerator();
                 }
                 else
                 {
                     enableCarDel(false);
                     carGeneratorRun=false;
+                    generStopCar();
                 }
             }
         });
@@ -141,14 +144,15 @@ public class CarControll {
             public void handle(ActionEvent event) {
                 if(!tramGeneratorRun){
                     enableTramDel(true);
-                    
                     tramGeneratorRun=true;
+                    if(Prometheus.simulationRun())
+                        tramGenerator();
                 }
                 else
                 {
                     enableTramDel(false);
-                    
                     tramGeneratorRun=false;
+                    generStopTram();
                 }
             }
         });

@@ -125,6 +125,7 @@ public class StreetSegment {
         cir.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent t) {
+                
                 selectedUsek=DrawControll.getActualStreetSegment();
                 if(t.getButton()==MouseButton.PRIMARY)
                 {  
@@ -139,20 +140,18 @@ public class StreetSegment {
                         }
                         DrawControll.setActualStreetSegment(getUsek());
                         //Prometheus.setActUsek(getUsek());
-                        circleStyle(cir,Color.BLUE, 5);
+                        circleStyle(cir,Color.MEDIUMVIOLETRED, 6);
                         selectCheckPoints(getUsek());
                         selectSemafory(getUsek());
                     }
                     else
                     {
-                        circleStyle(cir,DEF_COLOR, 4);
-                        deSelectCheckPoints(getUsek());
-                        deselectSemafory(getUsek());
-                        DrawControll.setActualStreetSegment(null);
+                        deselect();
                     }
                 }
                 else if(t.getButton()==MouseButton.SECONDARY)
                 {
+                   
                     if(selectedUsek!=null)
                     {
                         if(selectedUsek.getCheckPoints().contains(getUsek()))
@@ -163,7 +162,7 @@ public class StreetSegment {
                         else
                         {
                             selectedUsek.addCheckPoint(getUsek());
-                            circleStyle(cir,Color.ORANGE, 5);
+                            circleStyle(cir,Color.ORANGE, 6);
                         }
                     }
                 }  
@@ -183,6 +182,13 @@ public class StreetSegment {
                         cir.setRadius(4);
                 }
             });
+    }
+    public void deselect()
+    {
+        circleStyle(cir,DEF_COLOR, 4);
+        deSelectCheckPoints(getUsek());
+        deselectSemafory(getUsek());
+        DrawControll.setActualStreetSegment(null);
     }
     public void selectCheckPoints(StreetSegment u)
     {

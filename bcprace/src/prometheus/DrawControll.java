@@ -93,19 +93,21 @@ public class DrawControll {
         lastIdConnect=0;
         lastIdCurve=0;
         lastIdSegment=0;
+        
         endConnect=null;
         actualCurve=null;
         actualConnect=null;
         actualStreetSegment=null;
+        
         PoliceControll.clean();
         LightsControll.clean();
         drawRoot.getChildren().removeAll(nodesToHide);
-        segments.clear();
-        curves.clear();
-        connects.clear();
-        startSegmentsCar.clear();
-        startSegmentsTram.clear();
-        nodesToHide.clear();
+        segments=new ArrayList<>();
+        curves=new ArrayList<>();
+        connects=new ArrayList<>();
+        startSegmentsCar=new ArrayList<>();
+        startSegmentsTram=new ArrayList<>();
+        nodesToHide=new ArrayList<>();
         background.setImage(null);
         CarControll.getAnimation().removeAll();
     }
@@ -187,22 +189,11 @@ public class DrawControll {
     }
     public static void lockBackground(boolean lock)
     {
-        if(lock)
-        {
-            locked=true;
-            if(canvas!=null)
-                canvas.setVisible(true);
-            if(lockBg!=null)
-                lockBg.setSelected(true);
-        }
-        else
-        {
-            locked=false;
-            if(canvas!=null)
-                canvas.setVisible(false);
-            if(lockBg!=null)
-                lockBg.setSelected(false);
-        }
+        locked=lock;
+        if(canvas!=null)
+            canvas.setVisible(lock);
+        if(lockBg!=null)
+            lockBg.setSelected(lock);
     }
     public static void lockBackground()
     {
@@ -371,6 +362,7 @@ public class DrawControll {
                     {
                         if(actualConnect==null || (actualConnect!=null && (actualConnect.isTram() ^ tram))){
                             actualConnect=newConnect(event.getX(), event.getY());
+                            actualConnect.select();
                             actualCurve=null;
                         }
                         else
@@ -521,6 +513,26 @@ public class DrawControll {
         
         endConnect=newConnect(x,y);
         newCurve();
+    }
+    public void deselectAll()
+    {
+        if(actualConnect!=null)
+            actualConnect.deselect();
+        if(actualCurve!=null)
+            actualCurve.deselectCurve();
+        if(actualStreetSegment!=null)
+            actualStreetSegment.deselect();
+        for (Police p : policeControll.getPolices()) {
+            p.deselect();
+        }
+        LightsControll lc=Prometheus.getLightsControll();
+        if(lc.getSemPrim()!=null)
+            lc.getSemPrim().setStyle(0);
+        if(lc.getSemSec()!=null)
+            lc.getSemSec().setStyle(0);
+        lc.setActualLight(null);
+        lc.selectSemPrim(null);
+        lc.selectSemSec(null);
     }
     private void newCurve()
     {

@@ -6,6 +6,9 @@
 package prometheus;
 
 import java.io.File;
+import java.net.URISyntaxException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.scene.control.Button;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -35,7 +38,6 @@ public class Prometheus extends Application {
     private static PoliceControll policeControll;
     private static GuiControll gui;
     private static LightsControll lightsControll;
-    private static StoreControll storeControll;
     private static boolean run=false;
     private static String[] argss;
     @Override
@@ -44,13 +46,11 @@ public class Prometheus extends Application {
         root=gui.getRoot();
         drawRoot=gui.getDrawRoot();
         Scene scene=gui.getScene();
-        
         canvas=gui.getCanvas();
         drawControll=new DrawControll(canvas, drawRoot, gui);
         policeControll=new PoliceControll(drawControll, gui);
         carControll=new CarControll(drawControll, gui);
         lightsControll=new LightsControll(drawControll, gui);
-        storeControll=new StoreControll();
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
@@ -72,6 +72,10 @@ public class Prometheus extends Application {
                             policeControll.removePolSide();
                         if(drawControll.getActualConnect()!=null)
                             drawControll.removeConnect();
+                    }
+                    if(event.getCode()==KeyCode.ESCAPE)
+                    {
+                        drawControll.deselectAll();
                     }
                 }
             });
@@ -111,7 +115,8 @@ public class Prometheus extends Application {
             @Override
             public void handle(ActionEvent event) {
                 
-                storeControll.openFile();
+               StoreControll sc=new StoreControll();
+               sc.openFile();
             }
         });
         
@@ -119,7 +124,8 @@ public class Prometheus extends Application {
         saveTemp.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                storeControll.saveFile(drawControll, lightsControll, policeControll, carControll);
+                StoreControll sc=new StoreControll();
+                sc.saveFile(drawControll, lightsControll, policeControll, carControll);
             }
         });
         Button newTemp=gui.getNewTemp();
@@ -174,6 +180,10 @@ public class Prometheus extends Application {
         carControll.stop();
         policeControll.stop();
         lightsControll.stop();
+    }
+    public static boolean simulationRun()
+    {
+        return run;
     }
     public static void cancel()
     {

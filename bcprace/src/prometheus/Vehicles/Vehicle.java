@@ -29,7 +29,7 @@ import prometheus.Prometheus;
 public abstract class Vehicle {
     private ImageView iv;
     private double time, totalTime;
-    private StreetSegment actualSegment;
+    private StreetSegment actualSegment, oldSegment;
     private Animation animation;
     private final double MAX_SPEED=0.07, MAX_FORCE=0.001;
     private double speed=MAX_SPEED, force=MAX_FORCE;
@@ -49,6 +49,7 @@ public abstract class Vehicle {
     private List<StreetSegment> street=new ArrayList<>();
     private List<StreetSegment> streetOriginal=new ArrayList<>();
     private boolean slowing=false;
+    private int winkCount=1;
     
     public Vehicle(Animation animation, StreetSegment ss) {
         actualSegment=ss;
@@ -230,9 +231,9 @@ public abstract class Vehicle {
         actualSegment.setVehicle(null);
         if(!street.isEmpty())
         {
+            oldSegment=actualSegment;
             actualSegment=street.get(0);
             street.remove(actualSegment);
-            
             StreetSegment checkWink=actualSegment;
             int dist=0;
             boolean startWink=false;
@@ -249,6 +250,7 @@ public abstract class Vehicle {
             }
             if(startWink)
             {
+                winkCount=1;
                 winkerRun(true);
                 if(checkWink.getWinkAngle()<0)
                     imgAlt=vi.getRightImg();
@@ -259,10 +261,12 @@ public abstract class Vehicle {
             setPoints();
             actualSegment.setVehicle(this); 
 
-            if(actualSegment.isStopWinker()){
+            if(actualSegment.isStopWinker() && winkCount==0){
                 
                 winkerRun(false);
             }
+            else
+                winkCount=0;
             //}
             //else
                 //removeCar(); 
@@ -275,10 +279,15 @@ public abstract class Vehicle {
     private void setPoints()
     {
         p0=actualSegment.getP0();
-        
-        p1=actualSegment.getP1();
         p3=actualSegment.getP3();
-        p2=actualSegment.getP2();
+        
+        if(actualSegment.getPredchoziUseky().size()>1)
+            calcConnectPoints();
+        else
+        {
+            p1=actualSegment.getP1();
+            p2=actualSegment.getP2();
+        }
         x0=p0.getX();
         y0=p0.getY();
         x1=3*(p1.getX()-x0);
@@ -290,6 +299,16 @@ public abstract class Vehicle {
         
         xLast=x0;
         yLast=y0;
+    }
+    private void calcConnectPoints()
+    {
+        p0=oldSegment.getP3();
+        double length=HelpMath.length(p0, p3)/3;
+        double angle=HelpMath.angle(p0, oldSegment.getP2());
+        p1=HelpMath.rotate(p0, length, angle);
+
+        angle=HelpMath.angle(p1, p3);
+        p2=HelpMath.rotate(p3, length, angle); 
     }
     public void removeCar()
     {
@@ -364,7 +383,7 @@ public abstract class Vehicle {
         move(time);
         time+=speed;
         move(time);
-        iv.setOnMouseClicked(new EventHandler<MouseEvent>() {
+        /*iv.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent t) {
                 if(!paused)
@@ -372,7 +391,7 @@ public abstract class Vehicle {
                 else
                     play();
             }
-        });
+        });*/
         Prometheus.drawNode(iv);
         
     }
