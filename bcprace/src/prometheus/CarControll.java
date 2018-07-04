@@ -201,6 +201,14 @@ public class CarControll {
             }
         });
         tfMyCarSpeed=gui.getSpeedOwn();
+        tfMyCarSpeed.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if (!newValue.matches("\\d*")) {
+                    tfMyCarSpeed.setText(oldValue.toString());
+                }
+            }
+        });
         tfMyCarSpeed.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent event) {
@@ -212,10 +220,8 @@ public class CarControll {
         upMyCarSpeed=gui.getSpeedOwnPl();
         upMyCarSpeed.setOnAction(new EventHandler<ActionEvent>() {
             @Override
-            public void handle(ActionEvent event) {
-                
-                changeMyCarSpeed(0.002);
-                tfMyCarSpeed.setText(String.valueOf(myCar.getSpeed()*1000));
+            public void handle(ActionEvent event) {  
+                changeMyCarSpeed(0.002);   
             }
         });
         downMyCarSpeed=gui.getSpeedOwnMi();
@@ -223,7 +229,6 @@ public class CarControll {
             @Override
             public void handle(ActionEvent event) {
                 changeMyCarSpeed(-0.002);
-                tfMyCarSpeed.setText(String.valueOf(myCar.getSpeed()*1000));
             }
         });
         
@@ -313,14 +318,16 @@ public class CarControll {
     }
     private void setMyCarSpeed(double newSpeed)
     {
-        if(myCar!=null)
+        if(myCar!=null){
             myCar.setSpeed(newSpeed/1000);
+            
+        }
     }
     private void changeMyCarSpeed(double newSpeed)
     {
         if(myCar!=null){
             myCar.updateSpeed(newSpeed);
-            tfMyCarSpeed.setText(String.valueOf(myCar.getSpeed()*1000));
+            tfMyCarSpeed.setText(String.valueOf((int)(myCar.getSpeed()*1000)));
         }
     }
     private static void changeDeleyCar(int count)

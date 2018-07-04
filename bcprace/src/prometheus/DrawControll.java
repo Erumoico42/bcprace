@@ -270,13 +270,13 @@ public class DrawControll {
     }
     public static void addStartSegmentCar(StreetSegment ss)
     {
-        if(ss!=null && !startSegmentsCar.contains(ss)){
+        if(!startSegmentsCar.contains(ss)){
             startSegmentsCar.add(ss);     
         }
     }
     public static void addStartSegmentTram(StreetSegment ss)
     {
-        if(ss!=null && !startSegmentsTram.contains(ss)){
+        if(!startSegmentsTram.contains(ss)){
             startSegmentsTram.add(ss);     
         }
     }

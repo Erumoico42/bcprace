@@ -101,16 +101,26 @@ public class Split {
         for (Connect connect : connects) {
             if(connect.getEndCurves().isEmpty())
             {
-                for (MyCurve startCurve : connect.getStartCurves()) {
-                    if(connect.isTram()){
-                        DrawControll.addStartSegmentTram(startCurve.getFirst());
-                    }
-                    else{
-                        DrawControll.addStartSegmentCar(startCurve.getFirst());
-                    }
-                }
+                addStartSegments(connect);
                 
             }
+        }
+    }
+    private void addStartSegments(Connect conn)
+    {
+        for (MyCurve startCurve : conn.getStartCurves()) {
+            if(startCurve.getFirst()==null)
+                addStartSegments(startCurve.getC3());
+            else
+            {
+                if(conn.isTram()){
+                    DrawControll.addStartSegmentTram(startCurve.getFirst());
+                }
+                else{
+                    DrawControll.addStartSegmentCar(startCurve.getFirst());
+                }
+            }
+
         }
     }
     private void setWink(StreetSegment us, double angle)
