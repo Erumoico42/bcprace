@@ -335,8 +335,9 @@ public abstract class Vehicle {
         controlRectangle.setY(y-rectHeight);
     }
     public abstract void newImage();
-    private void checkCollAll()
+    public boolean checkCollAll()
     {
+        boolean crash=false;
         List<Vehicle> auta=animation.getVehicles();
         for (int i = 0; i < auta.size(); i++) {
             Vehicle car=auta.get(i);
@@ -351,16 +352,17 @@ public abstract class Vehicle {
                         animation.addToRemove(this);
                     if(!animation.getToRemove().contains(car))
                         animation.addToRemove(car);
- 
+                    crash=true;
                 }
             }
         }
+        return crash;
     }
     public boolean removing()
     {
         return removing;
     }
-    private boolean checkColl(Rectangle r1, Rectangle r2)
+    public boolean checkColl(Rectangle r1, Rectangle r2)
     {
          if(Shape.intersect(r1, r2).getBoundsInLocal().getWidth()>10)
              return true;

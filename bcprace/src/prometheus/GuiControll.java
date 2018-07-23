@@ -14,6 +14,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,6 +25,7 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.css.CssMetaData;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -35,8 +37,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -54,6 +59,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import prometheus.Store.PlayerStore;
 
 /**
  *
@@ -87,13 +93,22 @@ public class GuiControll {
     private boolean enableMouseMoveExit=false;
     private BorderPane groupBorder;
     private double defWidthDist, defHeightdist;
+    private static Player player;
+    private Button btnShowTop;
+    private Label actTime, runCount, avgTime, crashes, lightsRun, policesRun, rightsRun;
+    private PlayerStore ps=new PlayerStore();
+    private Stage statStage;
+    private TableView<Player> playersTable;
+    private Label minTime;
+    private Label maxTime;
+    private Label mark;
     
     public GuiControll(Stage primaryStage, String[] args) {
         
         
         this.primaryStage=primaryStage;
         root = new Group(); 
-        scene = new Scene(root, 850, 600);
+        scene = new Scene(root, 900, 600);
         scene.setFill(Color.rgb(210, 210, 210));
         primaryStage.setTitle("Bakalarska prace");
         primaryStage.setScene(scene);
@@ -138,8 +153,7 @@ public class GuiControll {
                 break;
         }
         if(!edit)
-            editDisableMenu();
-        
+            setTestMenu();
     }
     public void tryLoad()
     {
@@ -167,6 +181,61 @@ public class GuiControll {
             }
         }
     }
+    private void enterName()
+    {
+        primaryStage.hide();
+        Group loginRoot = new Group();
+        Scene loginScene = new Scene(loginRoot, 250, 150);
+        Stage secondaryStage = new Stage();
+        secondaryStage.setTitle("Jméno");
+        secondaryStage.setScene(loginScene);
+        secondaryStage.show();
+        Label lblName=new Label("Jméno:");
+        lblName.setLayoutX(50);
+        lblName.setLayoutY(50);
+        TextField tfName=new TextField();
+        tfName.setLayoutX(100);
+        tfName.setLayoutY(50);
+        tfName.setMaxWidth(110);
+        tfName.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if(event.getCode()==KeyCode.ENTER){
+                    secondaryStage.close();
+                    player.setName(tfName.getText());
+                    primaryStage.show();
+                }
+            }
+        });
+        Button btnEnter=new Button("Pokračovat");
+        btnEnter.setLayoutX(100);
+        btnEnter.setLayoutY(80);
+        btnEnter.setMinWidth(110);
+        btnEnter.setMaxWidth(110);
+        secondaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                Prometheus.cancel();
+            }
+        });
+        btnEnter.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                secondaryStage.close();
+                player.setName(tfName.getText());
+                primaryStage.show();
+            }
+        });
+        loginRoot.getChildren().addAll(tfName, btnEnter, lblName);
+    }
+    private GuiControll getThis()
+    {
+        return this;
+    }
+    public static Player getPlayer()
+    {
+        return player;
+    }
     private String loadSleeperConfig(String path)
     {
         List<String> paths=new ArrayList<>();
@@ -175,7 +244,6 @@ public class GuiControll {
             try (BufferedReader br = new BufferedReader(new FileReader(pathFile))) {
                 String line;
                 while ((line = br.readLine()) != null) {
-                   // process the line.
                    paths.add(line);
                 }
             } catch (FileNotFoundException ex) {
@@ -269,8 +337,14 @@ public class GuiControll {
             if(width<actWidth)
                 width=actWidth;
         }
-        //System.out.println(width);
         return width;
+    }
+    public void savePlayer()
+    {
+        if(player!=null){
+            ps.saveTopList(player);
+            
+        }
     }
     private double findHeightOfGroup()
     {
@@ -280,12 +354,11 @@ public class GuiControll {
             if(height<actHeight)
                 height=actHeight;
         }
-        //System.out.println(height);
         return height;
     }
     private void initMenu()
     {
-        menuBg.setWidth(850);
+        menuBg.setWidth(900);
         menuBg.setHeight(102);
         menuBg.setFill(Color.WHITE);
         menu=new Menu();
@@ -325,12 +398,105 @@ public class GuiControll {
         root.getChildren().addAll(menuBg, menu.getMenu(), saveTemp,loadTemp, newTemp);
         menu.changeWidth(primaryStage.getWidth());
     }
-    private void editDisableMenu()
+    private void initStatist()
     {
+        Group statGroup = new Group();
+        Scene statScene = new Scene(statGroup, 1000, 300);
+        statStage = new Stage();
+        statStage.setTitle("Seznam hráčů");
+        statStage.setScene(statScene);
+        
+        
+        playersTable = new TableView<>();
+        playersTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        
+        TableColumn name = new TableColumn("Jméno");
+        name.setMinWidth(65);
+        name.setResizable(false);
+        name.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("name"));  
+        
+        TableColumn totalRuns = new TableColumn("Počet kol");
+        totalRuns.setMinWidth(35);
+        totalRuns.setResizable(false);
+        totalRuns.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("totalRuns"));
+        
+        TableColumn avgTime = new TableColumn("Průměrný čas");
+        avgTime.setMinWidth(90);
+        avgTime.setResizable(false);
+        avgTime.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("avgTime"));
+        
+        TableColumn totalCrashes = new TableColumn("Počet nehod");
+        totalCrashes.setMinWidth(70);
+        totalCrashes.setResizable(false);
+        totalCrashes.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("totalCrashes"));
+        
+        TableColumn lightsRuns = new TableColumn("Průjezd na červenou");
+        lightsRuns.setMinWidth(120);
+        lightsRuns.setResizable(false);
+        lightsRuns.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("lightsRuns"));
+        
+        TableColumn policesRuns = new TableColumn("Pokyny policisty");
+        policesRuns.setMinWidth(100);
+        policesRuns.setResizable(false);
+        policesRuns.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("policesRuns"));
+        
+        TableColumn rightsRuns = new TableColumn("Nedodržení přednosti");
+        rightsRuns.setMinWidth(130);
+        rightsRuns.setResizable(false);
+        rightsRuns.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("rightsRuns"));
+        
+        TableColumn minTimes = new TableColumn("Nejlepší kolo");
+        minTimes.setMinWidth(75);
+        minTimes.setResizable(false);
+        minTimes.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("minTimeStr"));
+        
+        TableColumn maxTimes = new TableColumn("Nejhorší kolo");
+        maxTimes.setMinWidth(75);
+        maxTimes.setResizable(false);
+        maxTimes.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("maxTimeStr"));
+        
+        TableColumn marks = new TableColumn("Hodnocení");
+        marks.setMinWidth(70);
+        marks.setResizable(false);
+        marks.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("mark"));
+        
+        TableColumn dates = new TableColumn("Datum");
+        dates.setMinWidth(75);
+        dates.setResizable(false);
+        dates.setCellValueFactory(
+                new PropertyValueFactory<Player, String>("date"));
+        
+        playersTable.getColumns().addAll(name, marks, totalRuns, avgTime, minTimes, maxTimes, totalCrashes, rightsRuns, policesRuns, lightsRuns, dates);
+        statGroup.getChildren().addAll(playersTable);
+    }
+    private void setTestMenu()
+    {
+        player=new Player(getThis());
+        ps.loadTopList();
+        enterName();
+        initStatist();
+        ps.getPlayers().sort(new Comparator<Player>() {
+            @Override
+            public int compare(Player t, Player t1) {
+                char m1=t.getMark().charAt(0);
+                char m2=t1.getMark().charAt(0);
+                return m1-m2;
+            }
+        });
+        playersTable.getItems().addAll(ps.getPlayers());
+                
         generCar.setDisable(true);
         generTram.setDisable(true);
-        //canvas.setDisable(true);
-        //drawRoot.setDisable(true);
         addOwn.setDisable(true);
 
         root.getChildren().removeAll(saveTemp,newTemp);
@@ -341,6 +507,103 @@ public class GuiControll {
         mgs4.getGroup().getChildren().remove(addOwn);
         mgs5.getGroup().getChildren().remove(hide);
         mgs5.setLayout(90);
+
+        Label lblActTime=new Label("Doba jízdy:");
+        lblActTime.setLayoutX(45);
+        lblActTime.setLayoutY(layout1);
+        
+        actTime=new Label("00:00");
+        actTime.setLayoutX(110);
+        actTime.setLayoutY(layout1);
+        
+        Label lblRun=new Label("Počet kol:");
+        lblRun.setLayoutX(45);
+        lblRun.setLayoutY(layout2);
+        
+        runCount=new Label("0");
+        runCount.setLayoutX(110);
+        runCount.setLayoutY(layout2);
+        //
+        Label lblMinTime=new Label("Nejkratší kolo:");
+        lblMinTime.setLayoutX(150);
+        lblMinTime.setLayoutY(layout1);
+        
+        minTime=new Label("00:00");
+        minTime.setLayoutX(230);
+        minTime.setLayoutY(layout1);
+        
+        Label lblMaxTime=new Label("Nejdelší kolo::");
+        lblMaxTime.setLayoutX(150);
+        lblMaxTime.setLayoutY(layout2);
+        
+        maxTime=new Label("00:00");
+        maxTime.setLayoutX(230);
+        maxTime.setLayoutY(layout2);
+        
+        Label lblAvgTime=new Label("Prům. doba jízdy:");
+        lblAvgTime.setLayoutX(270);
+        lblAvgTime.setLayoutY(layout1);
+        
+        avgTime=new Label("0.00");
+        avgTime.setLayoutX(370);
+        avgTime.setLayoutY(layout1);
+        
+        Label lblCrashes=new Label("Počet nehod:");
+        lblCrashes.setLayoutX(270);
+        lblCrashes.setLayoutY(layout2);
+        
+        crashes=new Label("0");
+        crashes.setLayoutX(370);
+        crashes.setLayoutY(layout2);
+        
+        Label lblLightsRun=new Label("Jízda na červenou:");
+        lblLightsRun.setLayoutX(410);
+        lblLightsRun.setLayoutY(layout1);
+        
+        lightsRun=new Label("0");
+        lightsRun.setLayoutX(515);
+        lightsRun.setLayoutY(layout1);
+        
+        Label lblPoliceRun=new Label("Policie:");
+        lblPoliceRun.setLayoutX(410);
+        lblPoliceRun.setLayoutY(layout2);
+        
+        policesRun=new Label("0");
+        policesRun.setLayoutX(515);
+        policesRun.setLayoutY(layout2);
+        
+        Label lblRightsRun=new Label("Porušení přednosti:");
+        lblRightsRun.setLayoutX(545);
+        lblRightsRun.setLayoutY(layout1);
+        
+        rightsRun=new Label("0");
+        rightsRun.setLayoutX(655);
+        rightsRun.setLayoutY(layout1);
+        
+        
+        btnShowTop=new Button("Seznam hráčů");
+        btnShowTop.setLayoutX(545);
+        btnShowTop.setLayoutY(layout2);
+        btnShowTop.setMinSize(100, 22);
+        btnShowTop.setMaxSize(100, 22);
+        btnShowTop.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                statStage.show();
+            }
+        });
+        mark=new Label();
+        mark.setFont(Font.font(40));
+        mark.setLayoutX(10);
+        mark.setLayoutY(layout1);
+        setMark("A");
+        MenuGroup mg7=new MenuGroup("Statistika");
+        mg7.setWidth(680);
+        mg7.addItems(btnShowTop, lblActTime, lblAvgTime, lblCrashes, lblLightsRun, lblPoliceRun, lblRightsRun, lblRun, 
+                actTime, runCount, avgTime, crashes, lightsRun, policesRun, rightsRun, minTime, maxTime, lblMinTime, lblMaxTime, mark);
+        mg7.setLayout(200);
+        mg7.setLblLayout(280);
+        fapSim.getContent().getChildren().add(mg7.getMenuGroup());
         menu.changeContent(fapSim);
         speedOwnPl.setLayoutY(layout1);
         speedOwnMi.setLayoutY(layout1);
@@ -744,11 +1007,11 @@ public class GuiControll {
     }
     private void initDrawingPlace()
     {
-        canvas=new Canvas(844, 491);
+        canvas=new Canvas(894, 491);
         defWidthDist=primaryStage.getWidth()-canvas.getWidth();
         defHeightdist=primaryStage.getHeight()-canvas.getHeight();
         drawRoot=new Group();
-        drawScene=new SubScene(drawRoot, 844, 491);
+        drawScene=new SubScene(drawRoot, 894, 491);
         drawScene.setFill(Color.WHITE);
         groupBorder = new BorderPane();
         groupBorder.setBorder(new Border(new BorderStroke(Color.BLACK,
@@ -1045,7 +1308,61 @@ public class GuiControll {
     public CheckBox getRunLights() {
         return runLights;
     }
+
+    public Button getBtnShowTop() {
+        return btnShowTop;
+    }
+
+    public void setActTime(String val) {
+        actTime.setText(val);
+    }
+
+    public void setRunCount(String val) {
+        runCount.setText(val);
+    }
+
+    public void setAvgTime(String val) {
+        avgTime.setText(val);
+    }
+
+    public void setCrashes(String val) {
+        crashes.setText(val);
+    }
+
+    public void setPolicesRun(String val) {
+        policesRun.setText(val);
+    }
+
+    public void setRightsRun(String val) {
+        rightsRun.setText(val);
+    }
     
-    
+    public void setLightsRun(String val) {
+        lightsRun.setText(val);
+    }
+    public void setMinTime(String val) {
+        minTime.setText(val);
+    }
+    public void setMaxTime(String val) {
+        maxTime.setText(val);
+    }
+    public void setMark(String val) {
+       mark.setText(val);
+       switch(val)
+       {
+           case "A": case "B":{
+               mark.setTextFill(Color.GREEN);
+               break;
+           }
+           case "C": case "D":{
+               mark.setTextFill(Color.ORANGE);
+               break;
+           }
+           case "E": case "F":{
+               mark.setTextFill(Color.RED);
+               break;
+           }
+       }
+    }
     
 }

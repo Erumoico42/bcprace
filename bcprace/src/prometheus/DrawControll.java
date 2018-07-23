@@ -133,6 +133,10 @@ public class DrawControll {
     {
         return lastIdSegment;
     }
+    public static void removeCurve(MyCurve curve)
+    {
+        curves.remove(curve);
+    }
     public void removeConnect()
     {
         actualConnect.remove();
@@ -216,9 +220,7 @@ public class DrawControll {
             sstoGen.addAll(startSegmentsCar);
         else
             sstoGen.addAll(startSegmentsTram);
-        
-        
-        
+
         while(!sstoGen.isEmpty())
         {
             boolean next=false;

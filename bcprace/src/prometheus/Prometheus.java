@@ -187,10 +187,12 @@ public class Prometheus extends Application {
     }
     public static void cancel()
     {
+        gui.savePlayer();
         pause();
         carControll.cancel();
         Platform.exit();
         System.exit(0);
+        
     }
     public static void drawNode(Node ... nodes)
     {

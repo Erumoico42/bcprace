@@ -96,6 +96,7 @@ public class CurveStore {
             if(connect.getId()==id)
                 return connect;
         }
+        System.out.println("null: "+id);
         return null;
     }      
     public void loadCurves(List<StreetSegment> segmentss, List<Connect> connectss)

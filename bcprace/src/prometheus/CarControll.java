@@ -12,6 +12,8 @@ import prometheus.Vehicles.BotTram;
 import prometheus.Vehicles.MyCar;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -306,14 +308,31 @@ public class CarControll {
             StreetSegment newSeg=drawing.getRandomStart(false);
             if(newSeg!=null){
                 myCar=new MyCar(animation,newSeg);
+                myCar.setPlayer(GuiControll.getPlayer());
+                GuiControll.getPlayer().enableCrash();
                 tfMyCarSpeed.setText(String.valueOf(myCar.getSpeed()*1000));
                 insertMyCar.setDisable(true);
                 tfMyCarSpeed.setDisable(false);
                 upMyCarSpeed.setDisable(false);
                 downMyCarSpeed.setDisable(false);
             }
-            else
-                newMyCar();
+            else{
+                
+                Thread th=new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Thread.sleep(1000);
+                            newMyCar();
+
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(CarControll.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                });
+                th.run();
+                th.setDaemon(true);
+            }
         }
     }
     private void setMyCarSpeed(double newSpeed)

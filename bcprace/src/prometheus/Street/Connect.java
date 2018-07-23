@@ -62,15 +62,18 @@ public class Connect {
             for (StreetSegment segment : endCurve.getSegments()) {
                 segment.removeUsek();
             }
+            DrawControll.removeCurve(endCurve);
         }
         for (MyCurve startCurve : startCurves) {
             startCurve.getC3().getEndCurves().remove(startCurve);
+            
             Prometheus.removeNode(startCurve.getCurve(), startCurve.getC1().getC(), startCurve.getC2().getC(), startCurve.getC1().getControlLine(), startCurve.getC2().getControlLine());
             if(startCurve.getLast()!=null)
                 startCurve.getLast().removeUsek();
             for (StreetSegment segment : startCurve.getSegments()) {
                 segment.removeUsek();
             }
+            DrawControll.removeCurve(startCurve);
         }
         endCurves.clear();
         startCurves.clear();
